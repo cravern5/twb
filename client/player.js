@@ -6,6 +6,8 @@ import { canvas, ctx } from './engine.js';
 import { MAP_WIDTH, MAP_HEIGHT, camera } from './world.js';
 import * as world from './world.js';
 
+export let playerName = "名無し";
+
 export let charactor = "maximin";
 export let isSitting = false;				//立ち/座り
 export let isRunning = true; 				//走り/歩き
@@ -54,7 +56,7 @@ const chatFontStyle = getComputedStyle(chatFontElement);
 const bubbleFont = `${chatFontStyle.fontSize} ${chatFontStyle.fontFamily}`;
 export let bubbleText = null;	// 頭上に表示中のチャット内容（null＝非表示中）
 let bubbleTimer = 0;			// ふきだしが消えるまでの残り時間（秒）
-const BUBBLE_DURATION = 5;		// ふきだしを表示しておく秒数
+const BUBBLE_DURATION = 4;		// ふきだしを表示しておく秒数
 
 
 //初期化
@@ -307,7 +309,7 @@ export function update(delta)
 
 		//まだ時間が残っていれば、頭の少し上にふきだしを描画する
 		if (bubbleTimer > 0)
-			drawBubble(screenX + SPRITE_WIDTH / 2, screenY - 5);
+			drawBubble(playerName + " ： " + bubbleText, screenX + SPRITE_WIDTH / 2, screenY - 5);
 	}
 }
 
@@ -353,18 +355,19 @@ function drawCharactor(ctx, asset, x, y)
 
 
 //頭上のふきだしを描画する（背景の四角＋テキスト）
-function drawBubble(x, y)
+function drawBubble(text, x, y)
 {
 	// chat.css の「.logLine, #chatUnder input」と同じフォントを指定する
 	ctx.font = bubbleFont;
 	if (!ctx.font)
 		ctx.font = "14px 'MS PGothic', 'Meiryo', sans-serif";
 
-	ctx.textAlign = "center";		// xを中心にして描く
-	ctx.textBaseline = "middle";	// yを縦方向の中心にして描く
+	// xを中心にして描く// yを縦方向の中心にして描く
+	ctx.textAlign = "center";
+	ctx.textBaseline = "middle";
 
 	//文字の横幅を測って、背景の四角の大きさを決める
-	const textWidth = ctx.measureText(bubbleText).width;
+	const textWidth = ctx.measureText(text).width;
 	const paddingX = 10;	// 文字の左右の余白
 	const paddingY = 6;	// 文字の上下の余白
 	const boxWidth = textWidth + paddingX * 2;
@@ -380,7 +383,7 @@ function drawBubble(x, y)
 
 	// 文字を描画（四角の縦方向の中央にくるように）
 	ctx.fillStyle = "#CEFFCE";
-	ctx.fillText(bubbleText, x, boxY + boxHeight / 2);
+	ctx.fillText(text, x, boxY + boxHeight / 2);
 }
 
 /*divでチャットバブル表現
