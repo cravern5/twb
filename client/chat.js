@@ -25,6 +25,8 @@ export function init()
 export function onChat(text)
 {
 	addLog("INFO", text);
+
+	player.showBubble(text);
 }
 
 //チャットを送信

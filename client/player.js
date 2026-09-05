@@ -6,7 +6,7 @@ import { canvas, ctx } from './engine.js';
 import { MAP_WIDTH, MAP_HEIGHT, camera } from './world.js';
 import * as world from './world.js';
 
-export let charactorName = "maximin";
+export let charactor = "maximin";
 export let isSitting = false;				//立ち/座り
 export let isRunning = true; 				//走り/歩き
 export let state = "idle";
@@ -27,21 +27,34 @@ export const SPRITE_HEIGHT = 95;
 export let moveTarget = null;// マウスクリックで指定した「目的地」（ワールド座標）、null のときは目的地なし＝マウスでは移動していない状態
 const MOVE_TARGET_THRESHOLD = 4;// 目的地にどれだけ近づいたら「到着」とみなすか（px）
 
+//キャラクター画像
 export const assets = {};
 export const assetPaths =
 {
-	run_backside: '/assets/player/' + charactorName + '/run/backside.png',
-	run_backward: '/assets/player/' + charactorName + '/run/backward.png',
-	run_forside: '/assets/player/' + charactorName + '/run/forside.png',
-	run_forward: '/assets/player/' + charactorName + '/run/forward.png',
-	run_side: '/assets/player/' + charactorName + '/run/side.png',
+	run_backside: '/assets/player/' + charactor + '/run/backside.png',
+	run_backward: '/assets/player/' + charactor + '/run/backward.png',
+	run_forside: '/assets/player/' + charactor + '/run/forside.png',
+	run_forward: '/assets/player/' + charactor + '/run/forward.png',
+	run_side: '/assets/player/' + charactor + '/run/side.png',
 
-	idle_backside: '/assets/player/' + charactorName + '/idle/backside.png',
-	idle_backward: '/assets/player/' + charactorName + '/idle/backward.png',
-	idle_forside: '/assets/player/' + charactorName + '/idle/forside.png',
-	idle_forward: '/assets/player/' + charactorName + '/idle/forward.png',
-	idle_side: '/assets/player/' + charactorName + '/idle/side.png',
+	idle_backside: '/assets/player/' + charactor + '/idle/backside.png',
+	idle_backward: '/assets/player/' + charactor + '/idle/backward.png',
+	idle_forside: '/assets/player/' + charactor + '/idle/forside.png',
+	idle_forward: '/assets/player/' + charactor + '/idle/forward.png',
+	idle_side: '/assets/player/' + charactor + '/idle/side.png',
 };
+
+//チャットバブル
+// chat.cssの「.logLine, #chatUnder input」と同じフォントを使うため、
+// 実際にそのCSSが当たっている要素（チャット入力欄）からフォント情報を読み取っておく
+const chatFontElement = document.getElementById("chatInput");
+const chatFontStyle = getComputedStyle(chatFontElement);
+// "font-size" と "font-family" をつなげて、ctx.fontで使える形の文字列にしておく
+// （毎フレーム計算すると無駄なので、最初に1回だけ作って使い回す）
+const bubbleFont = `${chatFontStyle.fontSize} ${chatFontStyle.fontFamily}`;
+export let bubbleText = null;	// 頭上に表示中のチャット内容（null＝非表示中）
+let bubbleTimer = 0;			// ふきだしが消えるまでの残り時間（秒）
+const BUBBLE_DURATION = 5;		// ふきだしを表示しておく秒数
 
 
 //初期化
@@ -222,11 +235,19 @@ export function updateState(move)
 	return changed;
 }
 
-
 // クリックした場所を目的地として登録する関数(game.jsなどで呼び出し用)
 export function setMoveTarget(x, y)
 {
 	moveTarget = { x, y };
+}
+
+//頭上にチャット内容のふきだしを表示する
+export function showBubble(text)
+{
+	//表示するテキストと、残り表示時間をセットするだけ
+	//（実際の描画は毎フレームupdate()の中で行う）
+	bubbleText = text;
+	bubbleTimer = BUBBLE_DURATION;
 }
 
 //画面更新
@@ -269,8 +290,31 @@ export function update(delta)
 	const screenX = position.x - camera.x;
 	const screenY = position.y - camera.y;
 
+	//足の位置
 	const foot = getFoot(screenX, screenY);
 
+	//影の描画
+	drawShadow(ctx, foot);
+
+	//キャラクター描画
+	drawCharactor(ctx, asset, screenX, screenY);
+
+	//吹き出し描画
+	if (bubbleTimer > 0)
+	{
+		//ふきだしを表示中なら、残り時間を減らしていく
+		bubbleTimer -= delta;
+
+		//まだ時間が残っていれば、頭の少し上にふきだしを描画する
+		if (bubbleTimer > 0)
+			drawBubble(screenX + SPRITE_WIDTH / 2, screenY - 5);
+	}
+}
+
+
+//影の描画
+function drawShadow(ctx, foot)
+{
 	//影の描画
 	utils2.drawCircle(
 		ctx, 'rgba(0, 0, 0, 0.6)', foot.x, foot.y,
@@ -278,7 +322,12 @@ export function update(delta)
 		SPRITE_WIDTH * 0.1//高さ
 	);
 	//utils2.drawShadow(ctx, 'rgba(0, 0, 0, 0.5)', screenX + 5, screenY - 15, SPRITE_WIDTH - 10, SPRITE_HEIGHT);
+}
 
+
+//キャラクター描画
+function drawCharactor(ctx, asset, x, y)
+{
 	// スプライトシートから該当コマだけを切り出して描画する
 	if (flip)
 	{
@@ -288,7 +337,7 @@ export function update(delta)
 		ctx.drawImage(
 			asset.img,
 			currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
-			-screenX - asset.frameWidth, screenY, asset.frameWidth, asset.frameHeight // position→screenX/screenY
+			-x - asset.frameWidth, y, asset.frameWidth, asset.frameHeight
 		);
 		ctx.restore();
 	}
@@ -297,10 +346,83 @@ export function update(delta)
 		ctx.drawImage(
 			asset.img,
 			currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
-			screenX, screenY, asset.frameWidth, asset.frameHeight // position→screenX/screenY
+			x, y, asset.frameWidth, asset.frameHeight
 		);
 	}
 }
+
+
+//頭上のふきだしを描画する（背景の四角＋テキスト）
+function drawBubble(x, y)
+{
+	// chat.css の「.logLine, #chatUnder input」と同じフォントを指定する
+	ctx.font = bubbleFont;
+	if (!ctx.font)
+		ctx.font = "14px 'MS PGothic', 'Meiryo', sans-serif";
+
+	ctx.textAlign = "center";		// xを中心にして描く
+	ctx.textBaseline = "middle";	// yを縦方向の中心にして描く
+
+	//文字の横幅を測って、背景の四角の大きさを決める
+	const textWidth = ctx.measureText(bubbleText).width;
+	const paddingX = 10;	// 文字の左右の余白
+	const paddingY = 6;	// 文字の上下の余白
+	const boxWidth = textWidth + paddingX * 2;
+	const boxHeight = 14 + paddingY * 2;	// 14はフォントサイズ分の目安の高さ
+
+	// 四角の左上座標（xを中心にしたいので、幅の半分だけ左にずらす）
+	const boxX = x - boxWidth / 2;
+	const boxY = y - boxHeight;
+
+	// 薄い黒背景の四角を描画
+	ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+	ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+
+	// 文字を描画（四角の縦方向の中央にくるように）
+	ctx.fillStyle = "#CEFFCE";
+	ctx.fillText(bubbleText, x, boxY + boxHeight / 2);
+}
+
+/*divでチャットバブル表現
+
+function update(delta)
+{
+		//時間切れになったら非表示にする
+		if (bubbleTimer <= 0)
+		{
+			bubbleElement.style.display = 'none';
+		}
+		else
+		{
+			//canvas自体が画面上のどこにあるかを取得する
+			//（screenX/screenYは「canvasの中での位置」なので、ページ全体での位置に変換する必要がある）
+			const canvasRect = canvas.getBoundingClientRect();
+
+			//キャラクターの頭の少し上にふきだしが来るように位置を計算する
+			bubbleElement.style.left = (canvasRect.left + screenX + SPRITE_WIDTH / 2) + "px";
+			bubbleElement.style.top = (canvasRect.top + screenY - 10) + "px";
+		}
+}
+
+// ふきだし用のHTML要素を、最初に1つだけ作って画面(body)に追加しておく
+// （毎回作り直すと重くなるので、使い回す）
+const bubbleElement = document.createElement('div');
+bubbleElement.className = 'chat-bubble';	// chat.cssで定義済みの見た目を適用
+bubbleElement.style.display = 'none';		// 最初は非表示にしておく
+document.body.appendChild(bubbleElement);
+
+//頭上にチャット内容のふきだしを表示する
+export function showBubble(text)
+{
+	//表示するテキストと、残り表示時間をセット
+	bubbleText = text;
+	bubbleTimer = BUBBLE_DURATION;
+
+	//ふきだしの中身を書き換えて、見えるようにする
+	bubbleElement.textContent = text;
+	bubbleElement.style.display = 'block';
+}
+*/
 
 
 //マウス移動
