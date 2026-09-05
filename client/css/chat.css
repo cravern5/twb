@@ -395,7 +395,9 @@ TWチャットバー
 
 	cursor: pointer;
 }
-
+.chatRangeBtn:active {
+	background-position: bottom left;
+}
 #chatRangeClub {
 	background-image: url("../assets/ui/ChatBar/club.png");
 }
