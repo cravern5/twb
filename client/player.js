@@ -1,13 +1,18 @@
 import { print, addLog } from '../shared/sub.js';
 
+import * as socket from './ws_bin_client.js';
 import * as utils2 from './utils2.js';
 import * as input from './input.js';
+import * as windows from './windows.js';
+import * as engine from './engine.js';
 import { canvas, ctx } from './engine.js';
 import { MAP_WIDTH, MAP_HEIGHT, camera } from './world.js';
 import * as world from './world.js';
 
+//プレイヤー情報
 export let playerName = "名無し";
 
+//キャラクター
 export let charactor = "maximin";
 export let isSitting = false;				//立ち/座り
 export let isRunning = true; 				//走り/歩き
@@ -46,7 +51,11 @@ export const assetPaths =
 	idle_side: '/assets/player/' + charactor + '/idle/side.png',
 };
 
-//チャットバブル
+//チャット
+const chatArea = document.getElementById("chatArea");
+const chatInput = document.getElementById("chatInput");
+const chatLog = document.getElementById("chatLog");
+
 export let bubbleText = null;	// 頭上に表示中のチャット内容（null＝非表示中）
 let bubbleTimer = 0;			// ふきだしが消えるまでの残り時間（秒）
 const BUBBLE_DURATION = 4;		// ふきだしを表示しておく秒数
@@ -54,12 +63,10 @@ let bubbleFont = "14px 'MS PGothic', 'Meiryo', sans-serif";	//バブルフォン
 let bubbleColor = "#CEFFCE";								//バブル文字色
 let bubbleBackcolor = "rgba(0, 0, 0, 0.6)";				//バブル背景色
 
-//チャットバブル(css読み取り)
-const chatFontElement = document.getElementById("chatInput");
-if (chatFontElement)
+if (chatInput)
 {
 	// "font-size" と "font-family" をつなげて、ctx.fontで使える形の文字列にしておく（毎フレーム計算すると無駄なので、最初に1回だけ作って使い回す）
-	const chatFontStyle = getComputedStyle(chatFontElement);
+	const chatFontStyle = getComputedStyle(chatInput);
 	bubbleFont = chatFontStyle.fontSize && chatFontStyle.fontFamily ? (`${chatFontStyle.fontSize} ${chatFontStyle.fontFamily}`) : ("");
 	bubbleColor = chatFontStyle.color;
 }
@@ -68,6 +75,9 @@ if (chatFontElement)
 //初期化
 export async function init()
 {
+	//this.onChat = this.onChat.bind(this);
+	socket.callbacks.onchat = onChat;
+
 	//画像読み込み　ループで一気に Image オブジェクトを作る
 	for (const [key, path] of Object.entries(assetPaths))
 	{
@@ -258,6 +268,73 @@ export function showBubble(text)
 	bubbleTimer = BUBBLE_DURATION;
 }
 
+//チャット受信
+export function onChat(text)
+{
+	addLog("INFO", text);
+
+	showBubble(text);
+}
+
+//チャット送信
+export function SendChat(e)
+{
+	if (e.key === 'Enter')
+	{
+		const text = chatInput.value.trim();
+
+		//サーバー未接続
+		if (!socket.connected)
+		{
+			addLog("ERROR", "サーバーに接続されていません")
+		}
+		//チャットウィンドウ非表示中
+		if (!windows.chatWindow.isVisible())
+		{
+			windows.chatWindow.restore();
+			chatInput.focus();
+		}
+		//チャットバーにフォーカスある
+		else if (document.activeElement === chatInput)
+		{
+			//テキスト入力
+			if (text === '')
+				engine.canvas.focus();//3Dキャンバスに戻る
+			else
+			{
+				socket.sendChat(text);//サーバーへチャット
+				//this.showBubble(text);//バブル表示
+				chatInput.value = '';// 入力欄をクリア
+				engine.canvas.focus();//3Dキャンバスに戻る
+			}
+		}
+		//チャットバーにフォーカス
+		else
+			chatInput.focus();
+
+		return true;
+	}
+	else//Enter以外
+	{
+		//チャットバーにフォーカスがある状態でのキー入力
+		return document.activeElement === chatInput;
+	}
+}
+
+//マウス移動
+export function mousedown(e)
+{
+	// キャンバス上を左クリックしたら、その場所を目的地にして歩き出す
+	if (input.mouseInfo.left && e.target === canvas)
+	{
+		// 画面上のクリック位置(clientX/Y)にカメラのズレ(camera.x/y)を足して、マップ上の座標に変換する
+		const worldX = e.clientX + world.camera.x;
+		const worldY = e.clientY + world.camera.y;
+
+		setMoveTarget(worldX, worldY);
+	}
+}
+
 //画面更新
 export function update(delta)
 {
@@ -292,7 +369,7 @@ export function update(delta)
 	}
 
 	// 描画前に一旦キャンバスをクリアする
-	//ctx.clearRect(position.x, position.y, player.frameWidth, player.frameHeight);
+	//ctx.clearRect(position.x, position.y, frameWidth, frameHeight);
 
 	//ワールド座標(position)からカメラ位置を引いて「画面上の描画位置」を求める、プレイヤーが動いてもカメラが追従して常に画面中央に見える
 	const screenX = position.x - camera.x;
@@ -319,7 +396,6 @@ export function update(delta)
 	}
 }
 
-
 //影の描画
 function drawShadow(ctx, foot)
 {
@@ -331,7 +407,6 @@ function drawShadow(ctx, foot)
 	);
 	//utils2.drawShadow(ctx, 'rgba(0, 0, 0, 0.5)', screenX + 5, screenY - 15, SPRITE_WIDTH - 10, SPRITE_HEIGHT);
 }
-
 
 //キャラクター描画
 function drawCharactor(ctx, asset, x, y)
@@ -390,8 +465,7 @@ function wrapText(text, maxWidth)
 	return lines;
 }
 
-// ↑↑↑ ここまで追加 ↑↑↑
-
+//バブル描画
 function drawBubble(text, x, y)
 {
 	const maxBoxWidth = 197;	// ふきだしの最大の幅
@@ -497,16 +571,5 @@ export function showBubble(text)
 */
 
 
-//マウス移動
-export function mousedown(e)
-{
-	// キャンバス上を左クリックしたら、その場所を目的地にして歩き出す
-	if (input.mouseInfo.left && e.target === canvas)
-	{
-		// 画面上のクリック位置(clientX/Y)にカメラのズレ(camera.x/y)を足して、マップ上の座標に変換する
-		const worldX = e.clientX + world.camera.x;
-		const worldY = e.clientY + world.camera.y;
 
-		setMoveTarget(worldX, worldY);
-	}
-}
+

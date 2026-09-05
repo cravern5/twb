@@ -10,7 +10,7 @@ import * as input from './input.js';
 import { keys, keysPress, mouseInfo } from './input.js';
 import * as world from './world.js';
 import * as player from './player.js';
-import * as chat from './chat.js';
+import * as scroll from './scroll.js';
 import * as sound from './sound.js';
 
 // プログレスバーとテキストの更新
@@ -33,7 +33,7 @@ async function init()
 	engine.init(); updateProgress();
 	windows.init(); updateProgress();
 	socket.init(); updateProgress();
-	chat.init(); updateProgress();
+	//scroll.init(); updateProgress();
 
 	await player.init(); updateProgress();
 	await world.init(); updateProgress();
@@ -124,7 +124,7 @@ canvas.addEventListener('touchcancel', (e) => input.getVirtualMove_touchend(e), 
 
 document.addEventListener('keydown', (e) =>
 {
-	if (chat.SendChat(e))//送信したらtrue
+	if (player.SendChat(e))//送信したらtrue
 	{
 	}
 	else if (e.key.toLowerCase() === "c")
@@ -159,7 +159,7 @@ document.addEventListener('mousemove', (e) =>
 	input.getMouseState_mousemove(e);
 
 	//チャットスクロールバー
-	chat.mousemove(e);
+	scroll.mousemove(e);
 
 	//if (mouseInfo.right)
 	//{
@@ -178,7 +178,7 @@ document.addEventListener('mouseup', (e) =>
 	input.getMouseState_mouseup(e);
 
 	//チャットスクロールバー
-	chat.mouseup(e);
+	scroll.mouseup(e);
 
 });
 // マウスホイールのイベント
