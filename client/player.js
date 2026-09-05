@@ -56,12 +56,19 @@ const chatArea = document.getElementById("chatArea");
 const chatInput = document.getElementById("chatInput");
 const chatLog = document.getElementById("chatLog");
 
-export let bubbleText = null;	// 頭上に表示中のチャット内容（null＝非表示中）
+export let bubbleLines = null;	// 頭上に表示中のチャット内容
 let bubbleTimer = 0;			// ふきだしが消えるまでの残り時間（秒）
 const BUBBLE_DURATION = 4;		// ふきだしを表示しておく秒数
 let bubbleFont = "14px 'MS PGothic', 'Meiryo', sans-serif";	//バブルフォント
 let bubbleColor = "#CEFFCE";								//バブル文字色
 let bubbleBackcolor = "rgba(0, 0, 0, 0.6)";				//バブル背景色
+
+//バブル用の各種サイズ設定（調整・描画の両方で使うので関数の外に出しておく）
+const BUBBLE_MAX_WIDTH = 197;	// ふきだしの最大の幅
+const BUBBLE_MAX_HEIGHT = 73;	// ふきだしの最大の高さ
+const BUBBLE_PADDING_X = 10;	// 文字の左右の余白
+const BUBBLE_PADDING_Y = 6;	// 文字の上下の余白
+const BUBBLE_LINE_HEIGHT = 20;	// 1行分の高さ（フォントサイズ14pxに行間を足した目安）
 
 if (chatInput)
 {
@@ -259,21 +266,13 @@ export function setMoveTarget(x, y)
 	moveTarget = { x, y };
 }
 
-//頭上にチャット内容のふきだしを表示する
-export function showBubble(text)
-{
-	//表示するテキストと、残り表示時間をセットするだけ
-	//（実際の描画は毎フレームupdate()の中で行う）
-	bubbleText = text;
-	bubbleTimer = BUBBLE_DURATION;
-}
-
 //チャット受信
 export function onChat(text)
 {
 	addLog("INFO", text);
 
-	showBubble(text);
+	//表示するテキストの残り表示時間をセット
+	bubbleTimer = BUBBLE_DURATION;
 }
 
 //チャット送信
@@ -302,7 +301,15 @@ export function SendChat(e)
 				engine.canvas.focus();//3Dキャンバスに戻る
 			else
 			{
-				socket.sendChat(text);//サーバーへチャット
+				//ログに送られる文字列
+				const sendText = playerName + " ： " + text;
+
+				//バブル表示用テキストセット
+				bubbleLines = adjustBubbleText(sendText);
+				//改行を取り除いて1行のテキストにする（\r\nの場合も考慮）
+				//const oneLineText = text.replace(/\r?\n/g, "");
+
+				socket.sendChat(sendText);//サーバーへチャット
 				//this.showBubble(text);//バブル表示
 				chatInput.value = '';// 入力欄をクリア
 				engine.canvas.focus();//3Dキャンバスに戻る
@@ -379,10 +386,10 @@ export function update(delta)
 	const foot = getFoot(screenX, screenY);
 
 	//影の描画
-	drawShadow(ctx, foot);
+	drawShadow(foot);
 
 	//キャラクター描画
-	drawCharactor(ctx, asset, screenX, screenY);
+	drawCharactor(asset, screenX, screenY);
 
 	//吹き出し描画
 	if (bubbleTimer > 0)
@@ -392,12 +399,15 @@ export function update(delta)
 
 		//まだ時間が残っていれば、頭の少し上にふきだしを描画する
 		if (bubbleTimer > 0)
-			drawBubble(playerName + " ： " + bubbleText, screenX + SPRITE_WIDTH / 2, screenY - 5);
+		{
+			//描画
+			drawBubble(bubbleLines, screenX + SPRITE_WIDTH / 2, screenY - 5);
+		}
 	}
 }
 
 //影の描画
-function drawShadow(ctx, foot)
+function drawShadow(foot)
 {
 	//影の描画
 	utils2.drawCircle(
@@ -409,7 +419,7 @@ function drawShadow(ctx, foot)
 }
 
 //キャラクター描画
-function drawCharactor(ctx, asset, x, y)
+function drawCharactor(asset, x, y)
 {
 	// スプライトシートから該当コマだけを切り出して描画する
 	if (flip)
@@ -465,24 +475,15 @@ function wrapText(text, maxWidth)
 	return lines;
 }
 
-//バブル描画
-function drawBubble(text, x, y)
+//バブルの文字調整（改行・行数オーバー時の省略処理だけを行う）
+function adjustBubbleText(text)
 {
-	const maxBoxWidth = 197;	// ふきだしの最大の幅
-	const maxBoxHeight = 73;	// ふきだしの最大の高さ
-	const paddingX = 10;		// 文字の左右の余白
-	const paddingY = 6;		// 文字の上下の余白
-	const lineHeight = 20;		// 1行分の高さ（フォントサイズ14pxに行間を足した目安）
-
+	//フォントを先に設定しておく（measureTextの結果はフォント設定に依存するため）
 	ctx.font = bubbleFont;
 
-	// xを中心にして描く// yを縦方向の中心にして描く
-	ctx.textAlign = "center";
-	ctx.textBaseline = "middle";
-
 	// 実際に文字を置ける横幅・最大行数を、余白を引いて計算する
-	const maxTextWidth = maxBoxWidth - paddingX * 2;
-	const maxLines = Math.floor((maxBoxHeight - paddingY * 2) / lineHeight);
+	const maxTextWidth = BUBBLE_MAX_WIDTH - BUBBLE_PADDING_X * 2;
+	const maxLines = Math.floor((BUBBLE_MAX_HEIGHT - BUBBLE_PADDING_Y * 2) / BUBBLE_LINE_HEIGHT);
 
 	// 幅に収まるように、テキストを複数行に分割する
 	let lines = wrapText(text, maxTextWidth);
@@ -501,13 +502,26 @@ function drawBubble(text, x, y)
 		lines[maxLines - 1] = lastLine + "...";
 	}
 
+	return lines;
+}
+
+//バブル描画（文字の調整は行わず、渡された結果を使って描くだけ）
+function drawBubble(lines, x, y)
+{
+	//adjustBubbleTextで既に設定してある
+	//ctx.font = bubbleFont;
+
 	// 実際に表示する行の中で、一番幅が広い行に合わせて背景の横幅を決める（最大幅は超えない）
 	let widestLineWidth = 0;
 	for (const line of lines)
 		widestLineWidth = Math.max(widestLineWidth, ctx.measureText(line).width);
 
-	const boxWidth = Math.min(maxBoxWidth, widestLineWidth + paddingX * 2);
-	const boxHeight = lines.length * lineHeight + paddingY * 2;
+	const boxWidth = Math.min(BUBBLE_MAX_WIDTH, widestLineWidth + BUBBLE_PADDING_X * 2);
+	const boxHeight = lines.length * BUBBLE_LINE_HEIGHT + BUBBLE_PADDING_Y * 2;
+
+	// xを中心にして描く// yを縦方向の中心にして描く
+	ctx.textAlign = "center";
+	ctx.textBaseline = "middle";
 
 	// 四角の左上座標（xを中心にしたいので、幅の半分だけ左にずらす）
 	const boxX = x - boxWidth / 2;
@@ -521,12 +535,9 @@ function drawBubble(text, x, y)
 	ctx.fillStyle = bubbleColor;
 	for (let i = 0; i < lines.length; i++)
 	{
-		const lineY = boxY + paddingY + lineHeight * i + lineHeight / 2;
+		const lineY = boxY + BUBBLE_PADDING_Y + BUBBLE_LINE_HEIGHT * i + BUBBLE_LINE_HEIGHT / 2;
 		ctx.fillText(lines[i], x, lineY);
 	}
-
-	// 実際に画面へ描画した文字列を返す（複数行の場合は改行でつなげる）
-	return lines.join("\n");
 }
 
 /*divでチャットバブル表現
