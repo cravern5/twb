@@ -47,16 +47,22 @@ export const assetPaths =
 };
 
 //チャットバブル
-// chat.cssの「.logLine, #chatUnder input」と同じフォントを使うため、
-// 実際にそのCSSが当たっている要素（チャット入力欄）からフォント情報を読み取っておく
-const chatFontElement = document.getElementById("chatInput");
-const chatFontStyle = getComputedStyle(chatFontElement);
-// "font-size" と "font-family" をつなげて、ctx.fontで使える形の文字列にしておく
-// （毎フレーム計算すると無駄なので、最初に1回だけ作って使い回す）
-const bubbleFont = `${chatFontStyle.fontSize} ${chatFontStyle.fontFamily}`;
 export let bubbleText = null;	// 頭上に表示中のチャット内容（null＝非表示中）
 let bubbleTimer = 0;			// ふきだしが消えるまでの残り時間（秒）
 const BUBBLE_DURATION = 4;		// ふきだしを表示しておく秒数
+let bubbleFont = "14px 'MS PGothic', 'Meiryo', sans-serif";	//バブルフォント
+let bubbleColor = "#CEFFCE";								//バブル文字色
+let bubbleBackcolor = "rgba(0, 0, 0, 0.6)";				//バブル背景色
+
+//チャットバブル(css読み取り)
+const chatFontElement = document.getElementById("chatInput");
+if (chatFontElement)
+{
+	// "font-size" と "font-family" をつなげて、ctx.fontで使える形の文字列にしておく（毎フレーム計算すると無駄なので、最初に1回だけ作って使い回す）
+	const chatFontStyle = getComputedStyle(chatFontElement);
+	bubbleFont = chatFontStyle.fontSize && chatFontStyle.fontFamily ? (`${chatFontStyle.fontSize} ${chatFontStyle.fontFamily}`) : ("");
+	bubbleColor = chatFontStyle.color;
+}
 
 
 //初期化
@@ -353,37 +359,100 @@ function drawCharactor(ctx, asset, x, y)
 	}
 }
 
+//テキストを、指定した幅(maxWidth)に収まるように1行ずつ分割する
+function wrapText(text, maxWidth)
+{
+	const lines = [];		// 完成した行を入れていく配列
+	let currentLine = "";	// 今組み立て中の行
 
-//頭上のふきだしを描画する（背景の四角＋テキスト）
+	//1文字ずつ確認しながら、幅に収まる分だけ行を区切っていく
+	for (const char of text)
+	{
+		const testLine = currentLine + char;	// 1文字足してみたときの文字列
+
+		//1文字足すと幅をオーバーする場合は、そこで行を区切る
+		//（currentLineが空文字の場合は、1文字も入らないバグを防ぐためオーバーしても続行する）
+		if (ctx.measureText(testLine).width > maxWidth && currentLine !== "")
+		{
+			lines.push(currentLine);	// 今の行を確定
+			currentLine = char;			// 新しい行を、はみ出した1文字から開始
+		}
+		else
+		{
+			currentLine = testLine;
+		}
+	}
+
+	//最後まで作っていた行が残っていれば、それも追加する
+	if (currentLine !== "")
+		lines.push(currentLine);
+
+	return lines;
+}
+
+// ↑↑↑ ここまで追加 ↑↑↑
+
 function drawBubble(text, x, y)
 {
-	// chat.css の「.logLine, #chatUnder input」と同じフォントを指定する
+	const maxBoxWidth = 197;	// ふきだしの最大の幅
+	const maxBoxHeight = 73;	// ふきだしの最大の高さ
+	const paddingX = 10;		// 文字の左右の余白
+	const paddingY = 6;		// 文字の上下の余白
+	const lineHeight = 20;		// 1行分の高さ（フォントサイズ14pxに行間を足した目安）
+
 	ctx.font = bubbleFont;
-	if (!ctx.font)
-		ctx.font = "14px 'MS PGothic', 'Meiryo', sans-serif";
 
 	// xを中心にして描く// yを縦方向の中心にして描く
 	ctx.textAlign = "center";
 	ctx.textBaseline = "middle";
 
-	//文字の横幅を測って、背景の四角の大きさを決める
-	const textWidth = ctx.measureText(text).width;
-	const paddingX = 10;	// 文字の左右の余白
-	const paddingY = 6;	// 文字の上下の余白
-	const boxWidth = textWidth + paddingX * 2;
-	const boxHeight = 14 + paddingY * 2;	// 14はフォントサイズ分の目安の高さ
+	// 実際に文字を置ける横幅・最大行数を、余白を引いて計算する
+	const maxTextWidth = maxBoxWidth - paddingX * 2;
+	const maxLines = Math.floor((maxBoxHeight - paddingY * 2) / lineHeight);
+
+	// 幅に収まるように、テキストを複数行に分割する
+	let lines = wrapText(text, maxTextWidth);
+
+	// 表示できる行数をオーバーしていたら、最後の行を省略して"..."を付ける
+	if (lines.length > maxLines)
+	{
+		// 表示できる行数分だけ残す（はみ出した分は切り捨て）
+		lines = lines.slice(0, maxLines);
+
+		// 最後の行を、"..."を付けても幅に収まるまで、後ろから1文字ずつ削る
+		let lastLine = lines[maxLines - 1];
+		while (ctx.measureText(lastLine + "...").width > maxTextWidth && lastLine.length > 0)
+			lastLine = lastLine.slice(0, -1);
+
+		lines[maxLines - 1] = lastLine + "...";
+	}
+
+	// 実際に表示する行の中で、一番幅が広い行に合わせて背景の横幅を決める（最大幅は超えない）
+	let widestLineWidth = 0;
+	for (const line of lines)
+		widestLineWidth = Math.max(widestLineWidth, ctx.measureText(line).width);
+
+	const boxWidth = Math.min(maxBoxWidth, widestLineWidth + paddingX * 2);
+	const boxHeight = lines.length * lineHeight + paddingY * 2;
 
 	// 四角の左上座標（xを中心にしたいので、幅の半分だけ左にずらす）
 	const boxX = x - boxWidth / 2;
 	const boxY = y - boxHeight;
 
 	// 薄い黒背景の四角を描画
-	ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+	ctx.fillStyle = bubbleBackcolor;
 	ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
 
-	// 文字を描画（四角の縦方向の中央にくるように）
-	ctx.fillStyle = "#CEFFCE";
-	ctx.fillText(text, x, boxY + boxHeight / 2);
+	// 文字を1行ずつ描画する（各行が縦方向にも中央に来るように位置を計算）
+	ctx.fillStyle = bubbleColor;
+	for (let i = 0; i < lines.length; i++)
+	{
+		const lineY = boxY + paddingY + lineHeight * i + lineHeight / 2;
+		ctx.fillText(lines[i], x, lineY);
+	}
+
+	// 実際に画面へ描画した文字列を返す（複数行の場合は改行でつなげる）
+	return lines.join("\n");
 }
 
 /*divでチャットバブル表現
