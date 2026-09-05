@@ -24,7 +24,7 @@ export let currentFrame = 0; 				// 何コマ目を表示しているか(0番目
 //export const ANIMATION_SPEED = 10; 		// フレーム更新の速さ（値が小さいほど速い）
 export let FRAME_DURATION = 0.07;			// アニメーションの更新間隔（秒単位：例 0.1秒ごとに1コマ進める）
 export let frameTimer = 0;					// コマ切り替え用の経過時間カウンター
-export const MOVE_SPEED = 200; 				// 1秒あたりの移動ピクセル数
+export const MOVE_SPEED = 150; 				// 1秒あたりの移動ピクセル数
 export const MOVE_SPEED_X_RATIO = 1.66;		//横方向の体感速度を補正するための倍率、横長なほど横移動が遅く感じる
 //export const MOVE_SPEED_X = 330;			// 横移動の速さ（1秒あたりのピクセル数）
 //export const MOVE_SPEED_Y = 200;			// 縦移動の速さ（1秒あたりのピクセル数）
@@ -56,12 +56,19 @@ const chatArea = document.getElementById("chatArea");
 const chatInput = document.getElementById("chatInput");
 const chatLog = document.getElementById("chatLog");
 
-export let bubbleLines = null;	// 頭上に表示中のチャット内容
+let bubbleLines = null;	// 頭上に表示中のチャット内容
 let bubbleTimer = 0;			// ふきだしが消えるまでの残り時間（秒）
 const BUBBLE_DURATION = 4;		// ふきだしを表示しておく秒数
 let bubbleFont = "14px 'MS PGothic', 'Meiryo', sans-serif";	//バブルフォント
 let bubbleColor = "#CEFFCE";								//バブル文字色
 let bubbleBackcolor = "rgba(0, 0, 0, 0.6)";				//バブル背景色
+if (chatInput)
+{
+	// "font-size" と "font-family" をつなげて、ctx.fontで使える形の文字列にしておく（毎フレーム計算すると無駄なので、最初に1回だけ作って使い回す）
+	const chatFontStyle = getComputedStyle(chatInput);
+	bubbleFont = chatFontStyle.fontSize && chatFontStyle.fontFamily ? (`${chatFontStyle.fontSize} ${chatFontStyle.fontFamily}`) : ("");
+	bubbleColor = chatFontStyle.color;
+}
 
 //バブル用の各種サイズ設定（調整・描画の両方で使うので関数の外に出しておく）
 const BUBBLE_MAX_WIDTH = 197;	// ふきだしの最大の幅
@@ -70,13 +77,6 @@ const BUBBLE_PADDING_X = 10;	// 文字の左右の余白
 const BUBBLE_PADDING_Y = 6;	// 文字の上下の余白
 const BUBBLE_LINE_HEIGHT = 20;	// 1行分の高さ（フォントサイズ14pxに行間を足した目安）
 
-if (chatInput)
-{
-	// "font-size" と "font-family" をつなげて、ctx.fontで使える形の文字列にしておく（毎フレーム計算すると無駄なので、最初に1回だけ作って使い回す）
-	const chatFontStyle = getComputedStyle(chatInput);
-	bubbleFont = chatFontStyle.fontSize && chatFontStyle.fontFamily ? (`${chatFontStyle.fontSize} ${chatFontStyle.fontFamily}`) : ("");
-	bubbleColor = chatFontStyle.color;
-}
 
 
 //初期化
