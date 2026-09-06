@@ -124,10 +124,15 @@ canvas.addEventListener('touchcancel', (e) => input.getVirtualMove_touchend(e), 
 
 document.addEventListener('keydown', (e) =>
 {
+	const key = e.key.toLowerCase();
 	if (player.SendChat(e))//送信したらtrue
 	{
 	}
-	else if (e.key.toLowerCase() === "c")
+	else if (key === "insert")//座り
+	{
+		player.isSitting = !player.isSitting;
+	}
+	else if (key === "c")//チャット表示切替
 	{
 		windows.chatWindow.show(-1);
 	}
@@ -252,19 +257,19 @@ function animate(currentTime)
 {
 	if (!lastTime)
 		lastTime = currentTime;
+	// 前のフレームからの経過時間（秒単位）
+	const deltaTime = (currentTime - lastTime) / 1000;
 
-	// ゲーム状態の更新（移動速度などに deltaTime を掛ける）
+
 	try
 	{
-		// 前のフレームからの経過時間（秒単位）
-		const deltaTime = (currentTime - lastTime) / 1000;
-
+		// ゲーム状態の更新（移動速度などに deltaTime を掛ける）
 		update(deltaTime);
 		requestAnimationFrame(animate);
 	}
 	catch (e)
 	{
-		print("red", "animation: " + e.message);
+		print("error", "update function in error : " + e.message);
 	}
 
 	lastTime = currentTime;

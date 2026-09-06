@@ -13,7 +13,7 @@ import * as world from './world.js';
 export let playerName = "名無し";
 
 //キャラクター
-export let charactor = "maximin";
+export let character = "maximin";
 export let isSitting = false;				//立ち/座り
 export let isRunning = true; 				//走り/歩き
 export let state = "idle";
@@ -30,32 +30,25 @@ export const MOVE_SPEED_X_RATIO = 1.66;		//横方向の体感速度を補正す�
 //export const MOVE_SPEED_Y = 200;			// 縦移動の速さ（1秒あたりのピクセル数）
 export const SPRITE_WIDTH = 70;
 export const SPRITE_HEIGHT = 95;
-
 export let moveTarget = null;// マウスクリックで指定した「目的地」（ワールド座標）、null のときは目的地なし＝マウスでは移動していない状態
 const MOVE_TARGET_THRESHOLD = 4;// 目的地にどれだけ近づいたら「到着」とみなすか（px）
 
 //キャラクター画像
 export const assets = {};
-export const assetPaths =
-{
-	run_backside: '/assets/player/' + charactor + '/run/backside.png',
-	run_backward: '/assets/player/' + charactor + '/run/backward.png',
-	run_forside: '/assets/player/' + charactor + '/run/forside.png',
-	run_forward: '/assets/player/' + charactor + '/run/forward.png',
-	run_side: '/assets/player/' + charactor + '/run/side.png',
-
-	idle_backside: '/assets/player/' + charactor + '/idle/backside.png',
-	idle_backward: '/assets/player/' + charactor + '/idle/backward.png',
-	idle_forside: '/assets/player/' + charactor + '/idle/forside.png',
-	idle_forward: '/assets/player/' + charactor + '/idle/forward.png',
-	idle_side: '/assets/player/' + charactor + '/idle/side.png',
-};
+export const assetDir = '/assets/player';
+export const directions = ['forward', 'forside', 'side', 'backside', 'backward'];
+export const states = ["idle", "run", "sit", "walk"];
 
 //チャット
 const chatArea = document.getElementById("chatArea");
 const chatInput = document.getElementById("chatInput");
 const chatLog = document.getElementById("chatLog");
-
+//バブル用の各種サイズ設定（調整・描画の両方で使うので関数の外に出しておく）
+const BUBBLE_MAX_WIDTH = 197;	// ふきだしの最大の幅
+const BUBBLE_MAX_HEIGHT = 73;	// ふきだしの最大の高さ
+const BUBBLE_PADDING_X = 10;	// 文字の左右の余白
+const BUBBLE_PADDING_Y = 6;	// 文字の上下の余白
+const BUBBLE_LINE_HEIGHT = 20;	// 1行分の高さ（フォントサイズ14pxに行間を足した目安）
 let bubbleLines = null;	// 頭上に表示中のチャット内容
 let bubbleTimer = 0;			// ふきだしが消えるまでの残り時間（秒）
 const BUBBLE_DURATION = 4;		// ふきだしを表示しておく秒数
@@ -70,36 +63,39 @@ if (chatInput)
 	bubbleColor = chatFontStyle.color;
 }
 
-//バブル用の各種サイズ設定（調整・描画の両方で使うので関数の外に出しておく）
-const BUBBLE_MAX_WIDTH = 197;	// ふきだしの最大の幅
-const BUBBLE_MAX_HEIGHT = 73;	// ふきだしの最大の高さ
-const BUBBLE_PADDING_X = 10;	// 文字の左右の余白
-const BUBBLE_PADDING_Y = 6;	// 文字の上下の余白
-const BUBBLE_LINE_HEIGHT = 20;	// 1行分の高さ（フォントサイズ14pxに行間を足した目安）
-
-
-
 //初期化
 export async function init()
 {
 	//this.onChat = this.onChat.bind(this);
 	socket.callbacks.onchat = onChat;
 
-	//画像読み込み　ループで一気に Image オブジェクトを作る
-	for (const [key, path] of Object.entries(assetPaths))
+	//画像読み込み ループで一気に Image オブジェクトを作る
+	//キャラ状態
+	for (const stt of states)
 	{
-		try
+		//方向
+		for (const dir of directions)
 		{
-			assets[key] = [];
-			assets[key].img = await utils2.loadImage(path);
-			assets[key].frameWidth = SPRITE_WIDTH;
-			assets[key].frameHeight = SPRITE_HEIGHT;
-			assets[key].frameCount = assets[key].img.width / assets[key].frameWidth;
+			const path = assetDir + "/" + character + "/" + stt + "/" + dir + ".png";
+			const key = character + "_" + stt + "_" + dir;
+			/*if (character === "maximin" && stt === "idle" && dir === "forward")
+			{
+				let a = 1;
+				a = 2;
+			}*/
+			try
+			{
+				assets[key] = [];
+				assets[key].img = await utils2.loadImage(path);
+				assets[key].frameWidth = SPRITE_WIDTH;
+				assets[key].frameHeight = SPRITE_HEIGHT;
+				assets[key].frameCount = assets[key].img.width / assets[key].frameWidth;
 
-		}
-		catch (e)
-		{
-			addLog("ERROR", "プレイヤーファイル読み込みエラー：" + key + " " + e.message);
+			}
+			catch (e)
+			{
+				addLog("ERROR", "プレイヤーファイル読み込みエラー：" + path + " " + e.message);
+			}
 		}
 	}
 }
@@ -111,7 +107,7 @@ export function getFoot(screenX, screenY)
 }
 
 //キーボードのw/a/s/dが押されているかどうか
-function isKeyMoving(key = input.keysPress)
+export function isKeyMoving(key = input.keysPress)
 {
 	return (key.w || key.a || key.s || key.d);
 }
@@ -359,8 +355,13 @@ export function update(delta)
 	}
 
 	//addLog("direction:" + olddirection + "→" + direction + " state:" + oldstate + "→" + state);
-
-	let asset = assets[state + "_" + direction];
+	const stateKey = character + "_" + state + "_" + direction;
+	const asset = assets[stateKey];
+	if (!asset)
+	{
+		print("error", "指定されたステートイメージはありません(" + stateKey + ")")
+		return;
+	}
 
 	//実際に経過した時間(delta)を加算する
 	frameTimer += delta;
@@ -389,7 +390,7 @@ export function update(delta)
 	drawShadow(foot);
 
 	//キャラクター描画
-	drawCharactor(asset, screenX, screenY);
+	drawCharacter(asset, screenX, screenY);
 
 	//吹き出し描画
 	if (bubbleTimer > 0)
@@ -407,7 +408,7 @@ export function update(delta)
 }
 
 //影の描画
-function drawShadow(foot)
+export function drawShadow(foot)
 {
 	//影の描画
 	utils2.drawCircle(
@@ -419,33 +420,40 @@ function drawShadow(foot)
 }
 
 //キャラクター描画
-function drawCharactor(asset, x, y)
+export function drawCharacter(asset, x, y)
 {
-	// スプライトシートから該当コマだけを切り出して描画する
-	if (flip)
+	try
 	{
-		//描画状態（座標系の回転・拡大縮小・移動、透過度、塗りつぶし色など）をスタックに保存・復元するための命令
-		ctx.save();
-		ctx.scale(-1, 1);
-		ctx.drawImage(
-			asset.img,
-			currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
-			-x - asset.frameWidth, y, asset.frameWidth, asset.frameHeight
-		);
-		ctx.restore();
+		// スプライトシートから該当コマだけを切り出して描画する
+		if (flip)
+		{
+			//描画状態（座標系の回転・拡大縮小・移動、透過度、塗りつぶし色など）をスタックに保存・復元するための命令
+			ctx.save();
+			ctx.scale(-1, 1);
+			ctx.drawImage(
+				asset.img,
+				currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
+				-x - asset.frameWidth, y, asset.frameWidth, asset.frameHeight
+			);
+			ctx.restore();
+		}
+		else
+		{
+			ctx.drawImage(
+				asset.img,
+				currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
+				x, y, asset.frameWidth, asset.frameHeight
+			);
+		}
 	}
-	else
+	catch (e)
 	{
-		ctx.drawImage(
-			asset.img,
-			currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
-			x, y, asset.frameWidth, asset.frameHeight
-		);
+		print("error", "キャラクター描画でエラーが発生しました " + e.message);
 	}
 }
 
 //テキストを、指定した幅(maxWidth)に収まるように1行ずつ分割する
-function wrapText(text, maxWidth)
+export function wrapText(text, maxWidth)
 {
 	const lines = [];		// 完成した行を入れていく配列
 	let currentLine = "";	// 今組み立て中の行
@@ -476,7 +484,7 @@ function wrapText(text, maxWidth)
 }
 
 //バブルの文字調整（改行・行数オーバー時の省略処理だけを行う）
-function adjustBubbleText(text)
+export function adjustBubbleText(text)
 {
 	//フォントを先に設定しておく（measureTextの結果はフォント設定に依存するため）
 	ctx.font = bubbleFont;
@@ -506,7 +514,7 @@ function adjustBubbleText(text)
 }
 
 //バブル描画（文字の調整は行わず、渡された結果を使って描くだけ）
-function drawBubble(lines, x, y)
+export function drawBubble(lines, x, y)
 {
 	//adjustBubbleTextで既に設定してある
 	//ctx.font = bubbleFont;
@@ -540,46 +548,7 @@ function drawBubble(lines, x, y)
 	}
 }
 
-/*divでチャットバブル表現
 
-function update(delta)
-{
-		//時間切れになったら非表示にする
-		if (bubbleTimer <= 0)
-		{
-			bubbleElement.style.display = 'none';
-		}
-		else
-		{
-			//canvas自体が画面上のどこにあるかを取得する
-			//（screenX/screenYは「canvasの中での位置」なので、ページ全体での位置に変換する必要がある）
-			const canvasRect = canvas.getBoundingClientRect();
-
-			//キャラクターの頭の少し上にふきだしが来るように位置を計算する
-			bubbleElement.style.left = (canvasRect.left + screenX + SPRITE_WIDTH / 2) + "px";
-			bubbleElement.style.top = (canvasRect.top + screenY - 10) + "px";
-		}
-}
-
-// ふきだし用のHTML要素を、最初に1つだけ作って画面(body)に追加しておく
-// （毎回作り直すと重くなるので、使い回す）
-const bubbleElement = document.createElement('div');
-bubbleElement.className = 'chat-bubble';	// chat.cssで定義済みの見た目を適用
-bubbleElement.style.display = 'none';		// 最初は非表示にしておく
-document.body.appendChild(bubbleElement);
-
-//頭上にチャット内容のふきだしを表示する
-export function showBubble(text)
-{
-	//表示するテキストと、残り表示時間をセット
-	bubbleText = text;
-	bubbleTimer = BUBBLE_DURATION;
-
-	//ふきだしの中身を書き換えて、見えるようにする
-	bubbleElement.textContent = text;
-	bubbleElement.style.display = 'block';
-}
-*/
 
 
 
