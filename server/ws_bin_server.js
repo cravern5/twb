@@ -20,7 +20,7 @@ export function init(server)
 	// サーバーが正常に「待ち受け状態」になったら実行
 	wss.on('listening', () =>
 	{
-		print("green", `✅ WebSocketサーバーがポート (${PORT}) で起動しました！`);
+		print("green", `✅ WebSocketサーバーを起動しました: PORT (${PORT})`);
 	});
 
 	wss.on('error', (err) =>

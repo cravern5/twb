@@ -303,6 +303,6 @@ export function init(api)
 	//Render/Koyebともに「0.0.0.0（すべての受信を待ち受ける）にバインドすること」を推奨しています
 	server.listen(PORT, '0.0.0.0', () =>
 	{
-		print("green", `✅ webサーバーが起動しました: http://localhost:${PORT}`);
+		print("green", `✅ HTTPサーバーを起動しました: http://localhost:${PORT}`);
 	});
 }
