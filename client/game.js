@@ -310,11 +310,12 @@ function showModelDebugInfo()
 		+ "\n width:" + canvas.width + " height:" + canvas.height
 		+ "\n[Performance]"
 		+ "\n FPS:" + fps
-		+ "\n chatLog件数:" + chatLog.children.length
+		+ "\n Log:" + chatLog.children.length
 		+ "\n[World]"
-		+ "\n camera.x:" + world.camera.x.toFixed(3) + " camera.y:" + world.camera.y.toFixed(3)
+		+ "\n camera.x:" + world.camera.x.toFixed(1) + " camera.y:" + world.camera.y.toFixed(1)
 		+ "\n[Player]"
-		+ "\n position.x:" + player.position.x.toFixed(3) + " position.y:" + player.position.y.toFixed(3)
+		+ "\n ID:" + socket.myPlayerId
+		+ "\n position.x:" + player.position.x.toFixed(1) + " position.y:" + player.position.y.toFixed(1)
 		+ "\n state:" + player.state + " direction:" + player.direction + " flip:" + player.flip
 		+ "\n[Network]"
 		+ Player.players

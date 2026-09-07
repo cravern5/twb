@@ -271,7 +271,7 @@ export class Player
 
 
 		// 動いていない場合は、直前の向きをそのまま維持する
-		if (move.x === 0 || move.y === 0)
+		if (move.x === 0 && move.y === 0)
 			s = "idle";
 		else
 		{
@@ -287,7 +287,7 @@ export class Player
 			switch (octant)
 			{
 				case 0: d = 'side'; f = true; break;			// 右
-				case 1: d = 'forside'; f = true; break;		// 右下（左下を反転）
+				case 1: d = 'forside'; f = true; break;			// 右下（左下を反転）
 				case 2: d = 'forward'; f = false; break;		// 下
 				case 3: d = 'forside'; f = false; break;		// 左下
 				case 4: d = 'side'; f = false; break;			// 左
@@ -359,7 +359,7 @@ export class Player
 		if (this.receiveCountTimer >= 1)
 		{
 			this.receivePerSecond = this.receiveCount;		// 直近1秒間の受信回数を「表示用の値」として確定
-			this.receiveCount = 0;						// カウンターを0に戻して次の1秒を数え直す
+			this.receiveCount = 0;							// カウンターを0に戻して次の1秒を数え直す
 			this.receiveCountTimer %= 1;					// 1秒を超えた余り時間は次に繰り越す（ずれ防止）
 		}
 
@@ -676,7 +676,7 @@ export function onState(id, x, y, stateIndex, directionIndex, flip)
 		return;
 	}
 
-	//デバッグ用の受信間隔計測（座標を書き換えるより前に測る）
+	//デバッグ用の受信間隔計測
 	const now = performance.now();							// 現在時刻をミリ秒の高精度な値で取得
 	if (player.lastReceiveTime !== null)					// 2回目以降の受信のときだけ間隔を計算できる
 		player.lastReceiveInterval = now - player.lastReceiveTime;	// 前回受信からの経過時間
