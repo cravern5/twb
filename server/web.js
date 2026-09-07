@@ -143,6 +143,8 @@ function plainWrite(res, code, message, contents = null, contentType = { 'Conten
 		//それ以外（オブジェクトやnullなど）はJSON化して返す
 		else if (contents)
 			res.end(JSON.stringify({ code: code, message: message, contents: contents }));
+		else
+			res.end(JSON.stringify({ code: code, message: message }));
 	}
 }
 
@@ -196,6 +198,13 @@ export function init(api)
 
 				//URLをきれいにして(見た目上)、ベースディレクトリ+指定パス結合
 				const filePath = path.resolve(baseDir, '.' + path.normalize(relativePath));
+
+				if (/maximin[/\\]idle[/\\]forward\.png$/.test(filePath))
+				{
+					let a = 1;
+				}
+
+
 				//兄弟誤判定が無いように末尾に区切りをつける
 				const pubSep = baseDir.endsWith(path.sep) ? baseDir : baseDir + path.sep;
 
