@@ -9,6 +9,7 @@ import { canvas, ctx } from './engine.js';
 import { MAP_WIDTH, MAP_HEIGHT, camera } from './world.js';
 import * as world from './world.js';
 
+//プレイヤー======================================
 //キャラクター
 export const SPRITE_WIDTH = 70;		//キャラ画像1コマの幅
 export const SPRITE_HEIGHT = 95;	//キャラ画像1コマの高さ
@@ -34,19 +35,6 @@ const BUBBLE_LINE_HEIGHT = 20;	// 1行分の高さ（フォントサイズ14px�
 const BUBBLE_DURATION = 4;		// ふきだしを表示しておく秒数
 
 
-//プレイヤー管理
-export let players = [];
-
-export async function addPlayer(id, playerName, character)
-{
-	const player = await new Player(id, playerName, character).init();
-	players.push(player);
-
-	return player;
-}
-
-
-//プレイヤークラス
 export class Player
 {
 	constructor(id, playerName, character)
@@ -82,8 +70,10 @@ export class Player
 			this.bubbleColor = chatFontStyle.color;
 		}
 
-		socket.callbacks.onchat = this.onChat.bind(this);
+		//他プレイヤーが含まれるのでここでは書かない
 		//this.socket.callbacks.onchat = onChat;
+		//socket.callbacks.onchat = this.onChat.bind(this);
+		//socket.callbacks.onmove = this.onMove.bind(this);
 	}
 
 	//初期化
@@ -133,21 +123,12 @@ export class Player
 	}
 
 	//ワールド座標取得
-	getWorldPosition()
+	getWorldPosition(pos)
 	{
 		const x = this.position.x + SPRITE_WIDTH / 2;
 		const y = this.position.y + SPRITE_HEIGHT / 2;
 		return { x: x, y: y };
 	}
-
-	//移動しているかどうか（キーボード操作 or バーチャル十字キー or マウスの目的地移動）
-	/*isMoving()
-	{
-		const key = input.keysPress;
-		const keyMoving = key.w || key.a || key.s || key.d;
-		const virtualMoving = (input.virtualMove.x !== 0 || input.virtualMove.y !== 0);
-		return keyMoving || virtualMoving || moveTarget !== null;
-	}*/
 
 	//キーの移動量取得
 	getMovement()
@@ -240,6 +221,9 @@ export class Player
 			this.position.x = Math.max(0, Math.min(MAP_WIDTH - SPRITE_WIDTH, this.position.x));
 			this.position.y = Math.max(0, Math.min(MAP_HEIGHT - SPRITE_HEIGHT, this.position.y));
 		}
+
+		// 自分の位置が変わったので、サーバーへ現在地を送信する
+		socket.sendMove(this.position.x, this.position.y);
 	}
 
 	//キャラ(状態、方向、反転)の設定
@@ -292,15 +276,6 @@ export class Player
 	setMoveTarget(x, y)
 	{
 		this.moveTarget = { x, y };
-	}
-
-	//チャット受信
-	onChat(text)
-	{
-		addLog("INFO", text);
-
-		//表示するテキストの残り表示時間をセット
-		this.bubbleTimer = BUBBLE_DURATION;
 	}
 
 	//チャット送信
@@ -381,10 +356,7 @@ export class Player
 
 		//状態変化
 		if (this.updateState(move))
-		{
-			//状態変化したらフレームは最初に
-			this.currentFrame = 0;
-		}
+			this.currentFrame = 0;	//状態変化したらフレームは最初に
 
 		//addLog("direction:" + olddirection + "→" + direction + " state:" + oldstate + "→" + state);
 		const stateKey = this.character + "_" + this.state + "_" + this.direction;

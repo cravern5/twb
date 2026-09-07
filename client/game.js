@@ -19,24 +19,29 @@ let player = null;
 //初期化
 async function init()
 {
-	//データ読み込み
-	const playerName = localStorage.getItem('playerName');
-	const character = localStorage.getItem('character');
-
-
 	engine.init(); engine.updateProgress();
 	windows.init(); engine.updateProgress();
 	socket.init(); engine.updateProgress();
 	//scroll.init(); updateProgress();
 	await world.init(); engine.updateProgress();
-	await Player.addPlayer(0, playerName, character); engine.updateProgress();
 
-	await Player.addPlayer(1, "ていち", "tichiel");
-
-	player = Player.players[0];
+	//await Player.addPlayer(0, playerName, character);
+	//player = Player.players[0];
+	//await Player.addPlayer(1, "ていち", "tichiel");
 
 	engine.endProgress();
 }
+
+//ログイン
+export async function onWelcome(id)
+{
+	//データ読み込み
+	const playerName = localStorage.getItem('playerName');
+	const character = localStorage.getItem('character');
+
+	player = await socket.addPlayer(id, playerName, character);
+}
+
 
 ///////イベント//////////
 
@@ -71,8 +76,6 @@ chatMail.addEventListener('click', (e) =>
 	windows.debugInfo.show(-1);
 });
 
-
-
 //BGM再生
 chatEmote.addEventListener('click', (e) =>
 {
@@ -82,7 +85,6 @@ chatEmote.addEventListener('click', (e) =>
 	sound.setBGM(fileBGM).play();
 
 });
-
 
 // chatRange非表示
 document.addEventListener('click', (e) =>
@@ -130,7 +132,6 @@ document.addEventListener('keydown', (e) =>
 		input.getKeyState_keydown(e);
 	}
 });
-
 
 document.addEventListener('keyup', (e) =>
 {
@@ -223,6 +224,9 @@ window.addEventListener('load', () =>
 let firstUpdate = false;
 function update(delta)
 {
+	if (!player)
+		return;
+
 	// カメラ計算のため、プレイヤーの中心座標を渡す
 	const center = player.getWorldPosition();
 
@@ -230,7 +234,7 @@ function update(delta)
 	world.update(delta, center.x, center.y);
 
 	//プレイヤー画面更新
-	Player.players.forEach((p) =>
+	socket.players.forEach((p) =>
 	{
 		p.update(delta);
 	});
