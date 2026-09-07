@@ -16,7 +16,7 @@ export async function init()
 }
 
 // プレイヤーの中心座標をもとに、カメラの位置を計算する関数
-function updateCamera(targetX, targetY)
+export function updateCamera(targetX, targetY)
 {
 	// プレイヤーが常に画面の中心に来るように、カメラの左上座標を逆算する
 	camera.x = targetX - canvas.width / 2;
@@ -30,13 +30,10 @@ function updateCamera(targetX, targetY)
 
 
 //画面更新
-export function update(delta, centerX, centerY)
+export function update(delta)
 {
 	// 1. フレームの最初にキャンバス全体をクリア
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-	// プレイヤー位置に合わせてカメラを更新
-	updateCamera(centerX, centerY);
 
 	// 中央固定の切り出しではなく、カメラ位置を基準にマップを切り出す
 	ctx.drawImage(

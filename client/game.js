@@ -228,10 +228,13 @@ function update(delta)
 		return;
 
 	// カメラ計算のため、プレイヤーの中心座標を渡す
-	const center = player.getWorldPosition();
+	const center = player.getCenterPosition();
+
+	// プレイヤー位置に合わせてカメラを更新
+	world.updateCamera(center.x, center.y);
 
 	//マップ描画
-	world.update(delta, center.x, center.y);
+	world.update(delta);
 
 	//プレイヤー画面更新
 	socket.players.forEach((p) =>

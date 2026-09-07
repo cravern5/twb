@@ -25,7 +25,7 @@ export function repaint()
 
 // プログレスバーとテキストの更新=================
 let loadedCount = 0;
-let loadTotal = 5;
+let loadTotal = 4;
 const loadingScreen = document.getElementById('loading-screen');
 const loadingText = document.getElementById('loading-text');
 const progressBar = document.getElementById('progress-bar');

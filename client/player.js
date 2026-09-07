@@ -122,12 +122,26 @@ export class Player
 		return { x: screenX + SPRITE_WIDTH / 2 + 0, y: screenY + SPRITE_HEIGHT - 14.5 };
 	}
 
-	//ワールド座標取得
-	getWorldPosition(pos)
+	//中央の座標取得
+	getCenterPosition(pos)
 	{
 		const x = this.position.x + SPRITE_WIDTH / 2;
 		const y = this.position.y + SPRITE_HEIGHT / 2;
 		return { x: x, y: y };
+	}
+
+	//マウス移動
+	mousedown(e)
+	{
+		// キャンバス上を左クリックしたら、その場所を目的地にして歩き出す
+		if (input.mouseInfo.left && e.target === engine.canvas)
+		{
+			// 画面上のクリック位置(clientX/Y)にカメラのズレ(camera.x/y)を足して、マップ上の座標に変換する
+			const worldX = e.clientX + world.camera.x;
+			const worldY = e.clientY + world.camera.y;
+
+			this.moveTarget = { x: worldX, y: worldY };
+		}
 	}
 
 	//キーの移動量取得
@@ -272,12 +286,6 @@ export class Player
 		return changed;
 	}
 
-	// クリックした場所を目的地として登録する関数(game.jsなどで呼び出し用)
-	setMoveTarget(x, y)
-	{
-		this.moveTarget = { x, y };
-	}
-
 	//チャット送信
 	SendChat(e)
 	{
@@ -328,20 +336,6 @@ export class Player
 		{
 			//チャットバーにフォーカスがある状態でのキー入力
 			return document.activeElement === chatInput;
-		}
-	}
-
-	//マウス移動
-	mousedown(e)
-	{
-		// キャンバス上を左クリックしたら、その場所を目的地にして歩き出す
-		if (input.mouseInfo.left && e.target === engine.canvas)
-		{
-			// 画面上のクリック位置(clientX/Y)にカメラのズレ(camera.x/y)を足して、マップ上の座標に変換する
-			const worldX = e.clientX + world.camera.x;
-			const worldY = e.clientY + world.camera.y;
-
-			this.setMoveTarget(worldX, worldY);
 		}
 	}
 
