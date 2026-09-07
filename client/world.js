@@ -44,6 +44,4 @@ export function update(delta, centerX, centerY)
 		camera.x, camera.y, canvas.width, canvas.height, // カメラ位置から画面サイズ分だけ切り抜き
 		0, 0, canvas.width, canvas.height                // 画面全体に1:1の等倍サイズで描画
 	);
-
-
 }

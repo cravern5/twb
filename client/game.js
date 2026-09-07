@@ -29,7 +29,11 @@ async function init()
 	socket.init(); engine.updateProgress();
 	//scroll.init(); updateProgress();
 	await world.init(); engine.updateProgress();
-	player = await Player.addPlayer(0, playerName, character); engine.updateProgress();
+	await Player.addPlayer(0, playerName, character); engine.updateProgress();
+
+	await Player.addPlayer(1, "ていち", "tichiel");
+
+	player = Player.players[0];
 
 	engine.endProgress();
 }
@@ -100,8 +104,7 @@ chatFixedText.addEventListener('click', (e) =>
 });
 
 
-// バーチャル十字キー（スマホの画面左半分でのタッチ操作）
-// passive: true だと preventDefault が無視されます
+// バーチャル十字キー（スマホの画面左半分でのタッチ操作）// passive: true だと preventDefault が無視されます
 canvas.addEventListener('touchstart', (e) => input.getVirtualMove_touchstart(e), { passive: false });
 canvas.addEventListener('touchmove', (e) => input.getVirtualMove_touchmove(e), { passive: false });
 canvas.addEventListener('touchend', (e) => input.getVirtualMove_touchend(e), { passive: false });
@@ -201,10 +204,8 @@ window.addEventListener('resize', () =>
 	engine.repaint();
 
 	//はみ出し抑制
-	windows.windows.forEach(win => 
-	{
-		win.insideScreen();
-	});
+	//for (const win of windows.windows) { win.insideScreen(); }
+	windows.windows.forEach(win => { win.insideScreen(); });
 });
 
 // ページ読み込み時
@@ -229,8 +230,10 @@ function update(delta)
 	world.update(delta, center.x, center.y);
 
 	//プレイヤー画面更新
-	player.update(delta);
-
+	Player.players.forEach((p) =>
+	{
+		p.update(delta);
+	});
 
 	firstUpdate = true;
 }

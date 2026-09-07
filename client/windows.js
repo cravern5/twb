@@ -316,19 +316,6 @@ class WindowController
 		if (!this.container)
 			return;
 
-		/*
-		// 画面に対する現在の相対位置（割合: 0.0 ～ 1.0）を記録する変数
-		this._saveRelativePos = { xRate: 0.5, yRate: 0.5 };
-		this._saveRect = this.container.getBoundingClientRect();//相対位置
-		this._saveRelativePos.xRate = this._saveRect.left / window.innerWidth;
-		this._saveRelativePos.yRate = this._saveRect.top / window.innerHeight;
-
-		// 保存しておいた割合から一旦のpx位置を計算
-		this.newLeft = window.innerWidth * this._saveRelativePos.xRate;
-		this.newTop = window.innerHeight * this._saveRelativePos.yRate;
-		*/
-
-
 		// 画面に対する現在の相対位置（割合: 0.0 ～ 1.0）を記録する変数
 		this._saveRelativePos = { xRate: 0.5, yRate: 0.5 };
 		this._saveRect = this.container.getBoundingClientRect();//相対位置
@@ -349,21 +336,6 @@ class WindowController
 	{
 		if (!this.container)
 			return;
-
-		/*	
-		let newLeft = window.innerWidth * this._saveRelativePos.xRate;
-			let newTop = window.innerHeight * this._saveRelativePos.yRate;
-	
-			// bottom/right や transform による影響を打ち消す場合は以下を指定
-			this.container.style.bottom = 'auto';
-			this.container.style.transform = 'none';
-	
-			// CSSのスタイルを更新（transform等で中央寄せしている場合は記述に合わせて調整）
-			this.container.style.left = `${newLeft}px`;
-			this.container.style.top = `${newTop}px`;
-		*/
-
-
 
 		// 現在の要素サイズを取得（中心位置からleft/topへ逆算するために必要）
 		const rect = this.container.getBoundingClientRect();

@@ -22,9 +22,9 @@ export const MOVE_TARGET_THRESHOLD = 4;				// 目的地にどれだけ近づい�
 export const FRAME_DURATION = 0.07;					// アニメーションの更新間隔（秒単位：例 0.1秒ごとに1コマ進める）
 
 //チャット
-const chatArea = document.getElementById("chatArea");
+//const chatArea = document.getElementById("chatArea");
 const chatInput = document.getElementById("chatInput");
-const chatLog = document.getElementById("chatLog");
+//const chatLog = document.getElementById("chatLog");
 //バブル用の各種サイズ設定（調整・描画の両方で使うので関数の外に出しておく）
 const BUBBLE_MAX_WIDTH = 197;	// ふきだしの最大の幅
 const BUBBLE_MAX_HEIGHT = 73;	// ふきだしの最大の高さ
@@ -35,12 +35,11 @@ const BUBBLE_DURATION = 4;		// ふきだしを表示しておく秒数
 
 
 //プレイヤー管理
-export let player = null;
 export let players = [];
 
 export async function addPlayer(id, playerName, character)
 {
-	player = await new Player(0, playerName, character).init();
+	const player = await new Player(id, playerName, character).init();
 	players.push(player);
 
 	return player;
@@ -108,12 +107,14 @@ export class Player
 				}
 				try
 				{
+					//画像が無い場合ここでエラーでキーを作らないようにする
+					const img = await utils2.loadImage(path);
+
 					this.assets[key] = [];
-					this.assets[key].img = await utils2.loadImage(path);
+					this.assets[key].img = img;
 					this.assets[key].frameWidth = SPRITE_WIDTH;
 					this.assets[key].frameHeight = SPRITE_HEIGHT;
 					this.assets[key].frameCount = this.assets[key].img.width / this.assets[key].frameWidth;
-
 				}
 				catch (e)
 				{
@@ -329,10 +330,10 @@ export class Player
 				else
 				{
 					//ログに送られる文字列
-					const sendText = playerName + " ： " + text;
+					const sendText = this.playerName + " ： " + text;
 
 					//バブル表示用テキストセット
-					bubbleLines = this.adjustBubbleText(sendText);
+					this.bubbleLines = this.adjustBubbleText(sendText);
 					//改行を取り除いて1行のテキストにする（\r\nの場合も考慮）
 					//const oneLineText = text.replace(/\r?\n/g, "");
 
@@ -433,7 +434,7 @@ export class Player
 			if (this.bubbleTimer > 0)
 			{
 				//描画
-				this.rawBubble(this.bubbleLines, screenX + SPRITE_WIDTH / 2, screenY - 5);
+				this.drawBubble(this.bubbleLines, screenX + SPRITE_WIDTH / 2, screenY - 5);
 			}
 		}
 	}
@@ -525,7 +526,7 @@ export class Player
 		const maxLines = Math.floor((BUBBLE_MAX_HEIGHT - BUBBLE_PADDING_Y * 2) / BUBBLE_LINE_HEIGHT);
 
 		// 幅に収まるように、テキストを複数行に分割する
-		let lines = wrapText(text, maxTextWidth);
+		let lines = this.wrapText(text, maxTextWidth);
 
 		// 表示できる行数をオーバーしていたら、最後の行を省略して"..."を付ける
 		if (lines.length > maxLines)
