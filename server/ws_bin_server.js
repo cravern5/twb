@@ -40,6 +40,8 @@ export function init(server)
 	{
 		//ID作成
 		ws.playerId = playerCount;
+		//このクライアントが最後に送ってきたSTATEパケット（Buffer）をキャッシュ、まだ一度もSTATEを送ってきていない場合はnull
+		ws.lastStateBuffer = null;
 		playerCount++;
 		print("white", '新しいプレイヤーが接続しました！(' + ws.playerId + ')');
 
@@ -76,6 +78,10 @@ export function init(server)
 
 				// 他の全員にではなく、新しく入ってきた本人(ws)にだけ送る
 				ws.send(existingJoinPacket, { binary: true });
+
+				// 既存プレイヤーが一度でもSTATEを送ってきていれば、そのままキャッシュ済みSTATEを送る
+				if (client.lastStateBuffer)
+					ws.send(client.lastStateBuffer, { binary: true });
 			}
 		});
 
@@ -105,6 +111,9 @@ export function init(server)
 			{
 				// タイプ1byte + ID(2byte) + Float32×2(8byte) + 状態(1byte) + 向き(1byte) + 反転(1byte) = 14バイト
 				if (data.length < 14) return;
+
+				// 次に誰かが新規接続してきたとき、この人の紹介用に使えるよう最新状態を保存しておく
+				ws.lastStateBuffer = Buffer.from(data);
 			}
 			// クライアントからチャット受信
 			else if (dataType === PACKET_TYPE.CHAT)
