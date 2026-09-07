@@ -9,13 +9,13 @@ import * as socket from './ws_bin_client.js';
 import * as input from './input.js';
 import { keys, keysPress, mouseInfo } from './input.js';
 import * as world from './world.js';
-import * as player from './player.js';
+import * as Player from './player.js';
 import * as scroll from './scroll.js';
 import * as sound from './sound.js';
 
 // プログレスバーとテキストの更新
 let loadedCount = 0;
-let loadTotal = 6;
+let loadTotal = 5;
 const loadingScreen = document.getElementById('loading-screen');
 const loadingText = document.getElementById('loading-text');
 const progressBar = document.getElementById('progress-bar');
@@ -27,6 +27,8 @@ function updateProgress()
 	progressBar.style.width = `${percentage}%`;
 }
 
+let player = null;
+
 //初期化
 async function init()
 {
@@ -35,17 +37,19 @@ async function init()
 	socket.init(); updateProgress();
 	//scroll.init(); updateProgress();
 
-	await player.init(); updateProgress();
 	await world.init(); updateProgress();
+
+	//データ読み込み
+	const playerName = localStorage.getItem('playerName');
+	const character = localStorage.getItem('character');
+
+	//await player.init(); updateProgress();
+	player = await Player.addPlayer(0, playerName, character); updateProgress();
 
 	// 画面をフェードアウトして非表示にする
 	loadingScreen.style.opacity = '0';
 	//loadingScreen.style.display = 'none';
 	setTimeout(() => { loadingScreen.style.display = 'none'; });
-
-
-	const charName = localStorage.getItem('charName');
-	const charType = localStorage.getItem('charType');
 }
 
 ///////イベント//////////
@@ -238,11 +242,10 @@ let firstUpdate = false;
 function update(delta)
 {
 	// カメラ計算のため、プレイヤーの中心座標を渡す
-	const centerX = player.position.x + player.SPRITE_WIDTH / 2;
-	const centerY = player.position.y + player.SPRITE_HEIGHT / 2;
+	const center = player.getWorldPosition();
 
 	//マップ描画
-	world.update(delta, centerX, centerY);
+	world.update(delta, center.x, center.y);
 
 	//プレイヤー画面更新
 	player.update(delta);

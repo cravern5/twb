@@ -370,12 +370,12 @@
 				<h3 class="box-title">ゲームスタート</h3>
 				<form class="character-form" id="character-form">
 					<div class="form-group">
-						<label for="char-name">キャラクター名</label>
-						<input type="text" id="char-name" class="form-input" placeholder="名前を入力してください">
+						<label for="playerName">プレイヤー名</label>
+						<input type="text" id="playerName" class="form-input" placeholder="名前を入力してください">
 					</div>
 					<div class="form-group">
-						<label for="char-type">キャラクター選択</label>
-						<select id="char-type" class="form-select">
+						<label for="character">キャラクター選択</label>
+						<select id="character" class="form-select">
 							<option value="maximin">マキシミン</option>
 							<option value="tichiel">ティチエル</option>
 						</select>
@@ -478,13 +478,13 @@
         event.preventDefault();
 
         // 入力欄・選択欄から値を取り出す
-        const charName = document.getElementById('char-name').value;
-        const charType = document.getElementById('char-type').value;
+        const playerName = document.getElementById('playerName').value;
+        const character = document.getElementById('character').value;
 
         // localStorageに保存する　
 		// 共有範囲　スキーム（プロトコル）: http / https ホスト（ドメイン）: example.com ポート番号: :80 / :443 など
-        localStorage.setItem('charName', charName);
-        localStorage.setItem('charType', charType);
+        localStorage.setItem('playerName', playerName);
+        localStorage.setItem('character', character);
 
         // 保存が終わったらgame.htmlへ移動する
         window.location.href = './game.html';
