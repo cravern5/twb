@@ -13,12 +13,21 @@ import * as Player from './player.js';
 import * as scroll from './scroll.js';
 import * as sound from './sound.js';
 
-
 let player = null;
+let firstUpdate = false;
+let lastTime = null;
+let fps = 0;			// 直近1秒間に実際に描画できたフレーム数
+let frameCount = 0;		// 1秒間のフレームカウンター
+let fpsTimer = 0;		// 1秒経過したかを計るための経過時間
+const debugInfo = document.getElementById('debugInfo');
+const chatLog = document.getElementById('chatLog');
+
 
 //初期化
 async function init()
 {
+	debugInfo.style.display = 'block';
+
 	engine.init(); engine.updateProgress();
 	windows.init(); engine.updateProgress();
 	socket.init(); engine.updateProgress();
@@ -36,8 +45,14 @@ async function init()
 export async function onWelcome(id)
 {
 	//データ読み込み
-	const playerName = localStorage.getItem('playerName');
-	const character = localStorage.getItem('character');
+	let playerName = localStorage.getItem('playerName');
+	let character = localStorage.getItem('character');
+
+	//デフォルト指定(直接game.htmlにアクセスされるのを許容)
+	if (!playerName)
+		playerName = "名無し";
+	if (!character)
+		character = Player.CHARACTERS[0];
 
 	player = await Player.addPlayer(id, playerName, character);
 }
@@ -53,7 +68,6 @@ const chatDM = document.getElementById("chatDM");
 const chatFixedText = document.getElementById("chatFixedText");
 const chatEmote = document.getElementById("chatEmote");
 const chatRange = document.getElementById("chatRange");
-const debugInfo = document.getElementById("debugInfo");
 
 
 //チャット範囲選択
@@ -225,7 +239,6 @@ window.addEventListener('load', () =>
 
 
 //画面更新
-let firstUpdate = false;
 function update(delta)
 {
 	if (!player)
@@ -249,19 +262,24 @@ function update(delta)
 	firstUpdate = true;
 }
 
-//アニメーション
-let lastTime = null;
 function animate(currentTime)
 {
 	try
 	{
-
 		if (!lastTime)
 			lastTime = currentTime;
-		// 前のフレームからの経過時間（秒単位）
 		const deltaTime = (currentTime - lastTime) / 1000;
 
-		// ゲーム状態の更新（移動速度などに deltaTime を掛ける）
+		//1秒ごとに「実際に何回animateが呼ばれたか」を数える＝これが体感のカクつきに直結する本当のフレームレート
+		frameCount++;
+		fpsTimer += deltaTime;
+		if (fpsTimer >= 1)
+		{
+			fps = frameCount;		// 直近1秒間のフレーム数を確定
+			frameCount = 0;
+			fpsTimer %= 1;
+		}
+
 		update(deltaTime);
 		requestAnimationFrame(animate);
 	}
@@ -287,16 +305,26 @@ function showModelDebugInfo()
 	if (!player)//|| !player.object3D)
 		return;
 
-	const div = document.getElementById('debugInfo');
-
-	div.textContent =
+	debugInfo.textContent =
 		"[Debug Info]"
 		+ "\n width:" + canvas.width + " height:" + canvas.height
+		+ "\n[Performance]"
+		+ "\n FPS:" + fps
+		+ "\n chatLog件数:" + chatLog.children.length
 		+ "\n[World]"
 		+ "\n camera.x:" + world.camera.x.toFixed(3) + " camera.y:" + world.camera.y.toFixed(3)
 		+ "\n[Player]"
 		+ "\n position.x:" + player.position.x.toFixed(3) + " position.y:" + player.position.y.toFixed(3)
 		+ "\n state:" + player.state + " direction:" + player.direction + " flip:" + player.flip
+		+ "\n[Network]"
+		+ Player.players
+			.filter((p) => p.id !== socket.myPlayerId)		// 自分以外の全プレイヤーが対象
+			.map((p) =>
+				"\n ID:" + p.id
+				+ "  受信:" + p.receivePerSecond + "回/秒"
+				+ "  前回間隔:" + p.lastReceiveInterval.toFixed(0) + "ms"
+			)
+			.join("");
 }
 showModelDebugInfo();
 setInterval(showModelDebugInfo, 500);

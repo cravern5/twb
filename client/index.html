@@ -482,10 +482,6 @@
         let playerName = document.getElementById('playerName').value;
         let character = document.getElementById('character').value;
 
-		//デフォルト指定
-		if( !playerName)
-			playerName = "名無し";
-
         // localStorageに保存する　
 		// 共有範囲　スキーム（プロトコル）: http / https ホスト（ドメイン）: example.com ポート番号: :80 / :443 など
         localStorage.setItem('playerName', playerName);

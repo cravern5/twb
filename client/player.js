@@ -58,6 +58,15 @@ export class Player
 		this.frameTimer = 0;						// コマ切り替え用の経過時間カウンター
 		this.moveTarget = null;						// マウスクリックで指定した「目的地」（ワールド座標）、null のときは目的地なし＝マウスでは移動していない状態
 
+		this.sendInterval = 1 / 20;	// 座標送信は1秒間に最大20回まで（20Hz）に制限する
+		this.sendTimer = 0;			// 前回送信してからの経過時間
+
+		this.lastReceiveTime = null;				// 前回STATEを受信した時刻（ミリ秒）。まだ1回も受信していなければnull
+		this.lastReceiveInterval = 0;				// 前回受信からの間隔（ミリ秒）＝これが不規則だと表示もカクつく
+		this.receiveCount = 0;						// 直近1秒間の受信回数のカウンター（毎秒0にリセットされる）
+		this.receivePerSecond = 0;					// 直前の1秒間で実際に受信できた回数（表示用に確定した値）
+		this.receiveCountTimer = 0;					// 1秒経過したかどうかを計るための経過時間カウンター
+
 		//チャットバブル
 		this.bubbleLines = null;		// 頭上に表示中のチャット内容
 		this.bubbleTimer = 0;			// ふきだしが消えるまでの残り時間（秒）
@@ -319,11 +328,15 @@ export class Player
 			if (state_changed)
 				this.currentFrame = 0;	//状態変化したらフレームは最初に
 
-			// 自分の状態が変わったので、サーバーへ現在地を送信する
-			if (state_changed || position_changed)
+			// 前回送信からの経過時間を積算しておく
+			this.sendTimer += delta;
+
+			//状態変化（止まる/歩く/走る切替など）は遅らせず即送信、
+			//位置だけの更新はsendIntervalごとに間引いて送信（負荷軽減）
+			if (state_changed || (position_changed && this.sendTimer >= this.sendInterval))
 			{
-				if (this.id === socket.myPlayerId)
-					socket.sendState(this.position.x, this.position.y, this.state, this.direction, this.flip);
+				this.sendTimer = 0;	// 送信したのでタイマーをリセット
+				socket.sendState(this.position.x, this.position.y, this.state, this.direction, this.flip);
 			}
 
 		}
@@ -339,6 +352,16 @@ export class Player
 
 		//実際に経過した時間(delta)を加算する
 		this.frameTimer += delta;
+
+
+		//デバッグ用、1秒ごとに受信回数を集計する
+		this.receiveCountTimer += delta;					// 経過時間を積算
+		if (this.receiveCountTimer >= 1)
+		{
+			this.receivePerSecond = this.receiveCount;		// 直近1秒間の受信回数を「表示用の値」として確定
+			this.receiveCount = 0;						// カウンターを0に戻して次の1秒を数え直す
+			this.receiveCountTimer %= 1;					// 1秒を超えた余り時間は次に繰り越す（ずれ防止）
+		}
 
 		// 設定した時間（0.1秒）を超えたらコマを進める
 		if (this.frameTimer >= FRAME_DURATION)
@@ -652,6 +675,14 @@ export function onState(id, x, y, stateIndex, directionIndex, flip)
 		addLog("WARNING", "存在しないプレイヤーからのSTATE受信データです（ID: " + id + "）");
 		return;
 	}
+
+	//デバッグ用の受信間隔計測（座標を書き換えるより前に測る）
+	const now = performance.now();							// 現在時刻をミリ秒の高精度な値で取得
+	if (player.lastReceiveTime !== null)					// 2回目以降の受信のときだけ間隔を計算できる
+		player.lastReceiveInterval = now - player.lastReceiveTime;	// 前回受信からの経過時間
+	player.lastReceiveTime = now;							// 今回の受信時刻を「前回」として保存し直す
+	player.receiveCount++;								// 1秒間の受信回数カウントに+1
+
 
 	player.position.x = x;
 	player.position.y = y;
