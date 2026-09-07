@@ -220,6 +220,7 @@ export class Player
 	//位置移動
 	updatePosition(delta, move)
 	{
+		let changed = false;
 		if (move.x !== 0 || move.y !== 0)
 		{
 			if (this.moveTarget)
@@ -244,7 +245,11 @@ export class Player
 			// 画面(canvas)の外ではなく、マップ全体(MAP_WIDTH/MAP_HEIGHT)の外に出ないよう制限する
 			this.position.x = Math.max(0, Math.min(MAP_WIDTH - SPRITE_WIDTH, this.position.x));
 			this.position.y = Math.max(0, Math.min(MAP_HEIGHT - SPRITE_HEIGHT, this.position.y));
+
+			changed = true;
 		}
+
+		return changed;
 	}
 
 	//キャラ(状態、方向、反転)の設定
@@ -255,15 +260,14 @@ export class Player
 		let d = this.direction;
 		let f = this.flip;
 
-		//状態
-		if (move.x !== 0 || move.y !== 0)
-			s = this.isRunning ? "run" : "walk";
-		else
-			s = "idle";
 
 		// 動いていない場合は、直前の向きをそのまま維持する
-		if (move.x !== 0 || move.y !== 0)
+		if (move.x === 0 || move.y === 0)
+			s = "idle";
+		else
 		{
+			s = this.isRunning ? "run" : "walk";
+
 			// 移動ベクトルの向いている角度を求める（画面はyが下向きなので、0=右、90°=下、180°=左、-90°=上）
 			const angle = Math.atan2(move.y, move.x);
 
@@ -284,7 +288,8 @@ export class Player
 			}
 		}
 
-		changed = (s != this.state || d != this.direction || f != this.flip);
+		if (s != this.state || d != this.direction || f != this.flip)
+			changed = true;
 
 		this.state = s;
 		this.direction = d;
@@ -306,15 +311,20 @@ export class Player
 			const move = this.getMovement();
 
 			//移動処理を追加
-			this.updatePosition(delta, move);
+			const position_changed = this.updatePosition(delta, move);
 
 			//状態変化
-			if (this.updateState(move))
+			const state_changed = this.updateState(move);
+
+			if (state_changed)
 				this.currentFrame = 0;	//状態変化したらフレームは最初に
 
 			// 自分の状態が変わったので、サーバーへ現在地を送信する
-			if (this.id === socket.myPlayerId)
-				socket.sendState(this.position.x, this.position.y, this.state, this.direction, this.flip);
+			if (state_changed || position_changed)
+			{
+				if (this.id === socket.myPlayerId)
+					socket.sendState(this.position.x, this.position.y, this.state, this.direction, this.flip);
+			}
 
 		}
 

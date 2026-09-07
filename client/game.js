@@ -114,6 +114,9 @@ canvas.addEventListener('touchcancel', (e) => input.getVirtualMove_touchend(e), 
 
 document.addEventListener('keydown', (e) =>
 {
+	if (!player)
+		return;
+
 	const key = e.key.toLowerCase();
 	if (player.SendChat(e))//送信したらtrue
 	{
@@ -144,7 +147,8 @@ document.addEventListener('mousedown', (e) =>
 	//マウス状態更新
 	input.getMouseState_mousedown(e);
 
-	player.mousedown(e);
+	if (player)
+		player.mousedown(e);
 });
 // マウスを動かしているとき
 document.addEventListener('mousemove', (e) =>
