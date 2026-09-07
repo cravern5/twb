@@ -13,43 +13,25 @@ import * as Player from './player.js';
 import * as scroll from './scroll.js';
 import * as sound from './sound.js';
 
-// プログレスバーとテキストの更新
-let loadedCount = 0;
-let loadTotal = 5;
-const loadingScreen = document.getElementById('loading-screen');
-const loadingText = document.getElementById('loading-text');
-const progressBar = document.getElementById('progress-bar');
-function updateProgress()
-{
-	loadedCount++;
-	const percentage = Math.floor((loadedCount / loadTotal) * 100);
-	loadingText.textContent = `Loading... ${percentage}%`;
-	progressBar.style.width = `${percentage}%`;
-}
 
 let player = null;
 
 //初期化
 async function init()
 {
-	engine.init(); updateProgress();
-	windows.init(); updateProgress();
-	socket.init(); updateProgress();
-	//scroll.init(); updateProgress();
-
-	await world.init(); updateProgress();
-
 	//データ読み込み
 	const playerName = localStorage.getItem('playerName');
 	const character = localStorage.getItem('character');
 
-	//await player.init(); updateProgress();
-	player = await Player.addPlayer(0, playerName, character); updateProgress();
 
-	// 画面をフェードアウトして非表示にする
-	loadingScreen.style.opacity = '0';
-	//loadingScreen.style.display = 'none';
-	setTimeout(() => { loadingScreen.style.display = 'none'; });
+	engine.init(); engine.updateProgress();
+	windows.init(); engine.updateProgress();
+	socket.init(); engine.updateProgress();
+	//scroll.init(); updateProgress();
+	await world.init(); engine.updateProgress();
+	player = await Player.addPlayer(0, playerName, character); engine.updateProgress();
+
+	engine.endProgress();
 }
 
 ///////イベント//////////
@@ -62,7 +44,6 @@ const chatDM = document.getElementById("chatDM");
 const chatFixedText = document.getElementById("chatFixedText");
 const chatEmote = document.getElementById("chatEmote");
 const chatRange = document.getElementById("chatRange");
-
 const debugInfo = document.getElementById("debugInfo");
 
 
