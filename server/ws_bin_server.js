@@ -100,12 +100,11 @@ export function init(server)
 			// 先頭の1バイト目からタイプを読み取る
 			const dataType = data[0];
 
-			// クライアントから移動受信
-			if (dataType === PACKET_TYPE.MOVE)
+			// クライアントから状態受信
+			if (dataType === PACKET_TYPE.STATE)
 			{
-				// 文字列変換もパースも通らない超軽量ルート
-				// タイプ1byte + Float32×3(12byte) = 最低13バイト
-				if (data.length < 11) return;
+				// タイプ1byte + ID(2byte) + Float32×2(8byte) + 状態(1byte) + 向き(1byte) + 反転(1byte) = 14バイト
+				if (data.length < 14) return;
 			}
 			// クライアントからチャット受信
 			else if (dataType === PACKET_TYPE.CHAT)

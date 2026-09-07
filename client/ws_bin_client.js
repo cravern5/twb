@@ -15,7 +15,7 @@ export let myPlayerId = null;
 export const callbacks =
 {
 	onchat: null,
-	onmove: null,
+	onstate: null,
 	onwelcome: null, //本人が入ったとき呼ばれる
 	onjoin: null,	// 他プレイヤーが入ってきたときに呼ばれる
 	onleave: null,	// 他プレイヤーが抜けたときに呼ばれる
@@ -39,10 +39,10 @@ export function init()
 	ws.binaryType = 'arraybuffer';
 
 	// サーバーからのチャット・移動データを受け取る窓口を、モジュール読み込み時に1回だけ登録する
-	callbacks.onchat = onChat;
-	callbacks.onmove = onMove;
-	callbacks.onjoin = onJoin;
-	callbacks.onleave = onLeave;
+	callbacks.onchat = Player.onChat;
+	callbacks.onstate = Player.onState;
+	callbacks.onjoin = Player.onJoin;
+	callbacks.onleave = Player.onLeave;
 	callbacks.onwelcome = game.onWelcome;
 
 	//セッション開始
@@ -76,19 +76,22 @@ export function init()
 
 		//DataViewとは？(※server.js確認)
 
-		// ─── 移動データを受信した場合 ───
-		if (dataType === PACKET_TYPE.MOVE)
+		// ─── 状態データを受信した場合 ───
+		if (dataType === PACKET_TYPE.STATE)
 		{
 			// DataViewを使って、バイト列から小数を正しく引き抜く
 			const view = new DataView(event.data);
-			const id = view.getUint16(1, true);	// 2〜3byte目：送信元のプレイヤーID
-			const x = view.getFloat32(3, true);	// 4〜7byte目：X座標
-			const y = view.getFloat32(7, true);	// 8〜11byte目：Y座標
+			const id = view.getUint16(1, true);		// 2〜3byte目：送信元のプレイヤーID
+			const x = view.getFloat32(3, true);		// 4〜7byte目：X座標
+			const y = view.getFloat32(7, true);		// 8〜11byte目：Y座標
+			const stateIndex = view.getUint8(11);		// 12byte目：状態
+			const directionIndex = view.getUint8(12);	// 13byte目：向き
+			const flip = view.getUint8(13) === 1;		// 14byte目：反転
 
-			if (callbacks.onmove)
-				callbacks.onmove(id, x, y);
+			if (callbacks.onstate)
+				callbacks.onstate(id, x, y, stateIndex, directionIndex, flip);
 			else
-				addLog("WARNING", "onmoveコールバック指定無し");
+				addLog("WARNING", "onstateコールバック指定無し");
 		}
 		// ─── チャットを受信した場合 ───
 		else if (dataType === PACKET_TYPE.CHAT)
@@ -183,86 +186,29 @@ export function sendChat(text)
 }
 
 //移動を送信
-export function sendMove(x, y)
+export function sendState(x, y, state, direction, flip)
 {
-	// タイプ(1byte) + プレイヤーID(2byte) + x座標(4byte) + y座標(4byte) = 合計11byte
-	const buffer = new ArrayBuffer(11);
+	//文字列(state/direction)のままではバイナリに乗せられないので、配列の中の「何番目か」という数字に変換する
+	//（見つからない場合はindexOfが-1を返すので、念のため0番目扱いにしておく）
+	const stateIndex = Math.max(0, Player.STATES.indexOf(state));
+	const directionIndex = Math.max(0, Player.DIRECTIONS.indexOf(direction));
+
+	// タイプ(1byte) + プレイヤーID(2byte) + x座標(4byte) + y座標(4byte)
+	// + 状態(1byte) + 向き(1byte) + 反転(1byte) = 合計14byte
+	const buffer = new ArrayBuffer(14);
 	const view = new DataView(buffer);
 
-	view.setUint8(0, PACKET_TYPE.MOVE);		// 1byte目：タイプ
-	view.setUint16(1, myPlayerId, true);	// 2〜3byte目：自分のID（trueはリトルエンディアン指定）
+	view.setUint8(0, PACKET_TYPE.STATE);		// 1byte目：タイプ
+	view.setUint16(1, myPlayerId, true);	// 2〜3byte目：自分のID
 	view.setFloat32(3, x, true);			// 4〜7byte目：X座標
 	view.setFloat32(7, y, true);			// 8〜11byte目：Y座標
+	view.setUint8(11, stateIndex);			// 12byte目：状態（idle/run/sit/walkのどれか）
+	view.setUint8(12, directionIndex);		// 13byte目：向き（forward/forside/side/backside/backwardのどれか）
+	view.setUint8(13, flip ? 1 : 0);		// 14byte目：反転しているか（0=通常、1=反転）
 
 	sendBinary(buffer);
 }
 
 
 
-
-//プレイヤー管理================================
-export let players = [];
-
-//IDからプレイヤーを検索する（見つからなければundefined）
-export function getPlayerById(id)
-{
-	return players.find((p) => p.id === id);
-}
-//プレイヤーの追加
-export async function addPlayer(id, playerName, character)
-{
-	const player = await new Player.Player(id, playerName, character).init();
-	players.push(player);
-
-	return player;
-}
-//IDを指定してプレイヤーをplayers配列から取り除く
-export function removePlayer(id)
-{
-	// findIndexで「配列の何番目にいるか」を調べる（見つからなければ-1）
-	const index = players.findIndex((p) => p.id === id);
-
-	if (index !== -1)
-		players.splice(index, 1); // 見つかった位置から1個だけ取り除く
-}
-// 他プレイヤーが新しく入ってきたときの処理
-export async function onJoin(joinedId)
-{
-	// 念のため、既に同じIDが存在していないか確認してから追加する
-	if (!getPlayerById(joinedId))
-		await addPlayer(joinedId, "プレイヤー" + joinedId, "tichiel");
-}
-// 他プレイヤーが抜けたときの処理
-export function onLeave(leftId)
-{
-	removePlayer(leftId);
-}
-//他プレイヤーのチャット受信
-export function onChat(id, text)
-{
-	addLog("INFO", text);
-
-	const player = getPlayerById(id);
-	if (!player)
-	{
-		addLog("WARNING", "存在しないプレイヤーからのチャットです（ID: " + id + "）");
-		return;
-	}
-
-	//表示するテキストの残り表示時間をセット
-	player.bubbleTimer = BUBBLE_DURATION;
-}
-//移動受信
-export function onMove(id, x, y)
-{
-	const player = getPlayerById(id);
-	if (!player)
-	{
-		addLog("WARNING", "存在しないプレイヤーからの移動データです（ID: " + id + "）");
-		return;
-	}
-
-	player.position.x = x;
-	player.position.y = y;
-}
 

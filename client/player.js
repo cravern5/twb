@@ -27,18 +27,20 @@ export const FRAME_DURATION = 0.07;					// アニメーションの更新間隔�
 const chatInput = document.getElementById("chatInput");
 //const chatLog = document.getElementById("chatLog");
 //バブル用の各種サイズ設定（調整・描画の両方で使うので関数の外に出しておく）
-const BUBBLE_MAX_WIDTH = 197;	// ふきだしの最大の幅
-const BUBBLE_MAX_HEIGHT = 73;	// ふきだしの最大の高さ
-const BUBBLE_PADDING_X = 10;	// 文字の左右の余白
-const BUBBLE_PADDING_Y = 6;	// 文字の上下の余白
-const BUBBLE_LINE_HEIGHT = 20;	// 1行分の高さ（フォントサイズ14pxに行間を足した目安）
-const BUBBLE_DURATION = 4;		// ふきだしを表示しておく秒数
+export const BUBBLE_MAX_WIDTH = 197;	// ふきだしの最大の幅
+export const BUBBLE_MAX_HEIGHT = 73;	// ふきだしの最大の高さ
+export const BUBBLE_PADDING_X = 10;	// 文字の左右の余白
+export const BUBBLE_PADDING_Y = 6;	// 文字の上下の余白
+export const BUBBLE_LINE_HEIGHT = 20;	// 1行分の高さ（フォントサイズ14pxに行間を足した目安）
+export const BUBBLE_DURATION = 4;		// ふきだしを表示しておく秒数
 
 
 export class Player
 {
 	constructor(id, playerName, character)
 	{
+		this.initialized = false;
+
 		//プレイヤー情報
 		this.id = id;
 		this.playerName = playerName;
@@ -113,6 +115,9 @@ export class Player
 			}
 		}
 		//}
+
+		this.initialized = true;
+
 		return this;
 	}
 
@@ -147,6 +152,11 @@ export class Player
 	//キーの移動量取得
 	getMovement()
 	{
+		//このプレイヤーが「自分自身」でなければ、キーボード・マウスの入力を反映しない
+		//（他人のキャラは、通信で受け取った座標(onMove)だけで動かすべきで、自分のキー入力を混ぜてはいけない）
+		if (this.id !== socket.myPlayerId)
+			return { x: 0, y: 0 };
+
 		// キーボード入力があれば、そちらを優先する（マウス移動は中断する）
 		const key = input.keysPress;
 		if (key.w || key.a || key.s || key.d)
@@ -235,9 +245,6 @@ export class Player
 			this.position.x = Math.max(0, Math.min(MAP_WIDTH - SPRITE_WIDTH, this.position.x));
 			this.position.y = Math.max(0, Math.min(MAP_HEIGHT - SPRITE_HEIGHT, this.position.y));
 		}
-
-		// 自分の位置が変わったので、サーバーへ現在地を送信する
-		socket.sendMove(this.position.x, this.position.y);
 	}
 
 	//キャラ(状態、方向、反転)の設定
@@ -286,71 +293,30 @@ export class Player
 		return changed;
 	}
 
-	//チャット送信
-	SendChat(e)
-	{
-		if (e.key === 'Enter')
-		{
-			const text = chatInput.value.trim();
-
-			//サーバー未接続
-			if (!socket.connected)
-			{
-				addLog("ERROR", "サーバーに接続されていません")
-			}
-			//チャットウィンドウ非表示中
-			if (!windows.chatWindow.isVisible())
-			{
-				windows.chatWindow.restore();
-				chatInput.focus();
-			}
-			//チャットバーにフォーカスある
-			else if (document.activeElement === chatInput)
-			{
-				//テキスト入力
-				if (text === '')
-					engine.canvas.focus();//3Dキャンバスに戻る
-				else
-				{
-					//ログに送られる文字列
-					const sendText = this.playerName + " ： " + text;
-
-					//バブル表示用テキストセット
-					this.bubbleLines = this.adjustBubbleText(sendText);
-					//改行を取り除いて1行のテキストにする（\r\nの場合も考慮）
-					//const oneLineText = text.replace(/\r?\n/g, "");
-
-					socket.sendChat(sendText);//サーバーへチャット
-					//this.showBubble(text);//バブル表示
-					chatInput.value = '';// 入力欄をクリア
-					engine.canvas.focus();//3Dキャンバスに戻る
-				}
-			}
-			//チャットバーにフォーカス
-			else
-				chatInput.focus();
-
-			return true;
-		}
-		else//Enter以外
-		{
-			//チャットバーにフォーカスがある状態でのキー入力
-			return document.activeElement === chatInput;
-		}
-	}
-
 	//画面更新
 	update(delta)
 	{
-		//移動量はここで1回だけ計算し、updatePositionとupdateStateの両方に渡す、2回計算すると、その間にpositionが変わってしまい向きがズレるため
-		const move = this.getMovement();
+		if (!this.initialized)
+			return;
 
-		//移動処理を追加
-		this.updatePosition(delta, move);
+		//状態を更新して送信(自分自身の場合)
+		if (this.id === socket.myPlayerId)
+		{
+			//移動量はここで1回だけ計算し、updatePositionとupdateStateの両方に渡す、2回計算すると、その間にpositionが変わってしまい向きがズレるため
+			const move = this.getMovement();
 
-		//状態変化
-		if (this.updateState(move))
-			this.currentFrame = 0;	//状態変化したらフレームは最初に
+			//移動処理を追加
+			this.updatePosition(delta, move);
+
+			//状態変化
+			if (this.updateState(move))
+				this.currentFrame = 0;	//状態変化したらフレームは最初に
+
+			// 自分の状態が変わったので、サーバーへ現在地を送信する
+			if (this.id === socket.myPlayerId)
+				socket.sendState(this.position.x, this.position.y, this.state, this.direction, this.flip);
+
+		}
 
 		//addLog("direction:" + olddirection + "→" + direction + " state:" + oldstate + "→" + state);
 		const stateKey = this.character + "_" + this.state + "_" + this.direction;
@@ -420,33 +386,80 @@ export class Player
 	//キャラクター描画
 	drawCharacter(asset, x, y)
 	{
-		try
+		// スプライトシートから該当コマだけを切り出して描画する
+		if (this.flip)
 		{
-			// スプライトシートから該当コマだけを切り出して描画する
-			if (this.flip)
-			{
-				//描画状態（座標系の回転・拡大縮小・移動、透過度、塗りつぶし色など）をスタックに保存・復元するための命令
-				ctx.save();
-				ctx.scale(-1, 1);
-				ctx.drawImage(
-					asset.img,
-					this.currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
-					-x - asset.frameWidth, y, asset.frameWidth, asset.frameHeight
-				);
-				ctx.restore();
-			}
-			else
-			{
-				ctx.drawImage(
-					asset.img,
-					this.currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
-					x, y, asset.frameWidth, asset.frameHeight
-				);
-			}
+			//描画状態（座標系の回転・拡大縮小・移動、透過度、塗りつぶし色など）をスタックに保存・復元するための命令
+			ctx.save();
+			ctx.scale(-1, 1);
+			ctx.drawImage(
+				asset.img,
+				this.currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
+				-x - asset.frameWidth, y, asset.frameWidth, asset.frameHeight
+			);
+			ctx.restore();
 		}
-		catch (e)
+		else
 		{
-			print("error", "キャラクター描画でエラーが発生しました " + e.message);
+			ctx.drawImage(
+				asset.img,
+				this.currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
+				x, y, asset.frameWidth, asset.frameHeight
+			);
+		}
+
+	}
+
+	//チャット送信
+	SendChat(e)
+	{
+		if (e.key === 'Enter')
+		{
+			const text = chatInput.value.trim();
+
+			//サーバー未接続
+			if (!socket.connected)
+			{
+				addLog("ERROR", "サーバーに接続されていません")
+			}
+			//チャットウィンドウ非表示中
+			if (!windows.chatWindow.isVisible())
+			{
+				windows.chatWindow.restore();
+				chatInput.focus();
+			}
+			//チャットバーにフォーカスある
+			else if (document.activeElement === chatInput)
+			{
+				//テキスト入力
+				if (text === '')
+					engine.canvas.focus();//3Dキャンバスに戻る
+				else
+				{
+					//ログに送られる文字列
+					const sendText = this.playerName + " ： " + text;
+
+					//バブル表示用テキストセット
+					this.bubbleLines = this.adjustBubbleText(sendText);
+					//改行を取り除いて1行のテキストにする（\r\nの場合も考慮）
+					//const oneLineText = text.replace(/\r?\n/g, "");
+
+					socket.sendChat(sendText);//サーバーへチャット
+					//this.showBubble(text);//バブル表示
+					chatInput.value = '';// 入力欄をクリア
+					engine.canvas.focus();//3Dキャンバスに戻る
+				}
+			}
+			//チャットバーにフォーカス
+			else
+				chatInput.focus();
+
+			return true;
+		}
+		else//Enter以外
+		{
+			//チャットバーにフォーカスがある状態でのキー入力
+			return document.activeElement === chatInput;
 		}
 	}
 
@@ -479,11 +492,13 @@ export class Player
 			lines.push(currentLine);
 
 		return lines;
+
 	}
 
 	//バブルの文字調整（改行・行数オーバー時の省略処理だけを行う）
 	adjustBubbleText(text)
 	{
+
 		//フォントを先に設定しておく（measureTextの結果はフォント設定に依存するため）
 		ctx.font = this.bubbleFont;
 
@@ -509,6 +524,7 @@ export class Player
 		}
 
 		return lines;
+
 	}
 
 	//バブル描画（文字の調整は行わず、渡された結果を使って描くだけ）
@@ -544,6 +560,7 @@ export class Player
 			const lineY = boxY + BUBBLE_PADDING_Y + BUBBLE_LINE_HEIGHT * i + BUBBLE_LINE_HEIGHT / 2;
 			ctx.fillText(lines[i], x, lineY);
 		}
+
 	}
 
 }
@@ -551,3 +568,92 @@ export class Player
 
 
 
+
+
+
+//プレイヤー管理================================
+export let players = [];
+
+//IDからプレイヤーを検索する（見つからなければundefined）
+export function getPlayerById(id)
+{
+	return players.find((p) => p.id === id);
+}
+//プレイヤーの追加
+export async function addPlayer(id, playerName, character)
+{
+	const player = new Player(id, playerName, character)
+
+	//※本来はinit前に書いたほうが良い
+	//画像読み込み前にSTATEパケットが届くと、「存在しないプレイヤー」扱いされる
+	players.push(player);
+
+	//画像の読み込みが終わるまで待つ（描画に使うだけなので、後からで問題ない）
+	await player.init();
+
+	return player;
+}
+//IDを指定してプレイヤーをplayers配列から取り除く
+export function removePlayer(id)
+{
+	// findIndexで「配列の何番目にいるか」を調べる（見つからなければ-1）
+	const index = players.findIndex((p) => p.id === id);
+
+	if (index !== -1)
+		players.splice(index, 1); // 見つかった位置から1個だけ取り除く
+}
+// 他プレイヤーが新しく入ってきたときの処理
+export async function onJoin(joinedId)
+{
+	// 念のため、既に同じIDが存在していないか確認してから追加する
+	if (!getPlayerById(joinedId))
+		await addPlayer(joinedId, "プレイヤー" + joinedId, "maximin");
+}
+// 他プレイヤーが抜けたときの処理
+export function onLeave(leftId)
+{
+	removePlayer(leftId);
+}
+//他プレイヤーのチャット受信
+export function onChat(id, text)
+{
+	const player = getPlayerById(id);
+	if (!player)
+	{
+		addLog("WARNING", "存在しないプレイヤーからのチャットです（ID: " + id + "）");
+		return;
+	}
+
+	addLog("INFO", text);
+
+	//表示するテキストの残り表示時間をセット
+	player.bubbleTimer = BUBBLE_DURATION;
+}
+//状態受信
+export function onState(id, x, y, stateIndex, directionIndex, flip)
+{
+	//自分自身の状態データは無視する（ローカルの計算結果の方が新しいため）
+	if (id === socket.myPlayerId)
+		return;
+
+	const player = getPlayerById(id);
+	if (!player)
+	{
+		addLog("WARNING", "存在しないプレイヤーからのSTATE受信データです（ID: " + id + "）");
+		return;
+	}
+
+	player.position.x = x;
+	player.position.y = y;
+
+	const newState = STATES[stateIndex] || STATES[0];
+	const newDirection = DIRECTIONS[directionIndex] || DIRECTIONS[0];
+
+	//状態か向きが変わった瞬間だけ、アニメーションのコマ数を最初に戻す
+	if (player.state !== newState || player.direction !== newDirection)
+		player.currentFrame = 0;
+
+	player.state = newState;
+	player.direction = newDirection;
+	player.flip = flip;
+}

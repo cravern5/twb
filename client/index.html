@@ -473,7 +473,8 @@
     const characterForm = document.getElementById('character-form');
 
     // フォームが送信されたときに実行される処理
-    characterForm.addEventListener('submit', function (event) {
+    characterForm.addEventListener('submit', function (event) 
+	{
         // 本来のフォーム送信(ページの再読み込み)を止める
         event.preventDefault();
 
@@ -493,6 +494,18 @@
         // 保存が終わったらgame.htmlへ移動する
         window.location.href = './game.html';
     });
+
+	// ページ読み込み時
+	window.addEventListener('load', () =>
+	{
+		const playerName = localStorage.getItem('playerName');
+		const character = localStorage.getItem('character');
+
+		document.getElementById('playerName').value = playerName;
+		document.getElementById('character').value = character;
+	});
+
+
 </script>
 
 </body>

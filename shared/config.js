@@ -13,7 +13,7 @@ export const PORT =
 export const PACKET_TYPE =
 {
 	CHAT: 1,
-	MOVE: 2,
+	STATE: 2,
 	WELCOME: 3,	// サーバー→本人だけに送る「あなたのIDはこれです」通知
 	JOIN: 4,	// サーバー→他の全員に送る「新しい人が入ってきました」通知
 	LEAVE: 5	// サーバー→他の全員に送る「この人が抜けました」通知

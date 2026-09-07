@@ -39,7 +39,7 @@ export async function onWelcome(id)
 	const playerName = localStorage.getItem('playerName');
 	const character = localStorage.getItem('character');
 
-	player = await socket.addPlayer(id, playerName, character);
+	player = await Player.addPlayer(id, playerName, character);
 }
 
 
@@ -237,7 +237,7 @@ function update(delta)
 	world.update(delta);
 
 	//プレイヤー画面更新
-	socket.players.forEach((p) =>
+	Player.players.forEach((p) =>
 	{
 		p.update(delta);
 	});
@@ -249,21 +249,21 @@ function update(delta)
 let lastTime = null;
 function animate(currentTime)
 {
-	if (!lastTime)
-		lastTime = currentTime;
-	// 前のフレームからの経過時間（秒単位）
-	const deltaTime = (currentTime - lastTime) / 1000;
-
-
 	try
 	{
+
+		if (!lastTime)
+			lastTime = currentTime;
+		// 前のフレームからの経過時間（秒単位）
+		const deltaTime = (currentTime - lastTime) / 1000;
+
 		// ゲーム状態の更新（移動速度などに deltaTime を掛ける）
 		update(deltaTime);
 		requestAnimationFrame(animate);
 	}
 	catch (e)
 	{
-		print("error", "update function in error : " + e.message);
+		print("error", "error:animate " + e.message);
 	}
 
 	lastTime = currentTime;
