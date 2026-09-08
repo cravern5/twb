@@ -10,10 +10,10 @@ import * as input from './input.js';
 import { keys, keysPress, mouseInfo } from './input.js';
 import * as world from './world.js';
 import * as Player from './player.js';
+import { player } from './player.js';
 import * as scroll from './scroll.js';
 import * as sound from './sound.js';
 
-export let player = null;
 export let firstUpdate = false;
 export let lastTime = null;
 export let fps = 0;			// 直近1秒間に実際に描画できたフレーム数
@@ -39,20 +39,6 @@ async function init()
 	//await Player.addPlayer(1, "ていち", "tichiel");
 
 	engine.endProgress();
-}
-
-// 他プレイヤーが新しく入ってきたときの処理
-export async function onJoin(joinedId, characterIndex)
-{
-	print(joinedId);
-
-	let added = null;
-	// 念のため、既に同じIDが存在していないか確認してから追加する
-	if (!Player.getPlayerById(joinedId))
-		added = await Player.addPlayer(joinedId, "プレイヤー" + joinedId, Player.CHARACTERS[characterIndex]);
-
-	if (joinedId == socket.myPlayerId)
-		player = added;
 }
 
 ///////イベント//////////

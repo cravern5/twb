@@ -8,10 +8,11 @@ import * as engine from './engine.js';
 import { canvas, ctx } from './engine.js';
 import { MAP_WIDTH, MAP_HEIGHT, camera } from './world.js';
 import * as world from './world.js';
-import * as game from './game.js';
+//import * as game from './game.js';
 
 //プレイヤー======================================
-//キャラクター
+export let player = null;
+
 export const SPRITE_WIDTH = 70;		//キャラ画像1コマの幅
 export const SPRITE_HEIGHT = 95;	//キャラ画像1コマの高さ
 export const ASSETSDIR = '/assets/player';	//キャラ画のディレクトリ
@@ -30,10 +31,10 @@ const chatInput = document.getElementById("chatInput");
 //バブル用の各種サイズ設定（調整・描画の両方で使うので関数の外に出しておく）
 export const BUBBLE_MAX_WIDTH = 197;	// ふきだしの最大の幅
 export const BUBBLE_MAX_HEIGHT = 73;	// ふきだしの最大の高さ
-export const BUBBLE_PADDING_X = 10;	// 文字の左右の余白
-export const BUBBLE_PADDING_Y = 6;	// 文字の上下の余白
+export const BUBBLE_PADDING_X = 10;		// 文字の左右の余白
+export const BUBBLE_PADDING_Y = 6;		// 文字の上下の余白
 export const BUBBLE_LINE_HEIGHT = 20;	// 1行分の高さ（フォントサイズ14pxに行間を足した目安）
-export const BUBBLE_DURATION = 4;		// ふきだしを表示しておく秒数
+export const BUBBLE_DURATION = 4.5;		// ふきだしを表示しておく秒数
 
 
 export class Player
@@ -423,6 +424,8 @@ export class Player
 		//ふきだしを表示中なら、残り時間を減らしていく
 		if (this.bubbleTimer > 0)
 			this.bubbleTimer -= delta;
+		else
+			this.bubbleLines = null;
 	}
 
 	draw()
@@ -524,12 +527,17 @@ export class Player
 					const sendText = this.playerName + " ： " + text;
 
 					//バブル表示用テキストセット
-					this.bubbleLines = this.adjustBubbleText(sendText);
+					//this.bubbleLines = this.adjustBubbleText(sendText);
+
 					//改行を取り除いて1行のテキストにする（\r\nの場合も考慮）
 					//const oneLineText = text.replace(/\r?\n/g, "");
 
-					socket.sendChat(sendText);//サーバーへチャット
-					//this.showBubble(text);//バブル表示
+					//サーバーへチャット
+					socket.sendChat(sendText);
+
+					//バブル表示はonChatで行う
+					//this.showBubble(text);
+
 					chatInput.value = '';// 入力欄をクリア
 					engine.canvas.focus();//3Dキャンバスに戻る
 				}
@@ -707,19 +715,20 @@ export async function onWelcome(id)
 	//JOINを受信して初めてキャラ追加する
 	//player = await addPlayer(id, playerName, character);
 }
-/*// 他プレイヤーが新しく入ってきたときの処理
+// 他プレイヤーが新しく入ってきたときの処理
 export async function onJoin(joinedId, characterIndex)
 {
-	print(joinedId);
-
 	let added = null;
 	// 念のため、既に同じIDが存在していないか確認してから追加する
 	if (!getPlayerById(joinedId))
+	{
 		added = await addPlayer(joinedId, "プレイヤー" + joinedId, CHARACTERS[characterIndex]);
 
-	if (joinedId == socket.myPlayerId)
-		game.player = added;
-}*/
+		//自分自身
+		if (joinedId == socket.myPlayerId)
+			player = added;
+	}
+}
 // 他プレイヤーが抜けたときの処理
 export function onLeave(leftId)
 {
@@ -739,6 +748,7 @@ export function onChat(id, text)
 
 	//表示するテキストの残り表示時間をセット
 	player.bubbleTimer = BUBBLE_DURATION;
+	player.bubbleLines = player.adjustBubbleText(text);
 }
 //状態受信
 export function onState(id, x, y, stateIndex, directionIndex, flip)
@@ -790,8 +800,8 @@ export function playerYSort()
 export function updateAll(delta)
 {
 	//自分自身の再計算
-	if (game.player)
-		game.player.recalc({ delta });
+	if (player)
+		player.recalc({ delta });
 
 	//足元のY座標が小さい（奥）順に並べ替える
 	const sortedPlayers = playerYSort();

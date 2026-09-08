@@ -111,12 +111,12 @@ function callAPI(req, res, body)
 			{
 				//関数実行
 				const ret = handler(req, res, body);
-				plainWrite(res, ret.code, ret.message, ret.results);
+				plainWrite(req, res, ret.code, ret.message, ret.results);
 				return true;
 			}
 			catch (e)
 			{
-				plainWrite(res, 400, "APIエラーで終了しました" + e.message);
+				plainWrite(req, res, 400, "APIエラーで終了しました" + e.message);
 			}
 		}
 	}
@@ -124,10 +124,10 @@ function callAPI(req, res, body)
 }
 
 //log & レスポンス
-function plainWrite(res, code, message, contents = null, contentType = { 'Content-Type': 'application/json; charset=utf-8' })
+function plainWrite(req, res, code, message, contents = null, contentType = { 'Content-Type': 'application/json; charset=utf-8' })
 {
 	if (message)
-		print(code === 304 ? ("cyan") : code >= 200 && code <= 299 ? ("info") : ("error"), message);
+		print(code === 304 ? ("cyan") : code >= 200 && code <= 299 ? ("info") : ("error"), message + " " + [req.method, req.url].filter(Boolean).join(''));
 
 	//このレスポンスは、もうヘッダーを送信し終えたかどうか
 	if (!res.headersSent)
@@ -170,13 +170,13 @@ export function init(api)
 		try
 		{
 			//ログ
-			print("info", [req.method, req.url].filter(Boolean).join(''));
+			//print("info", [req.method, req.url].filter(Boolean).join(''));
 
 
 			// Render/Koyebなどのホスティング先が「サーバーが生きているか」を定期的に確認しにくる場所、ファイルを読みに行く必要はない
 			if (req.url === '/health')
 			{
-				plainWrite(res, 200, 'OK', 'OK', { 'Content-Type': 'text/plain; charset=utf-8' });
+				plainWrite(req, res, 200, 'OK', 'OK', { 'Content-Type': 'text/plain; charset=utf-8' });
 				return;
 			}
 
@@ -202,7 +202,7 @@ export function init(api)
 				}
 				catch (e)
 				{
-					plainWrite(res, 400, 'Bad Request ' + e.message);
+					plainWrite(req, res, 400, 'Bad Request ' + e.message);
 				}
 
 				// URLが "/shared/" で始まっていたら、配信元フォルダを SHARED_DIR に切り替える　// "/shared/config.js" → SHARED_DIR + "/config.js" を読みに行く	
@@ -226,7 +226,7 @@ export function init(api)
 				// 指定パスが base の外に出ていないか（ディレクトリトラバーサル対策）
 				if (filePath !== baseDir && !filePath.startsWith(pubSep)) 
 				{
-					plainWrite(res, 403, 'Forbidden')
+					plainWrite(req, res, 403, 'Forbidden')
 					return;
 				}
 
@@ -249,7 +249,7 @@ export function init(api)
 						if (ifModifiedSince && ifModifiedSince === lastModified)
 						{
 							// 304を返すだけで、ファイルの中身は送らない
-							plainWrite(res, 304, 'キャッシュを使用', null, {
+							plainWrite(req, res, 304, 'キャッシュを使用', null, {
 								'Last-Modified': lastModified,
 								'Cache-Control': 'no-cache'
 							});
@@ -259,7 +259,7 @@ export function init(api)
 						// HEADリクエストの場合は「ファイルの情報だけ」返して、中身（本文）は送らない
 						if (req.method === 'HEAD')
 						{
-							plainWrite(res, 200, '静的ファイル読み込み', null,
+							plainWrite(req, res, 200, '静的ファイル読み込み', null,
 								{
 									'Content-Type': contentType,
 									'Content-Length': content.length, // ファイルサイズを教えてあげる
@@ -270,7 +270,7 @@ export function init(api)
 
 						//ファイル読み込み(同期)、画像も問題なし
 						const content = await fsp.readFile(filePath);
-						plainWrite(res, 200, '静的ファイル読み込み', content,
+						plainWrite(req, res, 200, '静的ファイル読み込み', content,
 							{
 								'Content-Type': contentType,
 								'Last-Modified': lastModified, // 次回比較用に日時を教える
@@ -280,13 +280,13 @@ export function init(api)
 					}
 					catch (e)
 					{
-						plainWrite(res, 404, 'Content-Type Not Found ' + e.message);
+						plainWrite(req, res, 404, 'Content-Type Not Found ' + e.message);
 						return
 					}
 				}
 				else
 				{
-					plainWrite(res, 404, 'Content-Type Not Found');
+					plainWrite(req, res, 404, 'Content-Type Not Found');
 					return;
 				}
 
@@ -312,12 +312,12 @@ export function init(api)
 			}
 
 			//Not Found
-			plainWrite(res, 404, 'Not Found');
+			plainWrite(req, res, 404, 'Not Found');
 
 		}
 		catch (e) 
 		{
-			plainWrite(res, 500, 'Internal Server Error ' + e.message);
+			plainWrite(req, res, 500, 'Internal Server Error ' + e.message);
 		}
 
 	});

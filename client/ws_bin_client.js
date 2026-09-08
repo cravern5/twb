@@ -41,7 +41,7 @@ export function init()
 	// サーバーからのチャット・移動データを受け取る窓口を、モジュール読み込み時に1回だけ登録する
 	callbacks.onchat = Player.onChat;
 	callbacks.onstate = Player.onState;
-	callbacks.onjoin = game.onJoin;
+	callbacks.onjoin = Player.onJoin;
 	callbacks.onleave = Player.onLeave;
 	callbacks.onwelcome = Player.onWelcome;
 
@@ -119,7 +119,7 @@ export function init()
 			// DataViewを使って2バイト目からID(Uint16)を読み取る
 			const view = new DataView(event.data);
 			myPlayerId = view.getUint16(1, true); // trueはサーバー側と合わせてリトルエンディアン指定
-			addLog("INFO", "WELCOME：" + myPlayerId);
+			//addLog("INFO", "サーバーとの接続を確立しました（" + myPlayerId + "）");
 
 			if (callbacks.onwelcome)
 				callbacks.onwelcome(myPlayerId);
