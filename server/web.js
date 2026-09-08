@@ -262,7 +262,7 @@ export function init(api)
 							plainWrite(req, res, 200, '静的ファイル読み込み', null,
 								{
 									'Content-Type': contentType,
-									'Content-Length': content.length, // ファイルサイズを教えてあげる
+									'Content-Length': stat.length, // ファイルサイズを教えてあげる
 									'Last-Modified': lastModified,
 								});
 							return;
