@@ -14,6 +14,7 @@ const isMainModule = process.argv[1] === fileURLToPath(import.meta.url);
 export let wss = null;
 
 let playerCount = 0;//上限 setUint16(65535）
+const JOIN_TIMEOUT = 5000; // 5秒待っても反応がなければタイムアウト扱い
 
 export function init(server)
 {
@@ -38,13 +39,6 @@ export function init(server)
 	// クライアントが接続してきたときの処理===============
 	wss.on('connection', (ws) =>
 	{
-		//ID作成
-		ws.playerId = playerCount;
-		//このクライアントが最後に送ってきたSTATEパケット（Buffer）をキャッシュ、まだ一度もSTATEを送ってきていない場合はnull
-		ws.lastStateBuffer = null;
-		playerCount++;
-		print("white", '新しいプレイヤーが接続しました！(' + ws.playerId + ')');
-
 		//client.send(data, {options.binary=true})　送信方式(バイナリ or テキスト)
 		//省略した場合、渡されたdataの型を見て自動的に判定します。
 		//文字列(string)なら「テキストフレーム」、Buffer・ArrayBuffer・Uint8Arrayなどのバイナリ型なら「バイナリフレーム」として送ってくれます。
@@ -57,12 +51,30 @@ export function init(server)
 		//複数バイトのデータをメモリや通信で送るときに、「下の位（桁）のバイトから順番に並べるルール」のことです。
 		//例:4550を16進数（2バイト）で表すと 0x1234（12 と 34）　ビッグエンディアン = 0x12 0x34、リトルエンディアン = 0x34 0x12
 
+		//クライアント除外
+		//ws.terminate()またはws.close()を呼べば、closeイベントが発火して自動的にwss.clientsから除外されます
+
+		//ID作成
+		ws.playerId = playerCount;
+		//このクライアントが最後に送ってきたSTATEパケット（Buffer）をキャッシュ、まだ一度もSTATEを送ってきていない場合はnull
+		ws.lastStateBuffer = null;
+		playerCount++;
+		print("white", '新しいプレイヤーが接続しました！(' + ws.playerId + ')');
+
 		//WELCOME送信 本人にIDを送信　タイプ(1byte) + プレイヤーID(2byte) の3byteパケット
 		const welcomePacket = createWelcomePacket(ws.playerId);
 		ws.send(welcomePacket, { binary: true });
 
-		//JOIN送信 他の全員に自分を伝える タイプ(1byte) + プレイヤーID(2byte) の3byteパケット
-		const joinPacket = createJoinPacket(ws.playerId);
+		// JOINが一定時間内に届かなければ、正式なクライアントとして認めず強制切断する
+		ws.joinTimeoutId = setTimeout(() =>
+		{
+			print("warning", "プレイヤー(" + ws.playerId + ")からJOINが届かなかったため切断します。");
+			ws.terminate(); // 強制切断→'close'イベントが発火し、wss.clientsから自動的に除外される
+		}, JOIN_TIMEOUT);
+
+		//JOIN送信 ※WELCOMEの後にクライアント側にJOINを送信させる　他の全員に自分を伝える タイプ(1byte) + プレイヤーID(2byte) の3byteパケット
+		/*//クライアントが情報を送るタイプ
+		//const joinPacket = createJoinPacket(ws.playerId);
 
 		//全ユーザー取得
 		wss.clients.forEach((client) =>
@@ -70,7 +82,7 @@ export function init(server)
 			if (client === ws || client.readyState !== 1)
 				return;
 
-			// 新規参加者へ既存プレイヤーを通知
+			// 新規参加者に既存プレイヤーを通知
 			const existingJoinPacket = createJoinPacket(client.playerId);
 			ws.send(existingJoinPacket, { binary: true });
 
@@ -80,62 +92,127 @@ export function init(server)
 
 			// 既存参加者へ新規参加者を通知
 			client.send(joinPacket, { binary: true });
-		});
+		});*/
 
 		//クライアントから受信
 		ws.on('message', (data) =>
 		{
-			if (!data || data.length === 0) return;
-
-			// 先頭の1バイト目からタイプを読み取る
-			const dataType = data[0];
-
-			// クライアントから状態受信
-			if (dataType === PACKET_TYPE.STATE)
+			let dataType;
+			try
 			{
-				// タイプ1byte + ID(2byte) + Float32×2(8byte) + 状態(1byte) + 向き(1byte) + 反転(1byte) = 14バイト
-				if (data.length !== 14) return;
+				if (!data || data.length === 0) return;
 
-				// 次に誰かが新規接続してきたとき、この人の紹介用に使えるよう最新状態を保存しておく
-				ws.lastStateBuffer = Buffer.from(data);
-			}
-			// クライアントからチャット受信
-			else if (dataType === PACKET_TYPE.CHAT)
-			{
-				// タイプ1byte + ID(2byte) + 文字列 が最低構成（サーバーは中身を見ず、そのまま転送するだけ）
-				if (data.length < 3) return;
+				// 先頭の1バイト目からタイプを読み取る
+				dataType = data[0];
 
-				const chatMessage = data.toString('utf-8', 1);// 2バイト目以降を文字列に変換
-				const chatMessageChars = [...chatMessage];
-
-				if (chatMessageChars.length > 50)
+				// クライアントから状態受信
+				if (dataType === PACKET_TYPE.STATE)
 				{
-					print("warning", "【検閲】50文字超過のバイナリチャットを破棄しました。");
+					// タイプ1byte + ID(2byte) + Float32×2(8byte) + 状態(1byte) + 向き(1byte) + 反転(1byte) = 14バイト
+					if (data.length !== 14) return;
+
+					// 次に誰かが新規接続してきたとき、この人の紹介用に使えるよう最新状態を保存しておく
+					ws.lastStateBuffer = Buffer.from(data);
+				}
+				// クライアントからチャット受信
+				else if (dataType === PACKET_TYPE.CHAT)
+				{
+					// タイプ1byte + ID(2byte) + 文字列 が最低構成（サーバーは中身を見ず、そのまま転送するだけ）
+					if (data.length < 3) return;
+
+					const chatMessage = data.toString('utf-8', 1);// 2バイト目以降を文字列に変換
+					const chatMessageChars = [...chatMessage];
+
+					if (chatMessageChars.length > 50)
+					{
+						print("warning", "【検閲】50文字超過のバイナリチャットを破棄しました。");
+						return;
+					}
+				}
+				// クライアントからキャラ情報取得
+				else if (dataType === PACKET_TYPE.JOIN)
+				{
+					// タイプ(1byte) + キャラID(2byte) = 3バイト
+					if (data.length < 3) return;
+
+					//data.byteOffset(読み書きの開始位置)、data.byteLength(対象のデータ長)
+					const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+					ws.characterIndex = view.getUint16(1, true); // キャラIDを記録
+
+					// JOINを正常に受け取れたので、タイムアウト強制切断の予約はもう不要→解除する
+					clearTimeout(ws.joinTimeoutId);
+
+					// 新規参加者自身のJOINパケット (タイプ1byte + ID 2byte + キャラID 2byte = 5バイト)
+					const myJoinPacket = createJoinPacket(ws.playerId, ws.characterIndex);
+
+					//自分自身に対してJOINパケットを送る
+					ws.send(myJoinPacket, { binary: true });
+
+					// 他の全ユーザーへ通知＆情報同期
+					wss.clients.forEach((client) =>
+					{
+						if (client === ws || client.readyState !== 1) return;
+
+						// 新規参加者へ、既存プレイヤーの情報(ID+キャラID)を通知
+						if (client.characterIndex !== undefined)
+						{
+							const existingJoinPacket = createJoinPacket(client.playerId, client.characterIndex);
+							ws.send(existingJoinPacket, { binary: true });
+						}
+
+						// 既存プレイヤーの最新STATEがあれば送信
+						if (client.lastStateBuffer)
+							ws.send(client.lastStateBuffer, { binary: true });
+
+						// 既存プレイヤーへ、新規参加者の情報を通知
+						client.send(myJoinPacket, { binary: true });
+					});
 					return;
 				}
-			}
-			// クライアントから想定外の受信
-			else 
-			{
-				print("warning", `【警告】未定義のタイプ（${dataType}）を受信しました。'\n(${data})`);
-				return;
-			}
-
-			// 安全が確認されたので全員に生のバイナリのまま横流し
-			wss.clients.forEach((client) =>
-			{
-				//STATEが自分自身も入ってくる状態になっている（クライアントでidで除外している）
-				if (client.readyState === 1) 
+				// クライアントから想定外の受信
+				else 
 				{
-					client.send(data, { binary: true });
+					print("warning", "未定義のタイプ(" + dataType + ")を受信しました。(" + ws.playerId + ")\n" + data);
+					return;
 				}
-			});
+
+				// ブロードキャスト 安全が確認されたので全員に生のバイナリのまま横流し
+				wss.clients.forEach((client) =>
+				{
+					// 1人への送信が失敗しても、他のクライアントへの配信を止めないようにする
+					if (client.readyState !== 1) return;
+					//if (client === ws || client.readyState !== 1) return;
+					try
+					{
+						//STATEが自分自身も入ってくる状態になっている（クライアントでidで除外している）
+						if (client.readyState === 1)
+							client.send(data, { binary: true });
+					}
+					catch (e)
+					{
+						print("error", "ブロードキャスト送信失敗 playerId(" + client.playerId + ") " + e.message);
+					}
+				});
+
+			}
+			catch (e)
+			{
+				// この接続の異常だけに留め、他のプレイヤーには影響させない
+				print("error", "メッセージ処理中に例外発生 playerId(" + ws.playerId + ") " + e.message);
+
+				// JOIN処理中に失敗した場合は「正式なクライアント」として成立しないので強制切断する
+				if (dataType === PACKET_TYPE.JOIN)
+					ws.terminate(); // 'close'イベント発火→wss.clientsから自動除外される
+			}
 		});
 
 		// 接続が切れたとき
 		ws.on('close', () =>
 		{
 			print("white", "プレイヤーが切断しました。(" + ws.playerId + ")");
+
+			// JOIN待ちタイマーが残っていれば解除する（二重発火防止のお作法）
+			clearTimeout(ws.joinTimeoutId);
 
 			//LEAVE送信 他の全員に自分の切断を伝える
 			const leavePacket = createLeavePacket(ws.playerId);
@@ -154,21 +231,38 @@ export function init(server)
 function createWelcomePacket(playerId)
 {
 	const welcomePacket = new Uint8Array(3);
-	const welcomeView = new DataView(welcomePacket.buffer);
-	welcomeView.setUint8(0, PACKET_TYPE.WELCOME);
-	welcomeView.setUint16(1, playerId, true); // 第3引数trueは「リトルエンディアン」という並び順の指定（clientと合わせる必要あり）
+	try
+	{
+		const welcomeView = new DataView(welcomePacket.buffer);
+		welcomeView.setUint8(0, PACKET_TYPE.WELCOME);
+		welcomeView.setUint16(1, playerId, true); // 第3引数trueは「リトルエンディアン」という並び順の指定（clientと合わせる必要あり）
+	}
+	catch (e)
+	{
+		print("error", "createWelcomePacket:" + e.message);
+		throw e;
+	}
+
 
 	return welcomePacket;
 }
 
-//JOIN 入ってきた人のIDを送信 タイプ(1byte) + プレイヤーID(2byte) の3byteパケット
-function createJoinPacket(playerId)
+//JOIN 入ってきた人のIDを送信 (タイプ1byte + ID 2byte + キャラID 2byte = 5バイト)
+function createJoinPacket(playerId, charactorIndex)
 {
-	const joinPacket = new Uint8Array(3);
-	const view = new DataView(joinPacket.buffer);
-
-	view.setUint8(0, PACKET_TYPE.JOIN);
-	view.setUint16(1, playerId, true);
+	const joinPacket = new Uint8Array(5);
+	try
+	{
+		const view = new DataView(joinPacket.buffer);
+		view.setUint8(0, PACKET_TYPE.JOIN);
+		view.setUint16(1, playerId, true);
+		view.setUint16(3, charactorIndex, true);
+	}
+	catch (e)
+	{
+		print("error", "createJoinPacket:" + e.message);
+		throw e;
+	}
 
 	return joinPacket;
 }
@@ -177,9 +271,18 @@ function createJoinPacket(playerId)
 function createLeavePacket(playerId)
 {
 	const leavePacket = new Uint8Array(3);
-	const leaveView = new DataView(leavePacket.buffer);
-	leaveView.setUint8(0, PACKET_TYPE.LEAVE);
-	leaveView.setUint16(1, playerId, true);
+	try
+	{
+		const leaveView = new DataView(leavePacket.buffer);
+		leaveView.setUint8(0, PACKET_TYPE.LEAVE);
+		leaveView.setUint16(1, playerId, true);
+	}
+	catch (e)
+	{
+		print("error", "createLeavePacket:" + e.message);
+		throw e;
+	}
+
 
 	return leavePacket;
 }

@@ -41,9 +41,9 @@ export function init()
 	// サーバーからのチャット・移動データを受け取る窓口を、モジュール読み込み時に1回だけ登録する
 	callbacks.onchat = Player.onChat;
 	callbacks.onstate = Player.onState;
-	callbacks.onjoin = Player.onJoin;
+	callbacks.onjoin = game.onJoin;
 	callbacks.onleave = Player.onLeave;
-	callbacks.onwelcome = game.onWelcome;
+	callbacks.onwelcome = Player.onWelcome;
 
 	//セッション開始
 	ws.onopen = () =>
@@ -81,9 +81,9 @@ export function init()
 		{
 			// DataViewを使って、バイト列から小数を正しく引き抜く
 			const view = new DataView(event.data);
-			const id = view.getUint16(1, true);		// 2〜3byte目：送信元のプレイヤーID
-			const x = view.getFloat32(3, true);		// 4〜7byte目：X座標
-			const y = view.getFloat32(7, true);		// 8〜11byte目：Y座標
+			const id = view.getUint16(1, true);			// 2〜3byte目：送信元のプレイヤーID
+			const x = view.getFloat32(3, true);			// 4〜7byte目：X座標
+			const y = view.getFloat32(7, true);			// 8〜11byte目：Y座標
 			const stateIndex = view.getUint8(11);		// 12byte目：状態
 			const directionIndex = view.getUint8(12);	// 13byte目：向き
 			const flip = view.getUint8(13) === 1;		// 14byte目：反転
@@ -131,9 +131,10 @@ export function init()
 		{
 			const view = new DataView(event.data);
 			const joinedId = view.getUint16(1, true);
+			const charactorIndex = view.getUint16(3, true);
 
 			if (callbacks.onjoin)
-				callbacks.onjoin(joinedId);
+				callbacks.onjoin(joinedId, charactorIndex);
 			else
 				addLog("WARNING", "onjoinコールバック指定無し");
 		}
@@ -162,6 +163,19 @@ function sendBinary(buffer)
 		//const packet = JSON.stringify({ type: type, data: data });
 		ws.send(buffer);
 	}
+}
+
+// WELCOMEでJOINを返送する　キャラ選択情報をサーバーへ送り返す関数
+export function sendJoin(characterIndex)
+{
+	// タイプ(1byte) + キャラID(2byte) = 3バイト
+	const buffer = new ArrayBuffer(3);
+	const view = new DataView(buffer);
+
+	view.setUint8(0, PACKET_TYPE.JOIN);
+	view.setUint16(1, characterIndex, true);
+
+	sendBinary(buffer);
 }
 
 //チャット送信

@@ -686,13 +686,40 @@ export function removePlayer(id)
 	if (index !== -1)
 		players.splice(index, 1); // 見つかった位置から1個だけ取り除く
 }
-// 他プレイヤーが新しく入ってきたときの処理
-export async function onJoin(joinedId)
+//自身のログイン
+export async function onWelcome(id)
 {
+	//データ読み込み
+	let playerName = localStorage.getItem('playerName');
+	let character = localStorage.getItem('character');
+
+	//デフォルト指定(直接game.htmlにアクセスされるのを許容)
+	if (!playerName)
+		playerName = "名無し";
+	if (!character)
+		character = CHARACTERS[0];
+
+	let characterIndex = CHARACTERS.indexOf(character);
+
+	//JOINでキャラ情報を送る
+	socket.sendJoin(characterIndex);
+
+	//JOINを受信して初めてキャラ追加する
+	//player = await addPlayer(id, playerName, character);
+}
+/*// 他プレイヤーが新しく入ってきたときの処理
+export async function onJoin(joinedId, characterIndex)
+{
+	print(joinedId);
+
+	let added = null;
 	// 念のため、既に同じIDが存在していないか確認してから追加する
 	if (!getPlayerById(joinedId))
-		await addPlayer(joinedId, "プレイヤー" + joinedId, "maximin");
-}
+		added = await addPlayer(joinedId, "プレイヤー" + joinedId, CHARACTERS[characterIndex]);
+
+	if (joinedId == socket.myPlayerId)
+		game.player = added;
+}*/
 // 他プレイヤーが抜けたときの処理
 export function onLeave(leftId)
 {

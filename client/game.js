@@ -41,22 +41,19 @@ async function init()
 	engine.endProgress();
 }
 
-//ログイン
-export async function onWelcome(id)
+// 他プレイヤーが新しく入ってきたときの処理
+export async function onJoin(joinedId, characterIndex)
 {
-	//データ読み込み
-	let playerName = localStorage.getItem('playerName');
-	let character = localStorage.getItem('character');
+	print(joinedId);
 
-	//デフォルト指定(直接game.htmlにアクセスされるのを許容)
-	if (!playerName)
-		playerName = "名無し";
-	if (!character)
-		character = Player.CHARACTERS[0];
+	let added = null;
+	// 念のため、既に同じIDが存在していないか確認してから追加する
+	if (!Player.getPlayerById(joinedId))
+		added = await Player.addPlayer(joinedId, "プレイヤー" + joinedId, Player.CHARACTERS[characterIndex]);
 
-	player = await Player.addPlayer(id, playerName, character);
+	if (joinedId == socket.myPlayerId)
+		player = added;
 }
-
 
 ///////イベント//////////
 
