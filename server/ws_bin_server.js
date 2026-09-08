@@ -150,7 +150,7 @@ export function init(server)
 		// 接続が切れたとき
 		ws.on('close', () =>
 		{
-			print("white", 'プレイヤーが切断しました。');
+			print("white", "プレイヤーが切断しました。(" + ws.playerId + ")");
 
 			//LEAVE送信 他の全員に自分の切断を伝える
 			const leavePacket = new Uint8Array(3);

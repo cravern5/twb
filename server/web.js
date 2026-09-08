@@ -157,7 +157,12 @@ export function init(api)
 	//webサーバー立ち上げ
 	server = http.createServer(async (req, res) =>
 	{
-		//ブラウザ「ヒューリスティックキャッシュ」、Last-Modifiedだけを付けてCache - Controlを付けなかった場合、ブラウザはRFC 7234で決められたヒューリスティック（推測）キャッシュというルールを使います
+		//クロスオリジン分離のヘッダー　※無駄っぽい？
+		//res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+		//res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+
+		//ヒューリスティックキャッシュ
+		//Last-Modifiedだけを付けてCache - Controlを付けなかった場合、ブラウザはRFC 7234で決められたヒューリスティック（推測）キャッシュというルールを使います
 		//何も指定しない	ブラウザが独自判断でサーバーに聞きにも来ない、ここに来ることさえなくなる、
 		//Cache - Control: no - cache	毎回サーバーに「変わってない？」と確認しにくる（304を活用できる）
 		//Cache - Control: no - store	毎回まるごと再ダウンロード（開発中の確認向け）
