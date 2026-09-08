@@ -497,8 +497,10 @@
 		const playerName = localStorage.getItem('playerName');
 		const character = localStorage.getItem('character');
 
-		document.getElementById('playerName').value = playerName;
-		document.getElementById('character').value = character;
+		if(playerName)
+			document.getElementById('playerName').value = playerName;
+		if(character)
+			document.getElementById('character').value = character;
 	});
 
 
