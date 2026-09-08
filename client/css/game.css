@@ -31,7 +31,9 @@ canvas {
 	font-size: 12px;
 	padding: 10px;
 	border-radius: 6px;
+	/*pre折り返しされない*/
 	white-space: pre;
+	/*選択不可*/
 	pointer-events: none;
 	z-index: 999;
 }
