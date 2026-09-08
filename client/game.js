@@ -13,12 +13,12 @@ import * as Player from './player.js';
 import * as scroll from './scroll.js';
 import * as sound from './sound.js';
 
-let player = null;
-let firstUpdate = false;
-let lastTime = null;
-let fps = 0;			// 直近1秒間に実際に描画できたフレーム数
-let frameCount = 0;		// 1秒間のフレームカウンター
-let fpsTimer = 0;		// 1秒経過したかを計るための経過時間
+export let player = null;
+export let firstUpdate = false;
+export let lastTime = null;
+export let fps = 0;			// 直近1秒間に実際に描画できたフレーム数
+export let frameCount = 0;		// 1秒間のフレームカウンター
+export let fpsTimer = 0;		// 1秒経過したかを計るための経過時間
 const debugInfo = document.getElementById('debugInfo');
 const chatLog = document.getElementById('chatLog');
 
@@ -253,11 +253,8 @@ function update(delta)
 	//マップ描画
 	world.update(delta);
 
-	//プレイヤー画面更新
-	Player.players.forEach((p) =>
-	{
-		p.update(delta);
-	});
+	//プレイヤー全更新
+	Player.updateAll(delta);
 
 	firstUpdate = true;
 }
@@ -270,7 +267,7 @@ function animate(currentTime)
 			lastTime = currentTime;
 		const deltaTime = (currentTime - lastTime) / 1000;
 
-		//1秒ごとに「実際に何回animateが呼ばれたか」を数える＝これが体感のカクつきに直結する本当のフレームレート
+		//フレームレート　1秒ごとに「何回animateが呼ばれたか」を数える
 		frameCount++;
 		fpsTimer += deltaTime;
 		if (fpsTimer >= 1)

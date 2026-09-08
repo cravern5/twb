@@ -8,6 +8,7 @@ import * as engine from './engine.js';
 import { canvas, ctx } from './engine.js';
 import { MAP_WIDTH, MAP_HEIGHT, camera } from './world.js';
 import * as world from './world.js';
+import * as game from './game.js';
 
 //プレイヤー======================================
 //キャラクター
@@ -142,6 +143,20 @@ export class Player
 		const x = this.position.x + SPRITE_WIDTH / 2;
 		const y = this.position.y + SPRITE_HEIGHT / 2;
 		return { x: x, y: y };
+	}
+
+	//現在の状態のアセットを取得
+	getStateAsset()
+	{
+		const stateKey = this.character + "_" + this.state + "_" + this.direction;
+		const asset = this.assets[stateKey];
+		if (!asset)
+		{
+			print("error", "指定されたステートイメージはありません(" + this.stateKey + ")")
+			return null;
+		}
+
+		return asset;
 	}
 
 	//マウス移動
@@ -307,11 +322,11 @@ export class Player
 		return changed;
 	}
 
-	//画面更新
-	update(delta)
+	//再計算(位置・状態)　(自身の場合)deltaだけ、(他ユーザーの場合)delta以外直接入力
+	recalc({ delta, x, y, state, direction, flip })
 	{
-		if (!this.initialized)
-			return;
+		let position_changed = false;
+		let state_changed = false;
 
 		//状態を更新して送信(自分自身の場合)
 		if (this.id === socket.myPlayerId)
@@ -320,13 +335,13 @@ export class Player
 			const move = this.getMovement();
 
 			//移動処理を追加
-			const position_changed = this.updatePosition(delta, move);
+			position_changed = this.updatePosition(delta, move);
 
 			//状態変化
-			const state_changed = this.updateState(move);
+			state_changed = this.updateState(move);
 
-			if (state_changed)
-				this.currentFrame = 0;	//状態変化したらフレームは最初に
+			//if (state_changed)
+			//	this.currentFrame = 0;	//状態変化したらフレームは最初に
 
 			// 前回送信からの経過時間を積算しておく
 			this.sendTimer += delta;
@@ -338,23 +353,40 @@ export class Player
 				this.sendTimer = 0;	// 送信したのでタイマーをリセット
 				socket.sendState(this.position.x, this.position.y, this.state, this.direction, this.flip);
 			}
-
 		}
-
-		//addLog("direction:" + olddirection + "→" + direction + " state:" + oldstate + "→" + state);
-		const stateKey = this.character + "_" + this.state + "_" + this.direction;
-		const asset = this.assets[stateKey];
-		if (!asset)
+		else
 		{
-			print("error", "指定されたステートイメージはありません(" + this.stateKey + ")")
-			return;
+			if (this.position.x !== x || this.position.y !== y)
+				position_changed = true;
+
+			//状態更新
+			this.position.x = x;
+			this.position.y = y;
+
+			//状態か向きが変わった瞬間だけ、アニメーションのコマ数を最初に戻す
+			if (this.state !== state || this.direction !== direction || this.flip != flip)
+				state_changed = true;
+			//this.currentFrame = 0;
+
+			this.state = state;
+			this.direction = direction;
+			this.flip = flip;
 		}
 
-		//実際に経過した時間(delta)を加算する
-		this.frameTimer += delta;
+		//状態変化したらフレームは最初に
+		if (state_changed)
+			this.currentFrame = 0;
 
+		return state_changed;
+	}
 
-		//デバッグ用、1秒ごとに受信回数を集計する
+	//画面更新
+	update(delta)
+	{
+		if (!this.initialized)
+			return;
+
+		//1秒ごとにupdate回数を集計する(デバッグ用)
 		this.receiveCountTimer += delta;					// 経過時間を積算
 		if (this.receiveCountTimer >= 1)
 		{
@@ -362,6 +394,21 @@ export class Player
 			this.receiveCount = 0;							// カウンターを0に戻して次の1秒を数え直す
 			this.receiveCountTimer %= 1;					// 1秒を超えた余り時間は次に繰り越す（ずれ防止）
 		}
+
+		//再計算(位置・状態)
+		//if (this.id === socket.myPlayerId)
+		//{
+		//	if (this.recalc({ delta }))
+		//		this.currentFrame = 0;
+		//}
+
+		//ステートアセット
+		const asset = this.getStateAsset();
+		if (!asset)
+			return;
+
+		//実際に経過した時間(delta)を加算する
+		this.frameTimer += delta;
 
 		// 設定した時間（0.1秒）を超えたらコマを進める
 		if (this.frameTimer >= FRAME_DURATION)
@@ -372,6 +419,20 @@ export class Player
 			// 最後のコマまで来たら最初のコマに戻る
 			this.currentFrame = (this.currentFrame + 1) % asset.frameCount;
 		}
+
+		//ふきだしを表示中なら、残り時間を減らしていく
+		if (this.bubbleTimer > 0)
+			this.bubbleTimer -= delta;
+	}
+
+	draw()
+	{
+		if (!this.initialized)
+			return;
+
+		const asset = this.getStateAsset();
+		if (!asset)
+			return;
 
 		//ワールド座標(position)からカメラ位置を引いて「画面上の描画位置」を求める、プレイヤーが動いてもカメラが追従して常に画面中央に見える
 		const screenX = this.position.x - camera.x;
@@ -389,19 +450,9 @@ export class Player
 		//キャラクター描画
 		this.drawCharacter(asset, screenX, screenY);
 
-		//吹き出し描画
+		//ふきだしを表示中なら、頭の少し上にふきだしを描画する
 		if (this.bubbleTimer > 0)
-		{
-			//ふきだしを表示中なら、残り時間を減らしていく
-			this.bubbleTimer -= delta;
-
-			//まだ時間が残っていれば、頭の少し上にふきだしを描画する
-			if (this.bubbleTimer > 0)
-			{
-				//描画
-				this.drawBubble(this.bubbleLines, screenX + SPRITE_WIDTH / 2, screenY - 5);
-			}
-		}
+			this.drawBubble(this.bubbleLines, screenX + SPRITE_WIDTH / 2, screenY - 5);
 	}
 
 	//影の描画
@@ -676,25 +727,51 @@ export function onState(id, x, y, stateIndex, directionIndex, flip)
 		return;
 	}
 
-	//デバッグ用の受信間隔計測
-	const now = performance.now();							// 現在時刻をミリ秒の高精度な値で取得
-	if (player.lastReceiveTime !== null)					// 2回目以降の受信のときだけ間隔を計算できる
-		player.lastReceiveInterval = now - player.lastReceiveTime;	// 前回受信からの経過時間
-	player.lastReceiveTime = now;							// 今回の受信時刻を「前回」として保存し直す
-	player.receiveCount++;								// 1秒間の受信回数カウントに+1
+	//onStateの受信間隔計測(デバッグ用)
+	const now = performance.now();// 現在時刻をミリ秒の高精度な値で取得
 
+	// 前回受信からの経過時間
+	if (player.lastReceiveTime !== null)
+		player.lastReceiveInterval = now - player.lastReceiveTime;
+	player.lastReceiveTime = now;
 
-	player.position.x = x;
-	player.position.y = y;
+	// 1秒間の受信回数カウントに+1
+	player.receiveCount++;
 
-	const newState = STATES[stateIndex] || STATES[0];
-	const newDirection = DIRECTIONS[directionIndex] || DIRECTIONS[0];
+	const state = STATES[stateIndex] || STATES[0];
+	const direction = DIRECTIONS[directionIndex] || DIRECTIONS[0];
 
-	//状態か向きが変わった瞬間だけ、アニメーションのコマ数を最初に戻す
-	if (player.state !== newState || player.direction !== newDirection)
-		player.currentFrame = 0;
+	//再計算
+	player.recalc({ x, y, state, direction, flip });
+}
 
-	player.state = newState;
-	player.direction = newDirection;
-	player.flip = flip;
+//プレイヤー一覧をYSortしたものを出力
+export function playerYSort()
+{
+	//足元のY座標が小さい（奥）順に並べ替える
+	//→ Y座標が大きい（画面の下＝手前）キャラを後から重ねて描くことで、自然な前後関係（Y-sort）になる
+	const sortedPlayers = [...players].sort((a, b) =>
+	{
+		const footA = a.getFootPosition(a.position.x, a.position.y);
+		const footB = b.getFootPosition(b.position.x, b.position.y);
+		return footA.y - footB.y;
+	});
+	return sortedPlayers;
+}
+
+//プレイヤー全更新
+export function updateAll(delta)
+{
+	//自分自身の再計算
+	if (game.player)
+		game.player.recalc({ delta });
+
+	//足元のY座標が小さい（奥）順に並べ替える
+	const sortedPlayers = playerYSort();
+
+	//プレイヤーの位置・状態だけ先に更新する　※全てのフレームを更新
+	players.forEach((p) => { p.update(delta); });
+
+	//ソート済みの順番で描画する
+	sortedPlayers.forEach((p) => { p.draw(); });
 }
