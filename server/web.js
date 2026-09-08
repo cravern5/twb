@@ -191,8 +191,19 @@ export function init(api)
 				let baseDir = PUBLIC_DIR;
 				let reqPath = req.url === '/' ? '/index.html' : req.url;
 
+				// ?以降のクエリを分離して、パス部分だけ取得
+				//const pathname = new URL(reqPath, 'http://localhost').pathname;
+
 				//不正な形式の文字列検知
-				let relativePath = decodeURIComponent(reqPath);
+				let relativePath;
+				try
+				{
+					relativePath = decodeURIComponent(reqPath);
+				}
+				catch (e)
+				{
+					plainWrite(res, 400, 'Bad Request ' + e.message);
+				}
 
 				// URLが "/shared/" で始まっていたら、配信元フォルダを SHARED_DIR に切り替える　// "/shared/config.js" → SHARED_DIR + "/config.js" を読みに行く	
 				if (relativePath.startsWith('/' + sharedPrefix + '/'))
@@ -208,7 +219,6 @@ export function init(api)
 				{
 					let a = 1;
 				}
-
 
 				//兄弟誤判定が無いように末尾に区切りをつける
 				const pubSep = baseDir.endsWith(path.sep) ? baseDir : baseDir + path.sep;
@@ -246,10 +256,6 @@ export function init(api)
 							return;
 						}
 
-
-						//ファイル読み込み(同期)、画像も問題なし
-						const content = await fsp.readFile(filePath);
-
 						// HEADリクエストの場合は「ファイルの情報だけ」返して、中身（本文）は送らない
 						if (req.method === 'HEAD')
 						{
@@ -262,6 +268,8 @@ export function init(api)
 							return;
 						}
 
+						//ファイル読み込み(同期)、画像も問題なし
+						const content = await fsp.readFile(filePath);
 						plainWrite(res, 200, '静的ファイル読み込み', content,
 							{
 								'Content-Type': contentType,
@@ -309,7 +317,7 @@ export function init(api)
 		}
 		catch (e) 
 		{
-			plainWrite(res, 500, 'Internal Server Error' + e.message);
+			plainWrite(res, 500, 'Internal Server Error ' + e.message);
 		}
 
 	});

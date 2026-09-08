@@ -13,7 +13,7 @@ const isMainModule = process.argv[1] === fileURLToPath(import.meta.url);
 
 export let wss = null;
 
-let playerCount = 0;
+let playerCount = 0;//上限 setUint16(65535）
 
 export function init(server)
 {
@@ -61,39 +61,6 @@ export function init(server)
 		const welcomePacket = createWelcomePacket(ws.playerId);
 		ws.send(welcomePacket, { binary: true });
 
-		/*//JOIN(本人) 既存ユーザーを本人に伝える
-		wss.clients.forEach((client) =>
-		{
-			// 自分自身(今接続してきた本人)は対象外にする
-			if (client !== ws && client.readyState === 1)
-			{
-				// 既存プレイヤー1人につき、JOINパケット(タイプ+ID)を1つ作る
-				const existingJoinPacket = new Uint8Array(3);
-				const existingJoinView = new DataView(existingJoinPacket.buffer);
-				existingJoinView.setUint8(0, PACKET_TYPE.JOIN);
-				existingJoinView.setUint16(1, client.playerId, true);
-
-				// 他の全員にではなく、新しく入ってきた本人(ws)にだけ送る
-				ws.send(existingJoinPacket, { binary: true });
-
-				// 既存プレイヤーが一度でもSTATEを送ってきていれば、そのままキャッシュ済みSTATEを送る
-				if (client.lastStateBuffer)
-					ws.send(client.lastStateBuffer, { binary: true });
-			}
-		});
-
-		//JOIN送信 他の全員に自分を伝える タイプ(1byte) + プレイヤーID(2byte) の3byteパケット
-		const joinPacket = new Uint8Array(3);
-		const joinView = new DataView(joinPacket.buffer);
-		joinView.setUint8(0, PACKET_TYPE.JOIN);
-		joinView.setUint16(1, ws.playerId, true);
-		wss.clients.forEach((client) =>
-		{
-			// 送信者(=今接続してきた本人)には送らない
-			if (client !== ws && client.readyState === 1)
-				client.send(joinPacket, { binary: true });
-		});*/
-
 		//JOIN送信 他の全員に自分を伝える タイプ(1byte) + プレイヤーID(2byte) の3byteパケット
 		const joinPacket = createJoinPacket(ws.playerId);
 
@@ -127,7 +94,7 @@ export function init(server)
 			if (dataType === PACKET_TYPE.STATE)
 			{
 				// タイプ1byte + ID(2byte) + Float32×2(8byte) + 状態(1byte) + 向き(1byte) + 反転(1byte) = 14バイト
-				if (data.length < 14) return;
+				if (data.length !== 14) return;
 
 				// 次に誰かが新規接続してきたとき、この人の紹介用に使えるよう最新状態を保存しておく
 				ws.lastStateBuffer = Buffer.from(data);
@@ -157,6 +124,7 @@ export function init(server)
 			// 安全が確認されたので全員に生のバイナリのまま横流し
 			wss.clients.forEach((client) =>
 			{
+				//STATEが自分自身も入ってくる状態になっている（クライアントでidで除外している）
 				if (client.readyState === 1) 
 				{
 					client.send(data, { binary: true });
