@@ -138,6 +138,15 @@ export class Player
 		return { x: screenX + SPRITE_WIDTH / 2 + 0, y: screenY + SPRITE_HEIGHT - 14.5 };
 	}
 
+	//ワールド座標(position)からカメラ位置を引いて「画面上の描画位置」を求める、プレイヤーが動いてもカメラが追従して常に画面中央に見える
+	getWorldPosition()
+	{
+		const screenX = this.position.x - camera.x;
+		const screenY = this.position.y - camera.y;
+
+		return { x: screenX, y: screenY };
+	}
+
 	//中央の座標取得
 	getCenterPosition(pos)
 	{
@@ -428,7 +437,7 @@ export class Player
 			this.bubbleLines = null;
 	}
 
-	draw()
+	drawCharacter()
 	{
 		if (!this.initialized)
 			return;
@@ -438,42 +447,23 @@ export class Player
 			return;
 
 		//ワールド座標(position)からカメラ位置を引いて「画面上の描画位置」を求める、プレイヤーが動いてもカメラが追従して常に画面中央に見える
-		const screenX = this.position.x - camera.x;
-		const screenY = this.position.y - camera.y;
+		const screen = this.getWorldPosition();
+
+		//足の位置
+		const foot = this.getFootPosition(screen.x, screen.y);
 
 		// 描画前に一旦キャンバスをクリアする
 		//ctx.clearRect(this.position.x, this.position.y, asset.frameWidth, asset.frameHeight);
 
-		//足の位置
-		const foot = this.getFootPosition(screenX, screenY);
-
-		//影の描画
-		this.drawShadow(foot);
-
-		//キャラクター描画
-		this.drawCharacter(asset, screenX, screenY);
-
-		//ふきだしを表示中なら、頭の少し上にふきだしを描画する
-		if (this.bubbleTimer > 0)
-			this.drawBubble(this.bubbleLines, screenX + SPRITE_WIDTH / 2, screenY - 5);
-	}
-
-	//影の描画
-	drawShadow(foot)
-	{
 		//影の描画
 		utils2.drawCircle(
 			ctx, 'rgba(0, 0, 0, 0.6)', foot.x, foot.y,
 			SPRITE_WIDTH * 0.25,//幅
 			SPRITE_WIDTH * 0.1//高さ
 		);
-		//utils2.drawShadow(ctx, 'rgba(0, 0, 0, 0.5)', screenX + 5, screenY - 15, SPRITE_WIDTH - 10, SPRITE_HEIGHT);
-	}
+		//utils2.drawShadow(ctx, 'rgba(0, 0, 0, 0.5)', screen.x + 5, screen.y - 15, SPRITE_WIDTH - 10, SPRITE_HEIGHT);
 
-	//キャラクター描画
-	drawCharacter(asset, x, y)
-	{
-		// スプライトシートから該当コマだけを切り出して描画する
+		//キャラクター描画 スプライトシートから該当コマだけを切り出して描画する
 		if (this.flip)
 		{
 			//描画状態（座標系の回転・拡大縮小・移動、透過度、塗りつぶし色など）をスタックに保存・復元するための命令
@@ -482,7 +472,7 @@ export class Player
 			ctx.drawImage(
 				asset.img,
 				this.currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
-				-x - asset.frameWidth, y, asset.frameWidth, asset.frameHeight
+				-screen.x - asset.frameWidth, screen.y, asset.frameWidth, asset.frameHeight
 			);
 			ctx.restore();
 		}
@@ -491,10 +481,9 @@ export class Player
 			ctx.drawImage(
 				asset.img,
 				this.currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
-				x, y, asset.frameWidth, asset.frameHeight
+				screen.x, screen.y, asset.frameWidth, asset.frameHeight
 			);
 		}
-
 	}
 
 	//チャット送信
@@ -620,18 +609,26 @@ export class Player
 	}
 
 	//バブル描画（文字の調整は行わず、渡された結果を使って描くだけ）
-	drawBubble(lines, x, y)
+	drawBubble()
 	{
+		if (!this.bubbleLines)
+			return;
+
+		//ワールド座標(position)からカメラ位置を引いて「画面上の描画位置」を求める、プレイヤーが動いてもカメラが追従して常に画面中央に見える
+		const screen = this.getWorldPosition();
+		const x = screen.x + SPRITE_WIDTH / 2
+		const y = screen.y - 5;
+
 		//adjustBubbleTextで既に設定してある
 		//ctx.font = bubbleFont;
 
 		// 実際に表示する行の中で、一番幅が広い行に合わせて背景の横幅を決める（最大幅は超えない）
 		let widestLineWidth = 0;
-		for (const line of lines)
+		for (const line of this.bubbleLines)
 			widestLineWidth = Math.max(widestLineWidth, ctx.measureText(line).width);
 
 		const boxWidth = Math.min(BUBBLE_MAX_WIDTH, widestLineWidth + BUBBLE_PADDING_X * 2);
-		const boxHeight = lines.length * BUBBLE_LINE_HEIGHT + BUBBLE_PADDING_Y * 2;
+		const boxHeight = this.bubbleLines.length * BUBBLE_LINE_HEIGHT + BUBBLE_PADDING_Y * 2;
 
 		// xを中心にして描く// yを縦方向の中心にして描く
 		ctx.textAlign = "center";
@@ -647,10 +644,10 @@ export class Player
 
 		// 文字を1行ずつ描画する（各行が縦方向にも中央に来るように位置を計算）
 		ctx.fillStyle = this.bubbleColor;
-		for (let i = 0; i < lines.length; i++)
+		for (let i = 0; i < this.bubbleLines.length; i++)
 		{
 			const lineY = boxY + BUBBLE_PADDING_Y + BUBBLE_LINE_HEIGHT * i + BUBBLE_LINE_HEIGHT / 2;
-			ctx.fillText(lines[i], x, lineY);
+			ctx.fillText(this.bubbleLines[i], x, lineY);
 		}
 
 	}
@@ -810,5 +807,6 @@ export function updateAll(delta)
 	players.forEach((p) => { p.update(delta); });
 
 	//ソート済みの順番で描画する
-	sortedPlayers.forEach((p) => { p.draw(); });
+	sortedPlayers.forEach((p) => { p.drawCharacter(); });
+	sortedPlayers.forEach((p) => { p.drawBubble(); });
 }
