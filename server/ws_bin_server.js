@@ -183,7 +183,7 @@ export function init(server)
 
 
 //WELCOME 本人にIDを送信　タイプ(1byte) + プレイヤーID(2byte) の3byteパケット
-function createWelcomPacket(playerId)
+function createWelcomePacket(playerId)
 {
 	const welcomePacket = new Uint8Array(3);
 	const welcomeView = new DataView(welcomePacket.buffer);
