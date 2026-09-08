@@ -72,7 +72,8 @@ class WindowController
 		this.minHeight = minHeight;
 
 		//四隅上下左右リサイズハンドルの追加
-		['nw', 'ne', 'sw', 'se', 'n', 's', 'w', 'e'].forEach(dir =>
+		//['nw', 'ne', 'sw', 'se', 'n', 's', 'w', 'e'].forEach(dir =>
+		for (let dir of ['nw', 'ne', 'sw', 'se', 'n', 's', 'w', 'e'])
 		{
 			const handle = document.createElement('div');
 			handle.className = `resize-handle ${dir}`;
@@ -81,7 +82,7 @@ class WindowController
 
 			this.container.appendChild(handle);
 
-		});
+		}//);
 
 		//ウィンドウリサイズ
 		if (this.resizer)
