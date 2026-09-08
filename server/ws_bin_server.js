@@ -58,13 +58,10 @@ export function init(server)
 		//例:4550を16進数（2バイト）で表すと 0x1234（12 と 34）　ビッグエンディアン = 0x12 0x34、リトルエンディアン = 0x34 0x12
 
 		//WELCOME送信 本人にIDを送信　タイプ(1byte) + プレイヤーID(2byte) の3byteパケット
-		const welcomePacket = new Uint8Array(3);
-		const welcomeView = new DataView(welcomePacket.buffer);
-		welcomeView.setUint8(0, PACKET_TYPE.WELCOME);
-		welcomeView.setUint16(1, ws.playerId, true); // 第3引数trueは「リトルエンディアン」という並び順の指定（clientと合わせる必要あり）
+		const welcomePacket = createWelcomePacket(ws.playerId);
 		ws.send(welcomePacket, { binary: true });
 
-		//JOIN(本人) 既存ユーザーを本人に伝える
+		/*//JOIN(本人) 既存ユーザーを本人に伝える
 		wss.clients.forEach((client) =>
 		{
 			// 自分自身(今接続してきた本人)は対象外にする
@@ -85,7 +82,7 @@ export function init(server)
 			}
 		});
 
-		//JOIN送信 他の全員に自分をを伝える タイプ(1byte) + プレイヤーID(2byte) の3byteパケット
+		//JOIN送信 他の全員に自分を伝える タイプ(1byte) + プレイヤーID(2byte) の3byteパケット
 		const joinPacket = new Uint8Array(3);
 		const joinView = new DataView(joinPacket.buffer);
 		joinView.setUint8(0, PACKET_TYPE.JOIN);
@@ -95,8 +92,28 @@ export function init(server)
 			// 送信者(=今接続してきた本人)には送らない
 			if (client !== ws && client.readyState === 1)
 				client.send(joinPacket, { binary: true });
-		});
+		});*/
 
+		//JOIN送信 他の全員に自分を伝える タイプ(1byte) + プレイヤーID(2byte) の3byteパケット
+		const joinPacket = createJoinPacket(ws.playerId);
+
+		//全ユーザー取得
+		wss.clients.forEach((client) =>
+		{
+			if (client === ws || client.readyState !== 1)
+				return;
+
+			// 新規参加者へ既存プレイヤーを通知
+			const existingJoinPacket = createJoinPacket(client.playerId);
+			ws.send(existingJoinPacket, { binary: true });
+
+			// 既存プレイヤーが一度でもSTATEを送ってきていれば、そのままキャッシュ済みSTATEを送る
+			if (client.lastStateBuffer)
+				ws.send(client.lastStateBuffer, { binary: true });
+
+			// 既存参加者へ新規参加者を通知
+			client.send(joinPacket, { binary: true });
+		});
 
 		//クライアントから受信
 		ws.on('message', (data) =>
@@ -153,10 +170,7 @@ export function init(server)
 			print("white", "プレイヤーが切断しました。(" + ws.playerId + ")");
 
 			//LEAVE送信 他の全員に自分の切断を伝える
-			const leavePacket = new Uint8Array(3);
-			const leaveView = new DataView(leavePacket.buffer);
-			leaveView.setUint8(0, PACKET_TYPE.LEAVE);
-			leaveView.setUint16(1, ws.playerId, true);
+			const leavePacket = createLeavePacket(ws.playerId);
 			wss.clients.forEach((client) =>
 			{
 				if (client.readyState === 1)
@@ -166,6 +180,42 @@ export function init(server)
 	});
 
 }
+
+
+//WELCOME 本人にIDを送信　タイプ(1byte) + プレイヤーID(2byte) の3byteパケット
+function createWelcomPacket(playerId)
+{
+	const welcomePacket = new Uint8Array(3);
+	const welcomeView = new DataView(welcomePacket.buffer);
+	welcomeView.setUint8(0, PACKET_TYPE.WELCOME);
+	welcomeView.setUint16(1, playerId, true); // 第3引数trueは「リトルエンディアン」という並び順の指定（clientと合わせる必要あり）
+
+	return welcomePacket;
+}
+
+//JOIN 入ってきた人のIDを送信 タイプ(1byte) + プレイヤーID(2byte) の3byteパケット
+function createJoinPacket(playerId)
+{
+	const joinPacket = new Uint8Array(3);
+	const view = new DataView(joinPacket.buffer);
+
+	view.setUint8(0, PACKET_TYPE.JOIN);
+	view.setUint16(1, playerId, true);
+
+	return joinPacket;
+}
+
+//LEAVE 自分の切断を伝える タイプ(1byte) + プレイヤーID(2byte) の3byteパケット
+function createLeavePacket(playerId)
+{
+	const leavePacket = new Uint8Array(3);
+	const leaveView = new DataView(leavePacket.buffer);
+	leaveView.setUint8(0, PACKET_TYPE.LEAVE);
+	leaveView.setUint16(1, playerId, true);
+
+	return leavePacket;
+}
+
 
 if (isMainModule)
 	init();
