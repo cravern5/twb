@@ -170,14 +170,14 @@ function sendBinary(buffer)
 }
 
 // WELCOMEでJOINを返送する　キャラ選択情報をサーバーへ送り返す関数
-export function sendJoin(id, characterIndex, playerName)
+export function sendJoin(characterIndex, playerName)
 {
 	// タイプ(1byte) + プレイヤーID(2byte) + キャラID(2byte) + 名前(固定NAME_BYTE_LENGTHバイト)
 	const packet = new Uint8Array(5 + NAME_BYTE_LENGTH);
 	const view = new DataView(packet.buffer);
 
 	view.setUint8(0, PACKET_TYPE.JOIN);
-	view.setUint16(1, id, true);
+	view.setUint16(1, myPlayerId, true);
 	view.setUint16(3, characterIndex, true);
 
 	// 名前を固定長のバイト列（0埋め込み）に変換して4byte目以降へコピー
@@ -220,7 +220,7 @@ export function sendState(x, y, state, direction, flip)
 	const buffer = new ArrayBuffer(14);
 	const view = new DataView(buffer);
 
-	view.setUint8(0, PACKET_TYPE.STATE);		// 1byte目：タイプ
+	view.setUint8(0, PACKET_TYPE.STATE);	// 1byte目：タイプ
 	view.setUint16(1, myPlayerId, true);	// 2〜3byte目：自分のID
 	view.setFloat32(3, x, true);			// 4〜7byte目：X座標
 	view.setFloat32(7, y, true);			// 8〜11byte目：Y座標

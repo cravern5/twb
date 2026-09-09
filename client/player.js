@@ -707,7 +707,7 @@ export async function onWelcome(id)
 	let characterIndex = CHARACTERS.indexOf(characterName);
 
 	//JOINでキャラ情報を送る
-	socket.sendJoin(id, characterIndex, playerName);
+	socket.sendJoin(characterIndex, playerName);
 
 	//JOINを受信して初めてキャラ追加する
 	//player = await addPlayer(id, playerName, character);
