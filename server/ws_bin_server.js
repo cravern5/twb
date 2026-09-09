@@ -132,15 +132,16 @@ export function init(server)
 				// クライアントからキャラ情報取得
 				else if (dataType === PACKET_TYPE.JOIN)
 				{
-					// タイプ(1byte) + キャラID(2byte) + 名前(固定NAME_BYTE_LENGTHバイト)
-					if (data.length < 3 + NAME_BYTE_LENGTH) return;
+					// タイプ(1byte) + プレイヤーID(2bytes) + キャラID(2byte) + 名前(固定NAME_BYTE_LENGTHバイト)
+					if (data.length < 5 + NAME_BYTE_LENGTH) return;
 
 					//data.byteOffset(読み書きの開始位置)、data.byteLength(対象のデータ長)
 					const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
-					ws.characterIndex = view.getUint16(1, true); // キャラIDを記録
+					const dummyid = view.getUint16(1, true); // プレイヤーIDを記録
+					ws.characterIndex = view.getUint16(3, true); // キャラIDを記録
 
-					// 4byte目から固定長ぶんを取り出し、プレイヤー名として記録する
-					const nameBytes = data.subarray(3, 3 + NAME_BYTE_LENGTH);
+					// 4byte目から固定長分を取り出し、プレイヤー名として記録する
+					const nameBytes = data.subarray(5, 5 + NAME_BYTE_LENGTH);
 					ws.playerName = decodeFixedName(nameBytes);
 
 					// JOINを正常に受け取れたので、タイムアウト強制切断の予約はもう不要→解除する
@@ -263,7 +264,7 @@ function createJoinPacket(playerId, characterIndex, playerName)
 		view.setUint16(3, characterIndex, true);
 
 		// 6byte目以降に名前を固定長のバイト列として書き込む
-		joinPacket.set(encodeFixedName(playerName), 5);
+		joinPacket.set(encodeFixedName(playerName, NAME_BYTE_LENGTH), 5);
 	}
 	catch (e)
 	{

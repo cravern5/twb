@@ -457,8 +457,17 @@ export function waitMObs(element, attrName, timeout = 5000)
 
 
 //キャラクター名を固定長のバイト列に変換する（余った部分は自動的に0埋めになる）
-export function encodeFixedName(text, byteLength = NAME_BYTE_LENGTH)
+export function encodeFixedName(text, byteLength)
 {
+	/*
+	// packetのオフセット3から直接NAME_BYTE_LENGTHバイトの書き込み枠（サブアレイ）を作成
+		const nameTarget = packet.subarray(5, NAME_BYTE_LENGTH + 5);
+		const encoder = new TextEncoder();
+		// encodeIntoは target のサイズ（NAME_BYTE_LENGTH）を超えないよう、
+		// 文字の途中で切れない最大のところまで自動で安全に書き込んでくれます
+		encoder.encodeInto(playerName, nameTarget);
+	*/
+
 	const encoder = new TextEncoder();
 	let bytes = encoder.encode(text);
 
