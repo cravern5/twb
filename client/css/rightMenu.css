@@ -19,9 +19,9 @@
 	/* はみ出した部分(縮んだときの中身)を見えなくする */
 	overflow: hidden;
 	/* 開いている状態の高さ(51px × 9個分) */
-	max-height: 459px;
+	max-height: calc(51px * 9);
 	/* max-heightが変化するときに0.5秒かけてなめらかに動かす */
-	transition: max-height 0.5s ease;
+	transition: max-height 0.25s ease;
 }
 
 /* JSでこのクラスを付けると閉じる(収納する) */
@@ -40,7 +40,10 @@
 }
 
 /* ホバー時は背景位置を右半分にずらして「押された画像」に見せる */
-.rightMenuBtn:hover, .rightMenuOpenBtn:hover {
+.rightMenuBtn:hover {
+	background-position: right top;
+}
+.rightMenuOpenBtn:active {
 	background-position: right top;
 }
 
@@ -87,4 +90,9 @@
 }
 #rightMenuOpen {
 	background-image: url("../assets/ui/RightMenu/open.png");
+}
+/* rightMenuButtonsが閉じていない=開いている時は、
+   rightMenuOpenの画像をclose.pngに差し替える */
+#rightMenuButtons:not(.closed) ~ #rightMenuOpen {
+	background-image: url("../assets/ui/RightMenu/close.png");
 }
