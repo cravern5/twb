@@ -24,7 +24,7 @@ canvas {
 	display: none;
 	position: fixed;
 	top: 10px;
-	left: 10px;
+	right: 30px;
 	background: rgba(0, 0, 0, 0.7);
 	color: #0f0;
 	font-family: monospace;

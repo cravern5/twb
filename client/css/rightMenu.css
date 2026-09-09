@@ -1,0 +1,74 @@
+/* #chatArea の直下にあるすべての要素に margin: 1px を適用 */
+#rightMenu {
+	display: flex;
+	flex-direction: column;
+	position: absolute;
+	right: 0px;
+	top: 0px;
+	width: 18px;
+	height: calc(51px * 9 + 18px);
+	padding: 0;
+	margin: 0;
+	/*大きい方が手前*/
+	z-index: 999;
+}
+
+/*共通ボタン*/
+.rightMenuBtn, .rightMenuOpenBtn {
+	/* 画像の横幅を2倍(200%)にすることで、画像全体を 左半分・右半分の2コマとして扱えるようにする */
+	/*background-size: 200% 100%;*/
+	/* 画像が繰り返し表示されないようにする */
+	background-repeat: no-repeat;
+	background-position: left top;
+	cursor: pointer;
+}
+
+/* ホバー時は背景位置を右半分にずらして「押された画像」に見せる */
+.rightMenuBtn:hover, .rightMenuOpenBtn:hover {
+	background-position: right top;
+}
+
+/* 各メニューボタン共通のサイズ・見た目 */
+.rightMenuBtn {
+	width: 18px;
+	height: 51px;
+}
+
+/* 各メニューボタン共通のサイズ・見た目 */
+.rightMenuOpenBtn {
+	width: 18px;
+	height: 18px;
+}
+
+#rightMenuCharacter {
+	background-image: url("../assets/ui/RightMenu/character.png");
+}
+
+#rightMenuCombo {
+	background-image: url("../assets/ui/RightMenu/combo.png");
+}
+
+#rightMenuEquip {
+	background-image: url("../assets/ui/RightMenu/equip.png");
+}
+#rightMenuItem {
+	background-image: url("../assets/ui/RightMenu/item.png");
+}
+#rightMenuOption {
+	background-image: url("../assets/ui/RightMenu/option.png");
+}
+#rightMenuSkill {
+	background-image: url("../assets/ui/RightMenu/skill.png");
+}
+#rightMenuTeam {
+	background-image: url("../assets/ui/RightMenu/team.png");
+}
+#rightMenuClub {
+	background-image: url("../assets/ui/RightMenu/club.png");
+}
+#rightMenuQuest {
+	background-image: url("../assets/ui/RightMenu/quest.png");
+}
+#rightMenuOpen {
+	background-image: url("../assets/ui/RightMenu/open.png");
+}
