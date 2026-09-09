@@ -1,5 +1,6 @@
 //import path from 'path'; //ブラウザ環境では使えない
 //import fs from 'fs';//ブラウザ環境では使えない
+import { NAME_BYTE_LENGTH } from './config.js';
 
 //ブラウザ環境のみ
 let chatLog = null;
@@ -452,4 +453,36 @@ export function waitMObs(element, attrName, timeout = 5000)
 
 		observer.observe(element, { attributes: true });
 	});
+}
+
+
+//キャラクター名を固定長のバイト列に変換する（余った部分は自動的に0埋めになる）
+export function encodeFixedName(text, byteLength = NAME_BYTE_LENGTH)
+{
+	const encoder = new TextEncoder();
+	let bytes = encoder.encode(text);
+
+	// 漢字や絵文字を文字の途中で切らないよう、1文字ずつ削りながら収まるまで縮める
+	let chars = [...text];
+	while (bytes.length > byteLength && chars.length > 0)
+	{
+		chars.pop();
+		bytes = encoder.encode(chars.join(""));
+	}
+
+	// 固定長の箱を用意し、変換したバイト列だけコピーする（残りは自動的に0埋めになる）
+	const fixed = new Uint8Array(byteLength);
+	fixed.set(bytes);
+	return fixed;
+}
+
+//固定長のバイト列から末尾の0埋め部分を取り除いて文字列に戻す
+export function decodeFixedName(bytes)
+{
+	// 末尾に続く0x00（パディング）が終わる位置を探す
+	let end = bytes.length;
+	while (end > 0 && bytes[end - 1] === 0) end--;
+
+	const decoder = new TextDecoder();
+	return decoder.decode(bytes.subarray(0, end));
 }

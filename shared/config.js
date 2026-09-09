@@ -18,3 +18,6 @@ export const PACKET_TYPE =
 	JOIN: 4,	// サーバー→他の全員に送る「新しい人が入ってきました」通知
 	LEAVE: 5	// サーバー→他の全員に送る「この人が抜けました」通知
 };
+
+export const NAME_MAX_CHARS = 20;
+export const NAME_BYTE_LENGTH = NAME_MAX_CHARS * 3; // 漢字はUTF-8で1文字3byteなので3倍しておく

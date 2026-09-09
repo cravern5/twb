@@ -1,8 +1,8 @@
 import { fileURLToPath } from 'url'; // パスとURLを相互変換するための標準機能、isMainModule用
 import { WebSocketServer } from 'ws';
 
-import { print } from '../shared/sub.js';
-import { PACKET_TYPE, PORT } from '../shared/config.js';
+import { print, encodeFixedName, decodeFixedName } from '../shared/sub.js';
+import { PACKET_TYPE, PORT, NAME_BYTE_LENGTH } from '../shared/config.js';
 //import * as web from './web.js';
 
 //直接実行されたかどうか
@@ -132,18 +132,22 @@ export function init(server)
 				// クライアントからキャラ情報取得
 				else if (dataType === PACKET_TYPE.JOIN)
 				{
-					// タイプ(1byte) + キャラID(2byte) = 3バイト
-					if (data.length < 3) return;
+					// タイプ(1byte) + キャラID(2byte) + 名前(固定NAME_BYTE_LENGTHバイト)
+					if (data.length < 3 + NAME_BYTE_LENGTH) return;
 
 					//data.byteOffset(読み書きの開始位置)、data.byteLength(対象のデータ長)
 					const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
 					ws.characterIndex = view.getUint16(1, true); // キャラIDを記録
 
+					// 4byte目から固定長ぶんを取り出し、プレイヤー名として記録する
+					const nameBytes = data.subarray(3, 3 + NAME_BYTE_LENGTH);
+					ws.playerName = decodeFixedName(nameBytes);
+
 					// JOINを正常に受け取れたので、タイムアウト強制切断の予約はもう不要→解除する
 					clearTimeout(ws.joinTimeoutId);
 
-					// 新規参加者自身のJOINパケット (タイプ1byte + ID 2byte + キャラID 2byte = 5バイト)
-					const myJoinPacket = createJoinPacket(ws.playerId, ws.characterIndex);
+					// 新規参加者自身のJOINパケットに名前も乗せる
+					const myJoinPacket = createJoinPacket(ws.playerId, ws.characterIndex, ws.playerName);
 
 					//自分自身に対してJOINパケットを送る
 					ws.send(myJoinPacket, { binary: true });
@@ -156,7 +160,7 @@ export function init(server)
 						// 新規参加者へ、既存プレイヤーの情報(ID+キャラID)を通知
 						if (client.characterIndex !== undefined)
 						{
-							const existingJoinPacket = createJoinPacket(client.playerId, client.characterIndex);
+							const existingJoinPacket = createJoinPacket(client.playerId, client.characterIndex, client.playerName);
 							ws.send(existingJoinPacket, { binary: true });
 						}
 
@@ -247,16 +251,19 @@ function createWelcomePacket(playerId)
 	return welcomePacket;
 }
 
-//JOIN 入ってきた人のIDを送信 (タイプ1byte + ID 2byte + キャラID 2byte = 5バイト)
-function createJoinPacket(playerId, charactorIndex)
+//JOIN 入ってきた人のID・キャラID・名前を送信 (タイプ1byte + ID 2byte + キャラID 2byte + 名前(固定NAME_BYTE_LENGTHバイト))
+function createJoinPacket(playerId, characterIndex, playerName)
 {
-	const joinPacket = new Uint8Array(5);
+	const joinPacket = new Uint8Array(5 + NAME_BYTE_LENGTH);
 	try
 	{
 		const view = new DataView(joinPacket.buffer);
 		view.setUint8(0, PACKET_TYPE.JOIN);
 		view.setUint16(1, playerId, true);
-		view.setUint16(3, charactorIndex, true);
+		view.setUint16(3, characterIndex, true);
+
+		// 6byte目以降に名前を固定長のバイト列として書き込む
+		joinPacket.set(encodeFixedName(playerName), 5);
 	}
 	catch (e)
 	{

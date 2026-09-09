@@ -374,8 +374,8 @@
 						<input type="text" id="playerName" class="form-input" placeholder="名前を入力してください">
 					</div>
 					<div class="form-group">
-						<label for="character">キャラクター選択</label>
-						<select id="character" class="form-select">
+						<label for="characterName">キャラクター選択</label>
+						<select id="characterName" class="form-select">
 							<option value="maximin">マキシミン</option>
 							<option value="tichiel">ティチエル</option>
 						</select>
@@ -480,12 +480,12 @@
 
         // 入力欄・選択欄から値を取り出す
         let playerName = document.getElementById('playerName').value;
-        let character = document.getElementById('character').value;
+        let characterName = document.getElementById('characterName').value;
 
         // localStorageに保存する　
 		// 共有範囲　スキーム（プロトコル）: http / https ホスト（ドメイン）: example.com ポート番号: :80 / :443 など
         localStorage.setItem('playerName', playerName);
-        localStorage.setItem('character', character);
+        localStorage.setItem('characterName', characterName);
 
         // 保存が終わったらgame.htmlへ移動する
         window.location.href = './game.html';
@@ -495,12 +495,12 @@
 	window.addEventListener('load', () =>
 	{
 		const playerName = localStorage.getItem('playerName');
-		const character = localStorage.getItem('character');
+		const characterName = localStorage.getItem('characterName');
 
 		if(playerName)
 			document.getElementById('playerName').value = playerName;
-		if(character)
-			document.getElementById('character').value = character;
+		if(characterName)
+			document.getElementById('characterName').value = characterName;
 	});
 
 

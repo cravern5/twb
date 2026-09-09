@@ -39,7 +39,7 @@ export const BUBBLE_DURATION = 4.5;		// ふきだしを表示しておく秒数
 
 export class Player
 {
-	constructor(id, playerName, character)
+	constructor(id, characterName, playerName)
 	{
 		this.initialized = false;
 
@@ -48,7 +48,7 @@ export class Player
 		this.playerName = playerName;
 
 		//キャラクター
-		this.character = character;
+		this.character = characterName;
 		this.assets = {};
 		this.isSitting = false;						//立ち/座り
 		this.isRunning = true; 						//走り/歩き
@@ -669,9 +669,9 @@ export function getPlayerById(id)
 	return players.find((p) => p.id === id);
 }
 //プレイヤーの追加
-export async function addPlayer(id, playerName, character)
+export async function addPlayer(id, characterName, playerName)
 {
-	const player = new Player(id, playerName, character)
+	const player = new Player(id, characterName, playerName)
 
 	//※本来はinit前に書いたほうが良い
 	//画像読み込み前にSTATEパケットが届くと、「存在しないプレイヤー」扱いされる
@@ -695,31 +695,31 @@ export function removePlayer(id)
 export async function onWelcome(id)
 {
 	//データ読み込み
+	let characterName = localStorage.getItem('characterName');
 	let playerName = localStorage.getItem('playerName');
-	let character = localStorage.getItem('character');
 
 	//デフォルト指定(直接game.htmlにアクセスされるのを許容)
+	if (!characterName)
+		characterName = CHARACTERS[0];
 	if (!playerName)
 		playerName = "名無し";
-	if (!character)
-		character = CHARACTERS[0];
 
-	let characterIndex = CHARACTERS.indexOf(character);
+	let characterIndex = CHARACTERS.indexOf(characterName);
 
 	//JOINでキャラ情報を送る
-	socket.sendJoin(characterIndex);
+	socket.sendJoin(characterIndex, playerName);
 
 	//JOINを受信して初めてキャラ追加する
 	//player = await addPlayer(id, playerName, character);
 }
 // 他プレイヤーが新しく入ってきたときの処理
-export async function onJoin(joinedId, characterIndex)
+export async function onJoin(joinedId, characterIndex, playerName)
 {
 	let joiner = null;
 	// 念のため、既に同じIDが存在していないか確認してから追加する
 	if (!getPlayerById(joinedId))
 	{
-		joiner = await addPlayer(joinedId, "プレイヤー" + joinedId, CHARACTERS[characterIndex]);
+		joiner = await addPlayer(joinedId, CHARACTERS[characterIndex], playerName);
 
 		//自分自身
 		if (joinedId == socket.myPlayerId)

@@ -1,6 +1,6 @@
 // client.js
-import { PACKET_TYPE, PORT } from '/shared/config.js';
-import { addLog } from '../shared/sub.js';
+import { PACKET_TYPE, PORT, NAME_BYTE_LENGTH } from '/shared/config.js';
+import { addLog, encodeFixedName, decodeFixedName } from '../shared/sub.js';
 //クライアントwsはnode標準搭載
 
 import * as Player from './player.js';
@@ -131,10 +131,14 @@ export function init()
 		{
 			const view = new DataView(event.data);
 			const joinedId = view.getUint16(1, true);
-			const charactorIndex = view.getUint16(3, true);
+			const characterIndex = view.getUint16(3, true);
+
+			// 6byte目から固定長ぶんを取り出し、0埋め部分を除いて名前に戻す
+			const nameBytes = new Uint8Array(event.data, 5, NAME_BYTE_LENGTH);
+			const playerName = decodeFixedName(nameBytes);
 
 			if (callbacks.onjoin)
-				callbacks.onjoin(joinedId, charactorIndex);
+				callbacks.onjoin(joinedId, characterIndex, playerName);
 			else
 				addLog("WARNING", "onjoinコールバック指定無し");
 		}
@@ -166,16 +170,19 @@ function sendBinary(buffer)
 }
 
 // WELCOMEでJOINを返送する　キャラ選択情報をサーバーへ送り返す関数
-export function sendJoin(characterIndex)
+export function sendJoin(characterIndex, playerName)
 {
-	// タイプ(1byte) + キャラID(2byte) = 3バイト
-	const buffer = new ArrayBuffer(3);
-	const view = new DataView(buffer);
+	// タイプ(1byte) + キャラID(2byte) + 名前(固定NAME_BYTE_LENGTHバイト)
+	const packet = new Uint8Array(3 + NAME_BYTE_LENGTH);
+	const view = new DataView(packet.buffer);
 
 	view.setUint8(0, PACKET_TYPE.JOIN);
 	view.setUint16(1, characterIndex, true);
 
-	sendBinary(buffer);
+	// 名前を固定長のバイト列（0埋め込み）に変換して4byte目以降へコピー
+	packet.set(encodeFixedName(playerName), 3);
+
+	sendBinary(packet);
 }
 
 //チャット送信
