@@ -56,6 +56,16 @@ const chatFixedText = document.getElementById("chatFixedText");
 const chatEmote = document.getElementById("chatEmote");
 const chatRange = document.getElementById("chatRange");
 
+// 開閉ボタンの要素と、開閉対象の箱の要素を取得
+const rightMenuOpenBtn = document.getElementById("rightMenuOpen");
+const rightMenuButtons = document.getElementById("rightMenuButtons");
+
+// 開閉ボタンがクリックされたら
+rightMenuOpenBtn.addEventListener("click", () =>
+{
+	// classListのtoggleは、既に付いていれば外す、無ければ付ける便利メソッド
+	rightMenuButtons.classList.toggle("closed");
+});
 
 //チャット範囲選択
 chatOpen.addEventListener('click', (e) =>
