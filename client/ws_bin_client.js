@@ -14,11 +14,11 @@ export let myPlayerId = null;
 //export let onchat = null;  //これだと外から書き換え不可
 export const callbacks =
 {
-	onchat: null,
-	onstate: null,
-	onwelcome: null, //本人が入ったとき呼ばれる
-	onjoin: null,	// 他プレイヤーが入ってきたときに呼ばれる
-	onleave: null,	// 他プレイヤーが抜けたときに呼ばれる
+	onchat: null,	//チャット
+	onstate: null,	//キャラ状態が変化
+	onwelcome: null,//本人が入ったとき呼ばれる、すぐJOINを返す必要がある
+	onjoin: null,	// 自身・他プレイヤーの情報を通知
+	onleave: null,	// 他プレイヤーが抜けたときに通知
 };
 
 //WebSocketサーバーに接続し、各種イベントのコールバックを登録する

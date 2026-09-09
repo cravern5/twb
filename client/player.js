@@ -715,15 +715,15 @@ export async function onWelcome(id)
 // 他プレイヤーが新しく入ってきたときの処理
 export async function onJoin(joinedId, characterIndex)
 {
-	let added = null;
+	let joiner = null;
 	// 念のため、既に同じIDが存在していないか確認してから追加する
 	if (!getPlayerById(joinedId))
 	{
-		added = await addPlayer(joinedId, "プレイヤー" + joinedId, CHARACTERS[characterIndex]);
+		joiner = await addPlayer(joinedId, "プレイヤー" + joinedId, CHARACTERS[characterIndex]);
 
 		//自分自身
 		if (joinedId == socket.myPlayerId)
-			player = added;
+			player = joiner;
 	}
 }
 // 他プレイヤーが抜けたときの処理
