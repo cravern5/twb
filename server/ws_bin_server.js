@@ -111,6 +111,10 @@ export function init(server)
 					// タイプ1byte + ID(2byte) + Float32×2(8byte) + 状態(1byte) + 向き(1byte) + 反転(1byte) = 14バイト
 					if (data.length !== 14) return;
 
+					// クライアントが送ってきたIDは信用せず、サーバーが把握している本物のIDに上書きする
+					const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+					view.setUint16(1, ws.playerId, true); // 2〜3byte目のIDを正しい値に書き換える
+
 					// 次に誰かが新規接続してきたとき、この人の紹介用に使えるよう最新状態を保存しておく
 					ws.lastStateBuffer = Buffer.from(data);
 				}
@@ -120,7 +124,7 @@ export function init(server)
 					// タイプ1byte + ID(2byte) + 文字列 が最低構成（サーバーは中身を見ず、そのまま転送するだけ）
 					if (data.length < 3) return;
 
-					const chatMessage = data.toString('utf-8', 1);// 2バイト目以降を文字列に変換
+					const chatMessage = data.toString('utf-8', 3);// 2バイト目以降を文字列に変換
 					const chatMessageChars = [...chatMessage];
 
 					if (chatMessageChars.length > 50)
@@ -128,6 +132,11 @@ export function init(server)
 						print("warning", "【検閲】50文字超過のバイナリチャットを破棄しました。");
 						return;
 					}
+
+					// クライアントが送ってきたIDは信用せず、サーバーが把握している本物のIDに上書きする
+					const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+					view.setUint16(1, ws.playerId, true); // 2〜3byte目のIDを正しい値に書き換える
+
 				}
 				// クライアントからキャラ情報取得
 				else if (dataType === PACKET_TYPE.JOIN)
@@ -137,7 +146,7 @@ export function init(server)
 
 					//data.byteOffset(読み書きの開始位置)、data.byteLength(対象のデータ長)
 					const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
-					const dummyid = view.getUint16(1, true); // プレイヤーIDを記録
+					//const dummyid = view.getUint16(1, true); // プレイヤーIDを記録
 					ws.characterIndex = view.getUint16(3, true); // キャラIDを記録
 
 					// 4byte目から固定長分を取り出し、プレイヤー名として記録する
