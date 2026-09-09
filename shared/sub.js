@@ -220,7 +220,7 @@ export async function checkFileExists(url)
 	}
 }
 
-//wait setInterval & Promise(外部ライブラリなどの既存オブジェクトの追加待ち)
+//wait setInterval & Promise(外部ライブラリなどの既存オブジェクトの追加待ち、exportも可能)
 /*使用例
 // 3秒後にプロパティが追加されるダミーオブジェクト
 const myObj = {};
@@ -241,30 +241,72 @@ setTimeout(() =>
 		console.error(error.message);
 	}
 })();
+
+//エクスポートの場合
+export let test;は変数そのものであり、通常のオブジェクトプロパティではないため、そのままではwait()のobj/propNameに渡せません。
+しかし、ES Modulesの名前空間オブジェクト（import * as ...で取得できるもの）を使うと、実質的にオブジェクトのプロパティとして参照できます。
+
+
 */
-export function waitInterval(obj, propName, timeout = 5000, interval = 100)
+//mode 0=値自体があれば返す、1=null,undefinedでなくなれば返す,2=値が変われば返す
+export function wait({ obj, propName, timeout = 5000, interval = 100, mode = 1 })
 {
+	//値が既に入った後にこの関数を読んでしまうと変更されたのに値が変わってない扱いになる
+	const initialValue = obj?.[propName];
+	let timer = null;
+
 	return new Promise((resolve, reject) =>
 	{
-		const startTime = Date.now();
-
-		const timer = setInterval(() =>
+		// 共通判定処理
+		const check = () =>
 		{
-			// プロパティが存在するかチェック (undefined 以外、または 'in' 演算子)
-			if (propName in obj && obj[propName] !== undefined)
+			if (obj && propName in obj)
 			{
-				clearInterval(timer);
-				resolve(obj[propName]);
-			} else if (Date.now() - startTime > timeout)
-			{
-				clearInterval(timer);
-				reject(new Error(`Timeout: Property "${propName}" was not found.`));
+				//プロパティが存在されれば返す
+				if (mode === 0)
+				{
+					clearInterval(timer);
+					resolve(obj[propName]);
+					return true;
+				}
+				//値が有効になれば返す
+				else if (mode === 1 && obj[propName] !== undefined && obj[propName] !== null)
+				{
+					clearInterval(timer);
+					resolve(obj[propName]);
+					return true;
+				}
+				//値が変われば返す
+				else if (mode === 2 && obj[propName] !== initialValue)
+				{
+					clearInterval(timer);
+					resolve(obj[propName]);
+					return true;
+				}
 			}
+			return false;
+		};
+
+		// 即時チェック（すでに条件を満たしていればタイマーを使わず解決）
+		if (check()) return;
+
+		const startTime = Date.now();
+		timer = setInterval(() =>
+		{
+			if (Date.now() - startTime > timeout)
+			{
+				clearInterval(timer);
+				reject(new Error("Timeout: Property " + propName + " was not found."));
+				return;
+			}
+
+			check();
 		}, interval);
+
 	});
 }
 
-//wait requestAnimationFrame(外部ライブラリなどの既存オブジェクトの追加待ち)
+//！未検証！wait requestAnimationFrame(「バックグラウンドタブで監視を止めたい」といった要件がある場合にのみ検討する価値
 export function waitRAF(obj, propName, timeout = 5000)
 {
 	return new Promise((resolve, reject) =>
@@ -289,65 +331,74 @@ export function waitRAF(obj, propName, timeout = 5000)
 	});
 }
 
-//wait proxy(自作のデータ構造でプロパティ追加をトリガーにしたい時)
+//wait proxy(自作のデータ構造でプロパティ追加をトリガーにしたい時、exportされたもの動かない)
 /*使用例
-// 1. 監視可能なオブジェクトを作成
 const watchedObj = waitProxy();
 
-// 2. プロパティがセットされるのを非同期で待機
 (async () =>
 {
-	console.log("待機開始...");
-
-	// 'token' プロパティが追加されるまでここで処理が一時停止する
-	const token = await watchedObj.waitFor("token");
-
+	// 1行でスマートに記述可能
+	const token = await watchedObj.token;
 	console.log("取得完了:", token); // -> "取得完了: abc-123-xyz"
 })();
 
-// 3. 少し遅れて（例: 2秒後）プロパティを代入してみる
+// 2秒後に代入
 setTimeout(() =>
 {
-	console.log("プロパティをセットします");
-	watchedObj.token = "abc-123-xyz"; // この代入を検知して waitFor の Promise が解決する
+	watchedObj.token = "abc-123-xyz";
 }, 2000);
 */
-export function waitProxy(target = {})
+export function waitProxy(target = {}, ifChange = true)
 {
+	// プロパティごとに「待っている人（resolve関数）」を配列で保持する
+	// 同じプロパティを複数箇所からgetしても、全員がちゃんと解決されるようにするため
 	const listeners = new Map();
 
-	const proxy = new Proxy(target, {
-		set(obj, prop, value)
+	return new Proxy(target, {
+		set(obj, prop, value)// 代入（set）の検知
 		{
+			// 実際にオブジェクトへ値を書き込む
 			obj[prop] = value;
+
+			// このプロパティを待っている人がいれば、全員に値を通知する
 			if (listeners.has(prop))
 			{
-				listeners.get(prop)(value);
-				listeners.delete(prop); // 待機解消
+				const waiters = listeners.get(prop);
+				waiters.forEach((resolve) => resolve(value)); // 待機中のPromiseを全て解決
+				listeners.delete(prop); // 通知し終わったので待機リストから削除
 			}
+
 			return true;
+		},
+		// 参照（get）の検知：プロパティ取得をPromise化する
+		get(obj, prop)
+		{
+			// Promiseの内部処理(thenableチェック)やSymbolアクセスの場合は通常挙動にする
+			if (prop === 'then' || typeof prop === 'symbol')
+				return obj[prop];
+
+			// すでにプロパティが存在するなら（値がundefinedでも）即座に返す
+			if (!ifChange)
+			{
+				if (prop in obj)
+					return Promise.resolve(obj[prop]);
+			}
+
+			// set されるまで待つ、resolve関数を待機リストに登録してPromiseを返す
+			return new Promise((resolve) =>
+			{
+				// このプロパティを待つのが初めてなら、空配列を用意する
+				if (!listeners.has(prop))
+					listeners.set(prop, []);
+
+				// 待機者リストに自分（resolve）を追加する
+				listeners.get(prop).push(resolve);
+			});
 		}
 	});
-
-	// プロパティ追加をPromiseで待機するメソッド
-	proxy.waitFor = (propName) =>
-	{
-		return new Promise((resolve) =>
-		{
-			if (propName in proxy && proxy[propName] !== undefined)
-			{
-				resolve(proxy[propName]);
-			} else
-			{
-				listeners.set(propName, resolve);
-			}
-		});
-	};
-
-	return proxy;
 }
 
-//ewait MutationObserver(DOM要素の属性や状態追加を待ちたい時)
+//！未検証！ewait MutationObserver(DOM要素の属性や状態追加を待ちたい時)
 /*使用例
 // 1. 対象のDOM要素を取得
 const button = document.querySelector("#my-button");
