@@ -91,8 +91,8 @@
 #rightMenuOpen {
 	background-image: url("../assets/ui/RightMenu/open.png");
 }
-/* rightMenuButtonsが閉じていない=開いている時は、
-   rightMenuOpenの画像をclose.pngに差し替える */
+/* rightMenuButtonsが閉じていない=開いている時は、rightMenuOpenの画像をclose.pngに差し替える 
+~ (チルダ)は「隣接兄弟セレクタ」で、「同じ親を持ち、かつ前に書いた要素より後ろにある要素」を指します*/
 #rightMenuButtons:not(.closed) ~ #rightMenuOpen {
 	background-image: url("../assets/ui/RightMenu/close.png");
 }
