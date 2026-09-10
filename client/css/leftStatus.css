@@ -1,0 +1,33 @@
+.leftStatus {
+	width: auto;
+	height: auto;
+
+	position: absolute;
+	left: 100px;
+	top: 40px;
+	padding: 20px;
+}
+
+.en {
+	color: rgb(255, 255, 255);
+	font-family: 'Ethnocentric', 'apt';
+	font-size: 10px;
+	line-height: 17px;
+	letter-spacing: -1px;
+	text-align: center;
+
+	/* 縁取り 元の色:#39308C*/
+	--huti_color: #1300bd;
+	--huti_size: 1.9px;
+
+	-webkit-text-stroke: 0.5px var(--huti_color);
+	text-shadow:
+		/*右下*/
+		var(--huti_size) var(--huti_size) 0 var(--huti_color),
+		/*左下*/
+		calc(-1 * var(--huti_size)) var(--huti_size) 0 var(--huti_color),
+		/*右上*/
+		var(--huti_size) calc(-1 * var(--huti_size)) 0 var(--huti_color),
+		/*左上*/
+		calc(-1 * var(--huti_size)) calc(-1 * var(--huti_size)) 0 var(--huti_color);
+}

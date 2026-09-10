@@ -51,6 +51,10 @@ const mimeTypes = {
 	".hdr": 'image/vnd.radiance',
 	'.mp3': 'audio/mpeg',
 	'.wav': 'audio/wav',
+	'.ttf': 'font/ttf',   // TrueTypeフォント
+	'.otf': 'font/otf',   // OpenTypeフォント
+	'.woff': 'font/woff',    // Web Open Font Format
+	'.woff2': 'font/woff2',  // WOFFの圧縮版(より軽量)
 };
 
 //httpserverメモ

@@ -27,7 +27,7 @@ const chatLog = document.getElementById('chatLog');
 //初期化
 async function init()
 {
-	debugInfo.style.display = 'block';
+	/*debugInfo.style.display = 'block';*/
 
 	engine.init(); engine.updateProgress("<エンジン初期化>");
 	windows.init(); engine.updateProgress("<ウィンドウコントローラー初期化>");
