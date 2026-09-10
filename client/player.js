@@ -446,6 +446,9 @@ export class Player
 		if (!asset)
 			return;
 
+		//画像を滑らかに拡大するかどうか css image-rendering: pixelatedと併用可能
+		ctx.imageSmoothingEnabled = false;
+
 		//ワールド座標(position)からカメラ位置を引いて「画面上の描画位置」を求める、プレイヤーが動いてもカメラが追従して常に画面中央に見える
 		const screen = this.getWorldPosition();
 

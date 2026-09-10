@@ -5,6 +5,9 @@ export let ctx = canvas.getContext("2d");
 
 export function init()
 {
+	//画像を滑らかに拡大するかどうかを示します　※ここで変更してもダメcanvas.widthなど呼ばれると戻る
+	//ctx.imageSmoothingEnabled = false;
+
 	// canvasがフォーカスを受け取れるようにする
 	canvas.setAttribute('tabindex', '0');
 	// 外枠の黒い線を消す（フォーカス時に青い枠線などが出ないようにする）
