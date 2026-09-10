@@ -84,7 +84,12 @@
 	/*background-image: url("./assets/ui/ChatBar/log.png");
 	background-repeat: no-repeat;*/
 
-	/* 固定の height ではなく、余ったスペースを全部使う設定に変える（min-heightで今までと同じ最低45pxは確保） */
+	/*「画面（親要素）の空きスペースに合わせて親要素内で伸縮し、コンテンツに応じた初期サイズを持つ」 設定です。
+				 1 （flex-grow / 伸長係数）: 親要素に余白がある場合、他の要素と分かち合って拡大します。 
+				 1 （flex-shrink / 収縮係数）: 親要素からはみ出る場合、他の要素に合わせて縮小します。 
+				 auto （flex-basis / 基本サイズ）: 要素の初期サイズを width や height（未指定の場合はコンテンツの大きさ）に基づいて決定します。*/
+
+	/*固定の height ではなく、余ったスペースを全部使う設定に変える（min-heightで今までと同じ最低45pxは確保） */
 	flex: 1 1 auto;
 	min-height: 45px;
 
@@ -177,6 +182,7 @@
 /*スクロールつまみ*/
 #chatScrollBar {
 
+	/*background-color: #FF0000;*/
 	position: absolute;
 	/*画像サイズ+1pxで指定するとちょうどきれい*/
 	width: 10px;
@@ -247,8 +253,6 @@
 			 1 （flex-grow / 伸長係数）: 親要素に余白がある場合、他の要素と分かち合って拡大します。 
 			 1 （flex-shrink / 収縮係数）: 親要素からはみ出る場合、他の要素に合わせて縮小します。 
 			 auto （flex-basis / 基本サイズ）: 要素の初期サイズを width や height（未指定の場合はコンテンツの大きさ）に基づいて決定します。*/
-	/*flex: 1 1 auto;*/
-
 	flex: 1 1 auto;
 
 	padding: 4px 8px 4px 8px;

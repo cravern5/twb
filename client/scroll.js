@@ -1,4 +1,4 @@
-//import { print, addLog } from '../shared/sub.js';
+import { print, addLog } from '../shared/sub.js';
 
 // ==========================================================================
 // スクロールバーの処理
@@ -13,6 +13,9 @@ const chatLog = document.getElementById("chatLog");//チャット全体
 
 // 1回のクリックで何pxスクロールするかの量
 const SCROLL_STEP = 14;
+
+// つまみの高さ（固定値。中身の量に関わらずこの高さのまま変えない）
+const THUMB_HEIGHT = 19;
 
 // 「つまみ」の大きさと位置を、今のログの状態に合わせて計算し直す処理
 function updateScrollBar()
@@ -44,15 +47,24 @@ function updateScrollBar()
 	// つまみが動ける範囲（トラックの高さ）を取得する
 	const trackHeight = chatScrollTrack.clientHeight;
 
+	/*//つまみの高さを変えるパターン
 	// 「見えている割合」に応じてつまみの高さを決める
 	// 最低の高さを大きめ（トラックの40%）にすることで、
 	// 少しだけ隠れている場合でも「まだ動かせる余地がある」と分かりやすくする
 	const thumbHeight = Math.max((visibleHeight / contentHeight) * trackHeight, trackHeight * 0.4);
-
 	// スクロールできる範囲がどれくらい残っているか
 	const maxScrollTop = contentHeight - visibleHeight;
 	// つまみが動ける範囲（トラックの高さ - つまみ自身の高さ）
 	const maxThumbTop = trackHeight - thumbHeight;
+	*/
+
+	// つまみの高さは常に固定値を使う（見えている割合による変化はさせない）
+	const thumbHeight = THUMB_HEIGHT;
+	// スクロールできる範囲がどれくらい残っているか
+	const maxScrollTop = contentHeight - visibleHeight;
+	// つまみが動ける範囲（トラックの高さ - つまみ自身の高さ）
+	const maxThumbTop = trackHeight - thumbHeight;
+
 
 	// 現在のスクロール位置を、つまみの位置（割合）に変換する
 	// maxScrollTopが0（スクロール不要）のときは0除算になるので、その場合はつまみを一番上にする
