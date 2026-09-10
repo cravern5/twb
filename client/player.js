@@ -655,6 +655,20 @@ export class Player
 
 	}
 
+	//HPバー描画　per=hp / maxを入れる
+	drawHP(per, startx = 30, starty = 30)
+	{
+		per = per * 10;
+		for (let i = 0; i < 10 && i < per; i++)
+		{
+			sub.drawPixelLine(ctx, startx + 0 + i * 4, starty, startx + 10 + i * 4, starty + 10, '#000418');
+			sub.drawPixelLine(ctx, startx + 1 + i * 4, starty, startx + 11 + i * 4, starty + 10, '#E75D21');
+			sub.drawPixelLine(ctx, startx + 2 + i * 4, starty, startx + 12 + i * 4, starty + 10, '#E75D21');
+			sub.drawPixelLine(ctx, startx + 3 + i * 4, starty, startx + 13 + i * 4, starty + 10, '#E75D21');
+		}
+	}
+
+
 }
 
 
