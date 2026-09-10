@@ -10,6 +10,7 @@
 //dh	number	Canvas上に描画する高さ（Destination Height）
 
 //画像イメージ同期処理
+
 export function loadImage(src)
 {
 	return new Promise((resolve, reject) =>
@@ -48,31 +49,133 @@ export function getDirection(angle)
 	return { direction: direction, flip: flip };
 }
 
-
-// 汎用の楕円（円）描画関数
-// ctx      : 描画先のCanvasコンテキスト
-// color    : 塗りつぶす色（例 'rgba(0,0,0,0.35)'）
-// x, y     : 楕円の中心となる基準座標
-// width    : 横方向の半径（拡大縮小前の基準サイズ）
-// height   : 縦方向の半径（拡大縮小前の基準サイズ）
-// scaleX   : width に掛ける倍率（1で等倍、0.5なら半分の幅）
-// scaleY   : height に掛ける倍率（1で等倍、0.5なら半分の高さ）
-export function drawCircle(ctx, color, x, y, width, height)
+// 24bit HEX (0xRRGGBB)
+export function getColor24bit(val)
 {
-	// 倍率を掛けて、実際に描画する半径を求める
-	const radiusX = width;// * scaleX;
-	const radiusY = height;// * scaleY;
+	const hex24 = val;
+	const r = (hex24 >> 16) & 0xFF; // 255
+	const g = (hex24 >> 8) & 0xFF;  // 0
+	const b = hex24 & 0xFF;         // 51
 
-	// 描画状態（塗りつぶし色など）を一時的に保存する
-	ctx.save();
+	return { r, g, b };
+}
 
-	ctx.fillStyle = color;
+// 32bit HEX (0xRRGGBBAA)
+export function getColor32bit(val)
+{
+	const r = (val >>> 24) & 0xFF;
+	const g = (val >>> 16) & 0xFF;
+	const b = (val >>> 8) & 0xFF;
+	const a = (val & 0xFF);// / 255;少数で欲しい場合
 
-	ctx.beginPath();
-	// 楕円を描く（回転なし、0〜2π=1周分をすべて描く）
-	ctx.ellipse(x, y, radiusX, radiusY, 0, 0, Math.PI * 2);
-	ctx.fill();
+	return { r, g, b, a };
+}
 
-	// 保存しておいた描画状態に戻す（他の描画に影響を与えないように）
-	ctx.restore();
+// RGBA
+export function rgbaToColor(r, g, b, a = 255)
+{
+	// アルファ値が 0〜1 の場合は 0〜255 に変換
+	const alpha = a <= 1 ? Math.round(a * 255) : a;
+
+	// >>> 0 で符号なし32ビット整数に変換（rが128以上で負数になるのを防ぐ）
+	return ((r << 24) | (g << 16) | (b << 8) | alpha) >>> 0;
+}
+
+// #RRGGBBAA #RGBA
+export function hexToRgba(hex)
+{
+	// #を除去
+	let c = hex.replace(/^#/, '');
+
+	// 3桁・4桁の短縮表記（#RGB / #RGBA）を6桁・8桁に拡張
+	if (c.length === 3 || c.length === 4)
+		c = c.split('').map(char => char + char).join('');
+
+	// 不透明度（Alpha）が指定されていない場合は FF (255) とする
+	if (c.length === 6)
+		c += 'ff';
+
+	if (c.length !== 8)
+		throw new Error('Invalid HEX color code');
+
+	const num = parseInt(c, 16);
+
+	return {
+		r: (num >> 24) & 255,
+		g: (num >> 16) & 255,
+		b: (num >> 8) & 255,
+		a: num & 255 // 0〜255の値（0.0〜1.0にしたい場合は (num & 255) / 255）
+	};
+}
+
+//putImageDataで線を描画  ※moveTo lineToだと1ピクセル単位の描画にならないため
+export function drawPixelLine(ctx, x0, y0, x1, y1, color)
+{
+	let { r, g, b, a } = hexToRgba(color);
+
+	// 描画領域の最小・最大座標を計算（逆方向に引っ張られた場合に対応するため）
+	const minX = Math.min(x0, x1);
+	const maxX = Math.max(x0, x1);
+	const minY = Math.min(y0, y1);
+	const maxY = Math.max(y0, y1);
+
+	const width = maxX - minX + 1;
+	const height = maxY - minY + 1;
+
+	// バウンディングボックス分のピクセルデータを取得
+	const imageData = ctx.getImageData(minX, minY, width, height);
+	const data = imageData.data;
+
+	// 指定したピクセル(x, y)に色を書き込む関数
+	function _setPixel(x, y)
+	{
+		// 切り取ったデータ領域（minX, minY）からの相対座標を計算
+		const localX = x - minX;
+		const localY = y - minY;
+
+		// 配列のインデックス計算（全体の幅ではなく取得領域の幅 width を使用）
+		const index = (localY * width + localX) * 4;
+
+		data[index] = r;
+		data[index + 1] = g;
+		data[index + 2] = b;
+		data[index + 3] = a;
+	}
+
+	// --- ブレゼンハムのアルゴリズム本体 ---
+	const dx = Math.abs(x1 - x0);
+	const dy = Math.abs(y1 - y0);
+	const sx = (x0 < x1) ? 1 : -1;
+	const sy = (y0 < y1) ? 1 : -1;
+	let err = dx - dy;
+
+	let x = x0;
+	let y = y0;
+
+	while (true)
+	{
+		// 現在地のピクセルを塗る
+		_setPixel(x, y);
+
+		// 終点に到達したらループを抜ける
+		if (x === x1 && y === y1)
+			break;
+
+		const e2 = err * 2;
+
+		// 誤差に応じてxを進めるかyを進めるか(あるいは両方)を判定
+		if (e2 > -dy)
+		{
+			err -= dy;
+			x += sx;
+		}
+		if (e2 < dx)
+		{
+			err += dx;
+			y += sy;
+		}
+	}
+
+	// 計算し終えたピクセルデータを正しい位置（minX, minY）に描画
+	ctx.putImageData(imageData, minX, minY);
 }

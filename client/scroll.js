@@ -4,11 +4,10 @@
 // スクロールバーの処理
 // ==========================================================================
 
-// スクロールバーに関わる要素をHTMLから取得しておく
-const chatScrollUp = document.getElementById("chatScrollUp");
-const chatScrollDown = document.getElementById("chatScrollDown");
-const chatScrollTrack = document.getElementById("chatScrollTrack");
-const chatScrollBar = document.getElementById("chatScrollBar");
+const chatScrollUp = document.getElementById("chatScrollUp");		//スクロールUPボタン
+const chatScrollDown = document.getElementById("chatScrollDown");	//スクロールDOWNボタン
+const chatScrollTrack = document.getElementById("chatScrollTrack");	//スクロールつまみ範囲
+const chatScrollBar = document.getElementById("chatScrollBar");		//スクロールバー
 
 // 1回のクリックで何pxスクロールするかの量
 const SCROLL_STEP = 14;
