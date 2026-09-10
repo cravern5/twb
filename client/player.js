@@ -509,14 +509,17 @@ export class Player
 			{
 				//テキスト入力
 				if (text === '')
-					engine.canvas.focus();//3Dキャンバスに戻る
+					engine.canvas.focus();//キャンバスに戻る
+				else if (text.toUpperCase() === '/SHOWFPS')
+				{
+					windows.debugInfo.show(-1);
+					chatInput.value = '';// 入力欄をクリア
+					engine.canvas.focus();//キャンバスに戻る
+				}
 				else
 				{
 					//ログに送られる文字列
 					const sendText = this.playerName + " ： " + text;
-
-					//バブル表示用テキストセット
-					//this.bubbleLines = this.adjustBubbleText(sendText);
 
 					//改行を取り除いて1行のテキストにする（\r\nの場合も考慮）
 					//const oneLineText = text.replace(/\r?\n/g, "");
@@ -524,11 +527,8 @@ export class Player
 					//サーバーへチャット
 					socket.sendChat(sendText);
 
-					//バブル表示はonChatで行う
-					//this.showBubble(text);
-
 					chatInput.value = '';// 入力欄をクリア
-					engine.canvas.focus();//3Dキャンバスに戻る
+					engine.canvas.focus();//キャンバスに戻る
 				}
 			}
 			//チャットバーにフォーカス

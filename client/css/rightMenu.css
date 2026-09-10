@@ -32,7 +32,7 @@
 /*共通ボタン*/
 .rightMenuBtn, .rightMenuOpenBtn {
 	/* 画像の横幅を2倍(200%)にすることで、画像全体を 左半分・右半分の2コマとして扱えるようにする */
-	/*background-size: 200% 100%;*/
+	/*background-size: 200% 200%;*/
 	/* 画像が繰り返し表示されないようにする */
 	background-repeat: no-repeat;
 	background-position: left top;
@@ -45,6 +45,14 @@
 }
 .rightMenuOpenBtn:active {
 	background-position: right top;
+}
+/* rightMenuButtonsが閉じていない=開いている時は、rightMenuOpenの画像をclose.pngに差し替える 
+~ (チルダ)は「隣接兄弟セレクタ」で、「同じ親を持ち、かつ前に書いた要素より後ろにある要素」を指します*/
+#rightMenuButtons:not(.closed) ~ #rightMenuOpen {
+	background-position: left bottom;
+}
+#rightMenuButtons:not(.closed) ~ #rightMenuOpen:active {
+	background-position: right bottom;
 }
 
 /* 各メニューボタン共通のサイズ・見た目 */
@@ -90,9 +98,4 @@
 }
 #rightMenuOpen {
 	background-image: url("../assets/ui/RightMenu/open.png");
-}
-/* rightMenuButtonsが閉じていない=開いている時は、rightMenuOpenの画像をclose.pngに差し替える 
-~ (チルダ)は「隣接兄弟セレクタ」で、「同じ親を持ち、かつ前に書いた要素より後ろにある要素」を指します*/
-#rightMenuButtons:not(.closed) ~ #rightMenuOpen {
-	background-image: url("../assets/ui/RightMenu/close.png");
 }
