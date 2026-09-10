@@ -8,6 +8,8 @@ const chatScrollUp = document.getElementById("chatScrollUp");		//スクロール
 const chatScrollDown = document.getElementById("chatScrollDown");	//スクロールDOWNボタン
 const chatScrollTrack = document.getElementById("chatScrollTrack");	//スクロールつまみ範囲
 const chatScrollBar = document.getElementById("chatScrollBar");		//スクロールバー
+const chatLogArea = document.getElementById("chatLogArea");//チャット全体
+//const chatLogArea = document.getElementById("chatLogArea");//チャット全体
 
 // 1回のクリックで何pxスクロールするかの量
 const SCROLL_STEP = 14;
@@ -142,7 +144,7 @@ chatLogObserver.observe(chatLog, { childList: true });
 const chatLogAreaResizeObserver = new ResizeObserver(() => { updateScrollBar(); });
 
 // 監視対象として、ログエリア全体（枠）を登録する
-chatLogAreaResizeObserver.observe(document.getElementById("chatLogArea"));
+chatLogAreaResizeObserver.observe(chatLogArea);
 
 
 // ページが読み込まれた時点でも、一度つまみの状態を正しくしておく
