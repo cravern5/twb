@@ -76,7 +76,7 @@
 	/*touch-action: none;*/
 }
 
-/*2段目ログエリア===========================*/
+/*2段目ログエリア&スクロールエリア===========================*/
 #chatLogArea {
 	/* 黒の50%半透明 */
 	background-color: rgba(0, 0, 0, 0.534);
@@ -99,8 +99,8 @@
 	position: absolute;
 	top: 0;
 	left: 0;
-	/* 右側は自作スクロールバーの幅ぶん空けておく */
-	right: 14px;
+	/* 右側は#chatScrollAreaスクロールバーの幅ぶん空けておく */
+	right: 26px;
 	bottom: 0;
 	overflow-y: auto;
 	/* Firefoxで標準のスクロールバーを消す */
@@ -112,9 +112,6 @@
 	margin-top: 0px;
 	padding-top: 5px;
 }
-
-/*スクロール============*/
-
 /* Chrome/Edgeで標準のスクロールバーを消す */
 #chatLog::-webkit-scrollbar {
 	display: none;

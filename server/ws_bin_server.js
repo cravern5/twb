@@ -129,8 +129,8 @@ export function init(server)
 
 					if (chatMessageChars.length > 50)
 					{
-						print("warning", "【検閲】50文字超過のバイナリチャットを破棄しました。");
-						return;
+						//print("warning", "【検閲】50文字超過のバイナリチャットを破棄しました。");
+						//return;
 					}
 
 					// クライアントが送ってきたIDは信用せず、サーバーが把握している本物のIDに上書きする
