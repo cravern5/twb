@@ -28,6 +28,34 @@ export function loadImage(src)
 	});
 };
 
+// 汎用の楕円（円）描画関数
+// ctx      : 描画先のCanvasコンテキスト
+// color    : 塗りつぶす色（例 'rgba(0,0,0,0.35)'）
+// x, y     : 楕円の中心となる基準座標
+// width    : 横方向の半径（拡大縮小前の基準サイズ）
+// height   : 縦方向の半径（拡大縮小前の基準サイズ）
+// scaleX   : width に掛ける倍率（1で等倍、0.5なら半分の幅）
+// scaleY   : height に掛ける倍率（1で等倍、0.5なら半分の高さ）
+export function drawCircle(ctx, color, x, y, width, height)
+{
+	// 倍率を掛けて、実際に描画する半径を求める
+	const radiusX = width;// * scaleX;
+	const radiusY = height;// * scaleY;
+
+	// 描画状態（塗りつぶし色など）を一時的に保存する
+	ctx.save();
+
+	ctx.fillStyle = color;
+
+	ctx.beginPath();
+	// 楕円を描く（回転なし、0〜2π=1周分をすべて描く）
+	ctx.ellipse(x, y, radiusX, radiusY, 0, 0, Math.PI * 2);
+	ctx.fill();
+
+	// 保存しておいた描画状態に戻す（他の描画に影響を与えないように）
+	ctx.restore();
+}
+
 // 角度から「使用する画像」と「反転フラグ」を決定する関数
 export function getDirection(angle)
 {
