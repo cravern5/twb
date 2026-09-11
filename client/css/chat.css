@@ -1,6 +1,7 @@
 /*チャットログと入力部分のフォント*/
 .logLine, #chatUnder input {
 
+
 	/*文字数分の横幅*/
 	width: fit-content;
 	/* または display: inline-block; */
@@ -17,6 +18,13 @@
 
 /*チャット全体===========================*/
 #chatArea {
+
+	/* ドットを崩さずに拡大表示する指定 ctx.imageSmoothingEnabled=falseと併用可能*/
+	/* Chrome, Edge, Safari */
+	image-rendering: pixelated;
+	/* Firefox */
+	image-rendering: crisp-edges;
+
 	/* 画面上に位置を固定 */
 	position: fixed;
 	margin: 0;

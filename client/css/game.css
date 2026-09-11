@@ -21,9 +21,9 @@ canvas {
 
 	/* ドットを崩さずに拡大表示する指定 ctx.imageSmoothingEnabled=falseと併用可能*/
 	/* Chrome, Edge, Safari */
-	image-rendering: pixelated;
+	/*image-rendering: pixelated;*/
 	/* Firefox */
-	image-rendering: crisp-edges;
+	/*image-rendering: crisp-edges;*/
 
 	display: block;
 	margin: 0px auto;
