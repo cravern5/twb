@@ -2,13 +2,11 @@
 import { fileURLToPath } from 'url'; // 重複でエラーになるのでstart.jsのみで
 import http from 'http';
 import fsp from 'node:fs/promises';
-//import fs from 'fs';
+import fs from 'fs';
 import path from 'path';
 
 import { PORT } from '../shared/config.js';
 import { print } from '../shared/sub.js';
-export let server = null;
-export let routeAPI = null;
 
 //https接続サンプル
 /*
@@ -23,6 +21,8 @@ const server = https.createServer({
 }); 
 */
 
+export let server = null;
+export let routeAPI = null;
 
 //ブラウザは サーバーが実際に置いているフォルダ構成を知りません
 const __filename = fileURLToPath(import.meta.url);
@@ -33,6 +33,14 @@ const sharedPrefix = 'shared';
 const PUBLIC_DIR = path.join(__dirname, '../' + publicPrefix);
 const SHARED_DIR = path.join(__dirname, '../' + sharedPrefix);
 //クライアント側呼び出し方 '/shared/config.js'
+
+// 開発環境（development）のときのみライブリロード（ファイル監視・SSE）を有効化、本番サーバー(Render/Koyebなど)ではNODE_ENV=productionを設定しておくこと
+const isDev = process.env.NODE_ENV !== 'production';
+// クライアント(SSE)の接続管理用リスト
+const clients = [];
+// 監視対象のディレクトリ（clientディレクトリ）
+const watchDir = path.join(__dirname, '../client');
+
 
 const mimeTypes = {
 	'.html': 'text/html; charset=utf-8',
@@ -152,10 +160,59 @@ function plainWrite(req, res, code, message, contents = null, contentType = { 'C
 	}
 }
 
+
+//ファイル監視、自動リロード　さらに/eventsに処理を書く必要がある
+function pageWatcher()
+{
+	let debounceTimer = null;
+	if (isDev && fs.existsSync(watchDir))
+	{
+		try
+		{
+			//ファイル変更時に接続中の全クライアントへリロード通知を送信
+			const watcher = fs.watch(watchDir, { recursive: true }, (eventType, filename) =>
+			{
+				// 変更ファイル名がない、またはドットで始まる一時ファイル（.g. .swp, .tmp等）は無視
+				if (!filename || path.basename(filename).startsWith('.'))
+					return;
+
+				clearTimeout(debounceTimer);
+				debounceTimer = setTimeout(() =>
+				{
+					console.log(`[Reload] File changed: ${filename}`);
+					// 接続が切れているクライアントを除外しながら通知を送信
+					for (let i = clients.length - 1; i >= 0; i--)
+					{
+						try
+						{
+							clients[i].write('data: reload\n\n');
+						} catch (e)
+						{
+							clients.splice(i, 1);
+						}
+					}
+				}, 100);
+			});
+
+			// ウォッチャー自体のエラーでサーバーが落ちないようにキャッチ
+			watcher.on('error', (error) =>
+			{
+				console.error('[Reload Watcher Error]:', error);
+			});
+		} catch (e)
+		{
+			console.error('[Reload Setup Error]:', e);
+		}
+	}
+}
+
 //httpserver初期化
 export function init(api)
 {
 	routeAPI = api;
+
+	//ファイル監視
+	pageWatcher();
 
 	//asyncする問題点　async関数内の例外はcatchされない、エラーが起きたときにサーバーごと落ちる可能性がある？asyncじゃなくても落ちるけど。
 	//webサーバー立ち上げ
@@ -176,6 +233,35 @@ export function init(api)
 			//ログ
 			//print("info", [req.method, req.url].filter(Boolean).join(''));
 
+			// SSE用エンドポイントの追加
+			if (req.url === '/events')
+			{
+				if (!isDev)
+				{
+					plainWrite(req, res, 404, 'Not Found');
+					return;
+				}
+
+				//SSE（Server-Sent Events）は「接続を張ったまま、ずっと開けておく」。res.end() すると通信が完了扱いになり、その場で切断される
+				res.writeHead(200, {
+					'Content-Type': 'text/event-stream',
+					'Cache-Control': 'no-cache',
+					'Connection': 'keep-alive'
+				});
+				//接続がちゃんと確立したことをすぐブラウザに伝える
+				res.write('\n');
+
+
+				clients.push(res);
+
+				req.on('close', () =>
+				{
+					const index = clients.indexOf(res);
+					if (index !== -1)
+						clients.splice(index, 1);
+				});
+				return;
+			}
 
 			// Render/Koyebなどのホスティング先が「サーバーが生きているか」を定期的に確認しにくる場所、ファイルを読みに行く必要はない
 			if (req.url === '/health')

@@ -15,6 +15,8 @@ export function init()
 
 	repaint();
 
+	autoPageReloader();
+
 	return true;
 }
 
@@ -49,4 +51,25 @@ export function endProgress()
 	loadingScreen.style.opacity = '0';
 	//loadingScreen.style.display = 'none';
 	setTimeout(() => { loadingScreen.style.display = 'none'; });
+}
+
+
+//自動ページリロード用
+export function autoPageReloader()
+{
+	// サーバーとの常時接続を開始する
+	const eventSource = new EventSource('/events');
+
+	// サーバーから 'data: reload\n\n' が送られてきた時に実行される処理
+	eventSource.onmessage = function (event)
+	{
+		// 送られてきたデータが "reload" だったらページを再読み込みする
+		if (event.data === 'reload')
+			location.reload();
+	};
+	// 追加：接続エラー時（本番環境で404が返る場合など）は再接続をやめる
+	eventSource.onerror = function ()
+	{
+		eventSource.close();
+	};
 }
