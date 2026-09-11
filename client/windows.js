@@ -15,7 +15,7 @@ export const chatLog = document.getElementById("chatLog");
 //ウィンドウクラス追加 呼び出し
 export function init()
 {
-	chatWindow = new WindowController({ container: '#chatArea', drager: '#chatLog', minWidth: 300, minHeight: 90, childLock: true });
+	chatWindow = new WindowController({ container: '#chatArea', drager: '#chatLog', minWidth: 300, minHeight: 90, childLock: true, defaultDisplay: 'flex' });
 	debugInfo = new WindowController({ container: '#debugInfo', defaultDisplay: "block" });
 
 	windows.push(chatWindow);

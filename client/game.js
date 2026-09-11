@@ -20,14 +20,19 @@ export let lastTime = null;
 export let fps = 0;			// 直近1秒間に実際に描画できたフレーム数
 export let frameCount = 0;		// 1秒間のフレームカウンター
 export let fpsTimer = 0;		// 1秒経過したかを計るための経過時間
+
 const debugInfo = document.getElementById('debugInfo');
 const chatLog = document.getElementById('chatLog');
+const chatArea = document.getElementById("chatArea");
+const rightMenuButtons = document.getElementById("rightMenuButtons");
 
 
 //初期化
 async function init()
 {
 	/*debugInfo.style.display = 'block';*/
+	chatArea.style.display = 'none';
+	//rightMenuButtons.classList.toggle("closed");
 
 	engine.init(); engine.updateProgress("<エンジン初期化>");
 	windows.init(); engine.updateProgress("<ウィンドウコントローラー初期化>");
@@ -58,7 +63,7 @@ const chatRange = document.getElementById("chatRange");
 
 // 開閉ボタンの要素と、開閉対象の箱の要素を取得
 const rightMenuOpenBtn = document.getElementById("rightMenuOpen");
-const rightMenuButtons = document.getElementById("rightMenuButtons");
+
 
 // 開閉ボタンがクリックされたら
 rightMenuOpenBtn.addEventListener("click", () =>

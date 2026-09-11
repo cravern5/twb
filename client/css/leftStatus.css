@@ -1,20 +1,212 @@
-.leftStatus {
+/*=======================*/
+#leftStatus {
+
+	/* ドットを崩さずに拡大表示する指定 ctx.imageSmoothingEnabled=falseと併用可能*/
+	/* Chrome, Edge, Safari */
+	image-rendering: pixelated;
+	/* Firefox */
+	image-rendering: crisp-edges;
+
+	/*background-color: rgb(204, 0, 255);*/
 	width: auto;
 	height: auto;
-
 	position: absolute;
-	left: 100px;
-	top: 40px;
-	padding: 20px;
+
+	left: 0px;
+	top: 0px;
+	padding: 0;
+	margin: 0;
+	/*display: flex;
+	flex-direction: column;*/
 }
 
-.en {
+
+/*=======================*/
+
+#leftStatusPanel {
+
+	/*background-color: green;*/
+	width: 176px;
+	height: 124px;
+}
+
+#leftOpen {
+	background-image: url("../assets/ui/Status/open.png");
+	background-repeat: no-repeat;
+
+	left: 0px;
+	top: 0px;
+	width: 45px;
+	height: 48px;
+}
+
+#leftXpBar {
+	background-image: url("../assets/ui/Status/xpBar.png");
+	background-repeat: no-repeat;
+	background-color: rgb(231, 178, 4);
+	position: absolute;
+	left: 0px;
+	/*leftOpen+2px*/
+	top: calc(48px + 2px);
+	width: 3px;
+	height: 233px;
+}
+
+#leftCoolTimer {
+	background-image: url("../assets/ui/Status/coolTimer.png");
+	background-repeat: no-repeat;
+
+	position: absolute;
+	left: 3px;
+	top: 1px;
+	width: 113px;
+	height: 119px;
+}
+
+#leftPower {
+	background-image: url("../assets/ui/Status/power.png");
+	background-repeat: no-repeat;
+
+	position: absolute;
+	left: 30px;
+	top: 28px;
+	width: 148px;
+	height: 65px;
+}
+
+#leftEnvironment {
+	background-image: url("../assets/ui/Status/environment.png");
+	background-repeat: no-repeat;
+	position: absolute;
+	left: 29px;
+	top: 29px;
+	width: 35px;
+	height: 35px;
+}
+
+#leftEnvironment {
+	background-image: url("../assets/ui/Status/environment.png");
+	background-repeat: no-repeat;
+	position: absolute;
+	left: 29px;
+	top: 26px;
+	width: 35px;
+	height: 35px;
+}
+#leftComboCount {
+	background-image: url("../assets/ui/Status/comboCount.png");
+	background-repeat: no-repeat;
+	position: absolute;
+	left: 44px;
+	top: 68px;
+	width: 15px;
+	height: 15px;
+}
+#leftAfkBtn {
+
+	background-image: url("../assets/ui/Status/afkBtn.png");
+	background-repeat: no-repeat;
+	position: absolute;
+	left: 78px;
+	top: 83px;
+	width: 15px;
+	height: 15px;
+}
+#leftFootBtn {
+	background-image: url("../assets/ui/Status/footBtn.png");
+	background-repeat: no-repeat;
+	position: absolute;
+	left: 93px;
+	top: 72px;
+	width: 15px;
+	height: 15px;
+}
+#leftStatusBtn {
+	background-image: url("../assets/ui/Status/statusBtn.png");
+	background-repeat: no-repeat;
+	position: absolute;
+	left: 66px;
+	top: 109px;
+	width: 15px;
+	height: 15px;
+}
+#leftEnvironmentBtn {
+	background-image: url("../assets/ui/Status/environmentBtn.png");
+	background-repeat: no-repeat;
+	position: absolute;
+	left: 84px;
+	top: 103px;
+	width: 15px;
+	height: 15px;
+}
+#leftNoExpandBtn {
+	background-image: url("../assets/ui/Status/noexpand.png");
+	background-repeat: no-repeat;
+	position: absolute;
+	left: 100px;
+	top: 92px;
+	width: 15px;
+	height: 15px;
+}
+#leftSkillSlot {
+	/*background: radial-gradient(circle, #d80303 0%, #000 100px, transparent 101px);*/
+
+	/* ドットを崩さずに拡大表示する指定 ctx.imageSmoothingEnabled=falseと併用可能*/
+	/* Chrome, Edge, Safari */
+	image-rendering: crisp-edges;
+	/* Firefox */
+	image-rendering: crisp-edges;
+	/* はみ出た画像を丸くカット */
+	overflow: hidden;
+	color: white;
+	background: rgb(0, 0, 0);
+	border-radius: 50%;
+	position: absolute;
+	left: 62px;
+	top: 52px;
+	width: 28px;
+	height: 28px;
+}
+
+
+/*=======================*/
+
+#leftStatusList {
+	background-color: rgb(4, 27, 231);
+
+	width: 100px;
+	margin: 0;
+	padding: 0;
+}
+
+.leftStatusText {
+	background-color: rgb(255, 20, 255);
+}
+
+.leftStatusView {
+	background-color: rgb(4, 231, 125);
+	display: flex;
+	flex-direction: row;
+	position: relative;
+	left: 10px;
+
+	width: 200px;
+
+}
+
+
+.leftStatusView .en {
+	background-color: rgb(21, 220, 255);
 	color: rgb(255, 255, 255);
 	font-family: 'Ethnocentric', 'apt';
 	font-size: 10px;
 	line-height: 17px;
 	letter-spacing: -1px;
-	text-align: center;
+
+	width: 50px;
+	left: 20px;
+	margin-left: auto;
+	margin-right: auto;
 
 	/* 縁取り 元の色:#39308C*/
 	--huti_color: #1300bd;

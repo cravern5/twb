@@ -72,7 +72,7 @@
 
 	<!-- 右メニュー -->
 	<div id="rightMenu">
-		<div id="rightMenuButtons">
+		<div id="rightMenuButtons" class="closed">
 			<div id="rightMenuCharacter" class="rightMenuBtn"></div>
 			<div id="rightMenuCombo" class="rightMenuBtn"></div>
 			<div id="rightMenuEquip" class="rightMenuBtn"></div>
@@ -87,20 +87,38 @@
 	</div>
 
 	<!--ステータス-->
-	<div class="leftStatus">
-		<div class="en">H P<br></div>
-		<div class="en">M P<br></div>
-		<div class="en">S P<br></div>
-		<div class="en">X P<br></div>
-		<div class="en"><br></div>
-		<div class="en">WEiGHT<br></div>
-		<div class="en">FAME<br></div>
-		<div class="en">SPEED<br></div>
+	<div id="leftStatus">
+		<div id="leftStatusPanel">
+			<div id="leftOpen"></div>
+			<div id="leftCoolTimer"></div>
+			<div id="leftXpBar"></div>
+			<div id="leftPower"></div>
+			<div id="leftEnvironment"></div>
+			<div id="leftComboCount"></div>
+			<div id="leftAfkBtn"></div>
+			<div id="leftFootBtn"></div>
+			<div id="leftStatusBtn"></div>
+			<div id="leftEnvironmentBtn"></div>
+			<div id="leftNoExpandBtn"></div>
+			<div id="leftSkillSlot"></div>
+		</div>
+
+		<div id="leftStatusList">
+			<div class="leftStatusView"><div class="en">H P</div><div class="leftStatusText" id="leftHP">190/190</div></div>
+			<div class="leftStatusView"><div class="en">M P</div><div class="leftStatusText" id="leftMP">50/50</div></div>
+			<div class="leftStatusView"><div class="en">S P</div><div class="leftStatusText" id="leftSP">950/950</div></div>
+			<div class="leftStatusView"><div class="en">X P</div><div class="leftStatusText" id="leftXP">0</div></div>
+			<br>
+			<div class="leftStatusView"><div class="en">WEiGHT</div><div class="leftStatusText" id="leftWEIGHT">27/1050</div></div>
+			<div class="leftStatusView"><div class="en">FAME</div><div class="leftStatusText" id="leftFAME">100</div></div>
+			<div class="leftStatusView"><div class="en">SPEED</div><div class="leftStatusText" id="leftSPEED">50</div></div>
+		</div>
 	</div>
 
 
 	<!-- 最後に書く -->
 	<script type="module" src="./game.js"></script>
+
 </body>
 
 </html>
