@@ -311,6 +311,7 @@ function showModelDebugInfo()
 		+ "\n ID:" + socket.myPlayerId
 		+ "\n position.x:" + player.position.x.toFixed(1) + " position.y:" + player.position.y.toFixed(1)
 		+ "\n state:" + player.state + " direction:" + player.direction + " flip:" + player.flip
+		+ "\n mobile:" + sub.isMobile()
 		+ "\n[Network]"
 		+ Player.players
 			.filter((p) => p.id !== socket.myPlayerId)		// 自分以外の全プレイヤーが対象

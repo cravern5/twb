@@ -179,6 +179,8 @@ export function debugLog(message)
 	}
 }
 
+
+
 //丸め処理
 export function roundTo(value, digits)
 {
@@ -191,6 +193,8 @@ export function nearlyEqual(a, b, epsilon = 1e-4)
 {
 	return Math.abs(a - b) <= epsilon;
 }
+
+
 
 //拡張子変更
 export function changeExt(filePath, newExt)
@@ -220,6 +224,50 @@ export async function checkFileExists(url)
 		return false;
 	}
 }
+
+//キャラクター名を固定長のバイト列に変換する（余った部分は自動的に0埋めになる）
+export function encodeFixedName(text, byteLength)
+{
+	/*
+	// packetのオフセット3から直接NAME_BYTE_LENGTHバイトの書き込み枠（サブアレイ）を作成
+		const nameTarget = packet.subarray(5, NAME_BYTE_LENGTH + 5);
+		const encoder = new TextEncoder();
+		// encodeIntoは target のサイズ（NAME_BYTE_LENGTH）を超えないよう、
+		// 文字の途中で切れない最大のところまで自動で安全に書き込んでくれます
+		encoder.encodeInto(playerName, nameTarget);
+	*/
+
+	const encoder = new TextEncoder();
+	let bytes = encoder.encode(text);
+
+	// 漢字や絵文字を文字の途中で切らないよう、1文字ずつ削りながら収まるまで縮める
+	let chars = [...text];
+	while (bytes.length > byteLength && chars.length > 0)
+	{
+		chars.pop();
+		bytes = encoder.encode(chars.join(""));
+	}
+
+	// 固定長の箱を用意し、変換したバイト列だけコピーする（残りは自動的に0埋めになる）
+	const fixed = new Uint8Array(byteLength);
+	fixed.set(bytes);
+	return fixed;
+}
+
+//固定長のバイト列から末尾の0埋め部分を取り除いて文字列に戻す
+export function decodeFixedName(bytes)
+{
+	// 末尾に続く0x00（パディング）が終わる位置を探す
+	let end = bytes.length;
+	while (end > 0 && bytes[end - 1] === 0) end--;
+
+	const decoder = new TextDecoder();
+	return decoder.decode(bytes.subarray(0, end));
+}
+
+
+
+
 
 //wait setInterval & Promise(外部ライブラリなどの既存オブジェクトの追加待ち、exportも可能)
 /*使用例
@@ -456,42 +504,8 @@ export function waitMObs(element, attrName, timeout = 5000)
 }
 
 
-//キャラクター名を固定長のバイト列に変換する（余った部分は自動的に0埋めになる）
-export function encodeFixedName(text, byteLength)
+
+export function isMobile()
 {
-	/*
-	// packetのオフセット3から直接NAME_BYTE_LENGTHバイトの書き込み枠（サブアレイ）を作成
-		const nameTarget = packet.subarray(5, NAME_BYTE_LENGTH + 5);
-		const encoder = new TextEncoder();
-		// encodeIntoは target のサイズ（NAME_BYTE_LENGTH）を超えないよう、
-		// 文字の途中で切れない最大のところまで自動で安全に書き込んでくれます
-		encoder.encodeInto(playerName, nameTarget);
-	*/
-
-	const encoder = new TextEncoder();
-	let bytes = encoder.encode(text);
-
-	// 漢字や絵文字を文字の途中で切らないよう、1文字ずつ削りながら収まるまで縮める
-	let chars = [...text];
-	while (bytes.length > byteLength && chars.length > 0)
-	{
-		chars.pop();
-		bytes = encoder.encode(chars.join(""));
-	}
-
-	// 固定長の箱を用意し、変換したバイト列だけコピーする（残りは自動的に0埋めになる）
-	const fixed = new Uint8Array(byteLength);
-	fixed.set(bytes);
-	return fixed;
-}
-
-//固定長のバイト列から末尾の0埋め部分を取り除いて文字列に戻す
-export function decodeFixedName(bytes)
-{
-	// 末尾に続く0x00（パディング）が終わる位置を探す
-	let end = bytes.length;
-	while (end > 0 && bytes[end - 1] === 0) end--;
-
-	const decoder = new TextDecoder();
-	return decoder.decode(bytes.subarray(0, end));
+	return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 }
