@@ -163,8 +163,11 @@ document.addEventListener('mousedown', (e) =>
 	//マウス状態更新
 	input.getMouseState_mousedown(e);
 
+	addLog("info", "mousemove");
+
 	if (player)
 		player.mousedown(e);
+
 });
 // マウスを動かしているとき
 document.addEventListener('mousemove', (e) =>
@@ -245,6 +248,12 @@ function update(delta)
 {
 	if (!player)
 		return;
+
+	// ピンチズームの結果をカメラの拡大率に反映する
+	// （プレイヤーは常に画面中心にいるので、これだけで自動的に中心起点のズームになる）
+	world.camera.zoom *= input.virtualZoom.scale;
+	world.camera.zoom = Math.min(Math.max(world.camera.zoom, 0.5), 3); // 拡大率の上限・下限を制限（お好みで調整）
+	input.clearVirtualZoom(); // 使い終わったので今回分のズーム値をリセット
 
 	// カメラ計算のため、プレイヤーの中心座標を渡す
 	const center = player.getCenterPosition();

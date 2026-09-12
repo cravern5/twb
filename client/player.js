@@ -135,14 +135,15 @@ export class Player
 	//足元座標
 	getFootPosition(screenX, screenY)
 	{
-		return { x: screenX + SPRITE_WIDTH / 2 + 0, y: screenY + SPRITE_HEIGHT - 14.5 };
+		return { x: screenX + (SPRITE_WIDTH / 2) * camera.zoom, y: screenY + (SPRITE_HEIGHT - 14.5) * camera.zoom };
+		//return { x: screenX + SPRITE_WIDTH / 2 + 0, y: screenY + SPRITE_HEIGHT - 14.5 };
 	}
 
 	//ワールド座標(position)からカメラ位置を引いて「画面上の描画位置」を求める、プレイヤーが動いてもカメラが追従して常に画面中央に見える
 	getWorldPosition()
 	{
-		const screenX = this.position.x - camera.x;
-		const screenY = this.position.y - camera.y;
+		const screenX = (this.position.x - camera.x) * camera.zoom;
+		const screenY = (this.position.y - camera.y) * camera.zoom;
 
 		return { x: screenX, y: screenY };
 	}
@@ -169,18 +170,24 @@ export class Player
 		return asset;
 	}
 
+	//画面座標→ワールド座標に変換して移動先をセットする（マウスクリック・タップの共通処理）
+	setMoveTargetFromScreen(clientX, clientY)
+	{
+		// 画面座標 = (ワールド座標 - camera.x) * zoom の逆算
+		const worldX = clientX / world.camera.zoom + world.camera.x;
+		const worldY = clientY / world.camera.zoom + world.camera.y;
+
+		this.moveTarget = { x: worldX, y: worldY };
+	}
+
 	//マウス移動
 	mousedown(e)
 	{
 		// キャンバス上を左クリックしたら、その場所を目的地にして歩き出す
 		if (input.mouseInfo.left && e.target === engine.canvas)
-		{
-			// 画面上のクリック位置(clientX/Y)にカメラのズレ(camera.x/y)を足して、マップ上の座標に変換する
-			const worldX = e.clientX + world.camera.x;
-			const worldY = e.clientY + world.camera.y;
+			this.setMoveTargetFromScreen(e.clientX, e.clientY);
 
-			this.moveTarget = { x: worldX, y: worldY };
-		}
+		//addLog("info", "moveTarget worldX(" + worldX.toFixed(1) + ") worldY(" + worldY.toFixed(1) + ")");
 	}
 
 	//キーの移動量取得
@@ -452,19 +459,19 @@ export class Player
 		//ワールド座標(position)からカメラ位置を引いて「画面上の描画位置」を求める、プレイヤーが動いてもカメラが追従して常に画面中央に見える
 		const screen = this.getWorldPosition();
 
+		// ズームすると見た目のサイズも変わるので、幅・高さにも同じ倍率を掛けておく
+		const drawWidth = asset.frameWidth * camera.zoom;
+		const drawHeight = asset.frameHeight * camera.zoom;
+
 		//足の位置
 		const foot = this.getFootPosition(screen.x, screen.y);
-
-		// 描画前に一旦キャンバスをクリアする
-		//ctx.clearRect(this.position.x, this.position.y, asset.frameWidth, asset.frameHeight);
 
 		//影の描画
 		utils2.drawCircle(
 			ctx, 'rgba(0, 0, 0, 0.6)', foot.x, foot.y,
-			SPRITE_WIDTH * 0.25,//幅
-			SPRITE_WIDTH * 0.1//高さ
+			SPRITE_WIDTH * 0.25 * camera.zoom,//幅　※ズームに合わせて影の大きさも変える
+			SPRITE_WIDTH * 0.1 * camera.zoom//高さ
 		);
-		//utils2.drawShadow(ctx, 'rgba(0, 0, 0, 0.5)', screen.x + 5, screen.y - 15, SPRITE_WIDTH - 10, SPRITE_HEIGHT);
 
 		//キャラクター描画 スプライトシートから該当コマだけを切り出して描画する
 		if (this.flip)
@@ -475,7 +482,7 @@ export class Player
 			ctx.drawImage(
 				asset.img,
 				this.currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
-				-screen.x - asset.frameWidth, screen.y, asset.frameWidth, asset.frameHeight
+				-screen.x - drawWidth, screen.y, drawWidth, drawHeight
 			);
 			ctx.restore();
 		}
@@ -484,7 +491,7 @@ export class Player
 			ctx.drawImage(
 				asset.img,
 				this.currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
-				screen.x, screen.y, asset.frameWidth, asset.frameHeight
+				screen.x, screen.y, drawWidth, drawHeight
 			);
 		}
 	}
