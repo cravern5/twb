@@ -183,11 +183,12 @@ export class Player
 	//マウス移動
 	mousedown(e)
 	{
-		addLog("info", "mousedown");
-
 		// キャンバス上を左クリックしたら、その場所を目的地にして歩き出す
 		if (input.mouseInfo.left && e.target === engine.canvas)
+		{
+			addLog("info", "mousedown x:" + e.clientX + " y;" + e.clientY);
 			this.setMoveTargetFromScreen(e.clientX, e.clientY);
+		}
 
 		//addLog("info", "moveTarget worldX(" + worldX.toFixed(1) + ") worldY(" + worldY.toFixed(1) + ")");
 	}
