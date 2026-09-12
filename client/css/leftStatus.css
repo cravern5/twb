@@ -219,7 +219,7 @@ display: flex;
 
 /*タイトル行*/
 .leftStatusTitleCol {
-	background-color: rgb(4, 231, 125);
+	/*background-color: rgb(4, 231, 125);*/
 	width: 55px;
 
 	/*テキスト上下中央調整用*/
@@ -228,7 +228,7 @@ display: flex;
 }
 /*値行*/
 .leftStatusValueCol {
-	background-color: rgb(231, 140, 4);
+	/*background-color: rgb(231, 140, 4);*/
 	width: 60px;
 
 	/*テキスト上下中央調整用*/
