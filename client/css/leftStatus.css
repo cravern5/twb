@@ -18,6 +18,10 @@
 	margin: 0;
 	/*display: flex;
 	flex-direction: column;*/
+
+	/*親が邪魔するのでこれもイベント発生しないようにする*/
+	pointer-events: none;
+
 }
 
 
@@ -28,6 +32,9 @@
 	/*background-color: green;*/
 	width: 176px;
 	height: 124px;
+
+	/*これは触れる*/
+	pointer-events: auto;
 }
 
 #leftOpen {
@@ -172,46 +179,80 @@
 /*=======================*/
 
 #leftStatusList {
-	background-color: rgb(4, 27, 231);
+	/*background-color: rgb(4, 27, 231);*/
 
-	width: 100px;
 	margin: 0;
 	padding: 0;
-}
+	position: relative;
+	left: 12px;
+	top: 5px;
 
-.leftStatusText {
-	background-color: rgb(255, 20, 255);
-}
-
-.leftStatusView {
-	background-color: rgb(4, 231, 125);
+	/*横並び*/
 	display: flex;
 	flex-direction: row;
-	position: relative;
-	left: 10px;
 
-	width: 200px;
+	/* クリックは受け付けず、下のCanvasに素通りさせる */
+	pointer-events: none;
+	/* ドラッグ操作などで文字が選択されてしまうのを防ぐ（Chrome/Edge/Safari用） */
+	-webkit-user-select: none;
+	/* 文字選択そのものを禁止する（標準プロパティ） */
+	user-select: none;
+}
 
+.leftStatusTitleCol, .leftStatusValueCol {
+
+	/*縦並び*/
+	display: flex;
+	flex-direction: column;
+}
+
+/*タイトル行*/
+.leftStatusTitleCol {
+	/*background-color: rgb(4, 231, 125);*/
+	width: 55px;
+
+}
+/*値行*/
+.leftStatusValueCol {
+	/*background-color: rgb(231, 140, 4);*/
+	width: 60px;
+}
+/*1行*/
+.leftStatusTitle, .leftStatusText {
+
+	/*background-color: rgb(189, 231, 4);*/
+	margin: auto;
+	height: 20px;
+
+	display: flex;
+	/* 上下中央揃え */
+	align-items: center;
+	/* 左右中央揃え (不要なら削除可) */
+	justify-content: center;
 }
 
 
-.leftStatusView .en {
-	background-color: rgb(21, 220, 255);
-	color: rgb(255, 255, 255);
-	font-family: 'Ethnocentric', 'apt';
-	font-size: 10px;
-	line-height: 17px;
-	letter-spacing: -1px;
+.leftStatusText span {
 
-	width: 50px;
-	left: 20px;
-	margin-left: auto;
-	margin-right: auto;
+	/*line-height: 10px;*/
+	color: rgb(255, 255, 255);
+	font-size: 10px;
+	letter-spacing: -1px;
+}
+
+.leftStatusTitle span {
+
+	/*line-height: 10px;*/
+	font-size: 10px;
+	font-family: 'Ethnocentric', 'apt';
+	color: rgb(255, 255, 255);
+	letter-spacing: -1px;
 
 	/* 縁取り 元の色:#39308C*/
 	--huti_color: #1300bd;
 	--huti_size: 1.9px;
 
+	/*line-height: 30px;*/
 	-webkit-text-stroke: 0.5px var(--huti_color);
 	text-shadow:
 		/*右下*/

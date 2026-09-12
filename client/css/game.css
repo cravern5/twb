@@ -52,6 +52,7 @@ canvas {
 	white-space: pre;
 	/*選択不可*/
 	pointer-events: none;
+	/*手前*/
 	z-index: 999;
 }
 

@@ -30,8 +30,8 @@ const rightMenuButtons = document.getElementById("rightMenuButtons");
 //初期化
 async function init()
 {
-	/*debugInfo.style.display = 'block';*/
-	chatArea.style.display = 'none';
+	//debugInfo.style.display = 'block';
+	//chatArea.style.display = 'none';
 	//rightMenuButtons.classList.toggle("closed");
 
 	engine.init(); engine.updateProgress("<エンジン初期化>");
