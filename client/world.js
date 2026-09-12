@@ -21,8 +21,7 @@ export async function init()
 // プレイヤーの中心座標をもとに、カメラの位置を計算する関数
 export function updateCamera(targetX, targetY)
 {
-	// zoomを考慮した「実際に画面に映る範囲」の幅と高さ
-	// zoomが大きいほど範囲が狭くなる＝拡大して見える
+	// zoomを考慮した「実際に画面に映る範囲」の幅と高さ zoomが大きいほど範囲が狭くなる＝拡大して見える
 	const viewWidth = canvas.width / camera.zoom;
 	const viewHeight = canvas.height / camera.zoom;
 

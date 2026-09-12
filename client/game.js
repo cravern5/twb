@@ -236,6 +236,7 @@ function update(delta)
 	input.clearInputZoom(); // 使い終わったので今回分のズーム値をリセット
 
 
+
 	// 1. フレームの最初にキャンバス全体をクリア
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -300,16 +301,16 @@ function showModelDebugInfo()
 	debugInfo.textContent =
 		"[Debug Info]"
 		+ "\n width:" + canvas.width + " height:" + canvas.height
-		+ "\n[Performance]"
 		+ "\n FPS:" + fps
 		+ "\n Log:" + chatLog.children.length
+		+ "\n useTouch:" + engine.useTouch
 		+ "\n[World]"
 		+ "\n camera.x:" + world.camera.x.toFixed(1) + " camera.y:" + world.camera.y.toFixed(1)
+		+ "\n camera.zoom:" + world.camera.zoom.toFixed(3)
 		+ "\n[Player]"
 		+ "\n ID:" + socket.myPlayerId
 		+ "\n position.x:" + player.position.x.toFixed(1) + " position.y:" + player.position.y.toFixed(1)
 		+ "\n state:" + player.state + " direction:" + player.direction + " flip:" + player.flip
-		+ "\n useTouch:" + engine.useTouch
 		+ "\n[Network]"
 		+ Player.players
 			.filter((p) => p.id !== socket.myPlayerId)		// 自分以外の全プレイヤーが対象

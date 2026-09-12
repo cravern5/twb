@@ -235,7 +235,7 @@ export class Player
 
 			//addLog("info", "movement x:" + input.crossTouch.x + " y;" + input.crossTouch.y);
 
-			return { x: input.crossTouch.x, y: input.crossTouch.y };
+			return { x: input.crossTouch.powerX, y: input.crossTouch.powerY };
 		}
 
 		// マウスの目的地に向かって移動する
