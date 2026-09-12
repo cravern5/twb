@@ -135,25 +135,25 @@ export class Player
 	//足元座標
 	getFootPosition(screenX, screenY)
 	{
-		return { x: screenX + (SPRITE_WIDTH / 2) * camera.zoom, y: screenY + (SPRITE_HEIGHT - 14.5) * camera.zoom };
+		return { x: screenX + (SPRITE_WIDTH / 2), y: screenY + (SPRITE_HEIGHT - 14.5) };
 		//return { x: screenX + SPRITE_WIDTH / 2 + 0, y: screenY + SPRITE_HEIGHT - 14.5 };
+	}
+
+	//中央の座標取得
+	getCenterPosition()
+	{
+		const x = this.position.x + SPRITE_WIDTH / 2;
+		const y = this.position.y + SPRITE_HEIGHT / 2;
+		return { x: x, y: y };
 	}
 
 	//ワールド座標(position)からカメラ位置を引いて「画面上の描画位置」を求める、プレイヤーが動いてもカメラが追従して常に画面中央に見える
 	getWorldPosition()
 	{
-		const screenX = (this.position.x - camera.x) * camera.zoom;
-		const screenY = (this.position.y - camera.y) * camera.zoom;
+		const screenX = (this.position.x - camera.x);
+		const screenY = (this.position.y - camera.y);
 
 		return { x: screenX, y: screenY };
-	}
-
-	//中央の座標取得
-	getCenterPosition(pos)
-	{
-		const x = this.position.x + SPRITE_WIDTH / 2;
-		const y = this.position.y + SPRITE_HEIGHT / 2;
-		return { x: x, y: y };
 	}
 
 	//現在の状態のアセットを取得
@@ -475,7 +475,7 @@ export class Player
 
 		//影の描画
 		utils2.drawCircle(
-			ctx, 'rgba(0, 0, 0, 0.6)', foot.x, foot.y,
+			ctx, 'rgba(0, 0, 0, 0.6)', foot.x * camera.zoom, foot.y * camera.zoom,
 			SPRITE_WIDTH * 0.25 * camera.zoom,//幅　※ズームに合わせて影の大きさも変える
 			SPRITE_WIDTH * 0.1 * camera.zoom//高さ
 		);
@@ -489,7 +489,7 @@ export class Player
 			ctx.drawImage(
 				asset.img,
 				this.currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
-				-screen.x - drawWidth, screen.y, drawWidth, drawHeight
+				-screen.x * camera.zoom - drawWidth, screen.y * camera.zoom, drawWidth, drawHeight
 			);
 			ctx.restore();
 		}
@@ -498,7 +498,7 @@ export class Player
 			ctx.drawImage(
 				asset.img,
 				this.currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
-				screen.x, screen.y, drawWidth, drawHeight
+				screen.x * camera.zoom, screen.y * camera.zoom, drawWidth, drawHeight
 			);
 		}
 	}
@@ -633,8 +633,8 @@ export class Player
 
 		//ワールド座標(position)からカメラ位置を引いて「画面上の描画位置」を求める、プレイヤーが動いてもカメラが追従して常に画面中央に見える
 		const screen = this.getWorldPosition();
-		const x = screen.x + SPRITE_WIDTH / 2
-		const y = screen.y - 5;
+		const x = (screen.x + SPRITE_WIDTH / 2) * camera.zoom;
+		const y = (screen.y - 5) * camera.zoom;
 
 		//adjustBubbleTextで既に設定してある
 		//ctx.font = bubbleFont;
