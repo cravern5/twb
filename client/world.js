@@ -39,9 +39,6 @@ export function updateCamera(targetX, targetY)
 //画面更新
 export function update(delta)
 {
-	// 1. フレームの最初にキャンバス全体をクリア
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
-
 	// zoomを考慮した切り出しサイズ（updateCameraと同じ計算）
 	const viewWidth = canvas.width / camera.zoom;
 	const viewHeight = canvas.height / camera.zoom;

@@ -3,7 +3,7 @@ import * as sub from '../shared/sub.js';
 
 import * as utils2 from './utils2.js';
 import * as windows from './windows.js';
-import { canvas, ctx } from './engine.js';
+import { ctx, canvas } from './engine.js';
 import * as engine from './engine.js';
 import * as socket from './ws_bin_client.js';
 import { myPlayerId } from './ws_bin_client.js';
@@ -102,111 +102,10 @@ chatEmote.addEventListener('click', (e) =>
 
 });
 
-// chatRange非表示
-document.addEventListener('click', (e) =>
-{
-	// クリックされた要素が chatRange 内のボタン、または chatRange の外側であれば非表示
-	if (chatRange.style.display === 'flex')
-	{
-		if (e.target.classList.contains('chatRangeBtn') || !chatRange.contains(e.target))
-		{
-			chatRange.style.display = 'none';
-		}
-	}
-});
-
 //画面フルスクリーン
 chatFixedText.addEventListener('click', (e) =>
 {
 	windows.chatWindow.restoreFullScreen();
-});
-
-
-// バーチャル十字キー（スマホの画面左半分でのタッチ操作）// passive: true だと preventDefault が無視されます
-canvas.addEventListener('touchstart', (e) => input.getVirtualMove_touchstart(e), { passive: false });
-canvas.addEventListener('touchmove', (e) => input.getVirtualMove_touchmove(e), { passive: false });
-canvas.addEventListener('touchend', (e) => input.getVirtualMove_touchend(e), { passive: false });
-canvas.addEventListener('touchcancel', (e) => input.getVirtualMove_touchend(e), { passive: false });
-
-document.addEventListener('keydown', (e) =>
-{
-	if (!player)
-		return;
-
-	const key = e.key.toLowerCase();
-	if (player.SendChat(e))//送信したらtrue
-	{
-	}
-	else if (key === "insert")//座り
-	{
-		player.isSitting = !player.isSitting;
-	}
-	else if (key === "c")//チャット表示切替
-	{
-		windows.chatWindow.show(-1);
-	}
-	else
-	{
-		//キー状態更新
-		input.getKeyState_keydown(e);
-	}
-});
-
-document.addEventListener('keyup', (e) =>
-{
-	//キー状態更新
-	input.getKeyState_keyup(e);
-});
-
-document.addEventListener('mousedown', (e) =>
-{
-	//マウス状態更新
-	input.getMouseState_mousedown(e);
-
-	addLog("info", "mousemove");
-
-	if (player)
-		player.mousedown(e);
-
-});
-// マウスを動かしているとき
-document.addEventListener('mousemove', (e) =>
-{
-	//状態取得
-	input.getMouseState_mousemove(e);
-
-	//チャットスクロールバー
-	scroll.mousemove(e);
-
-	//if (mouseInfo.right)
-	//{
-	//カメラ
-	//	engine.camera_MouseMove(e);
-
-	//}
-
-	//addLog("INFO", "window.mousemove" + mouseInfo.right);
-	//windows.mousemove(e);
-});
-// マウスを離したとき
-document.addEventListener('mouseup', (e) =>
-{
-	//状態取得
-	input.getMouseState_mouseup(e);
-
-	//チャットスクロールバー
-	scroll.mouseup(e);
-
-});
-// マウスホイールのイベント
-window.addEventListener('wheel', (e) =>
-{
-	input.getMouseState_mousewheel(e);
-});
-
-// 画面外に出た
-window.addEventListener('mouseleave', () =>
-{
 });
 
 // タブが切り替わったり別ウィンドウに移った
@@ -241,6 +140,87 @@ window.addEventListener('load', () =>
 
 
 
+///////入力イベント//////////
+
+//キーが押されたとき
+export function keydown(e)
+{
+	if (!player)
+		return;
+
+	const key = e.key.toLowerCase();
+	if (player.SendChat(e))//送信したらtrue
+	{
+	}
+	else if (key === "insert")//座り
+	{
+		player.isSitting = !player.isSitting;
+	}
+	else if (key === "c")//チャット表示切替
+	{
+		windows.chatWindow.show(-1);
+	}
+	else
+	{
+
+	}
+}
+
+//キーが離されたとき
+export function keyup(e)
+{
+
+}
+
+//マウスクリック
+export function click(e)
+{
+	// クリックされた要素が chatRange 内のボタン、または chatRange の外側であれば非表示
+	if (chatRange.style.display === 'flex')
+	{
+		if (e.target.classList.contains('chatRangeBtn') || !chatRange.contains(e.target))
+			chatRange.style.display = 'none';
+	}
+}
+
+//マウスを押したとき
+export function mousedown(e)
+{
+	if (!engine.useTouch)
+	{
+		if (player)
+			player.mousedown(e);
+	}
+}
+
+// マウスを動かしているとき
+export function mousemove(e)
+{
+	//チャットスクロールバー
+	scroll.mousemove(e);
+
+	//if (mouseInfo.right)
+	//{
+	//カメラ
+	//	engine.camera_MouseMove(e);
+
+	//}
+
+	//addLog("INFO", "window.mousemove" + mouseInfo.right);
+	//windows.mousemove(e);
+}
+
+// マウスを離したとき
+export function mouseup(e)
+{
+	//チャットスクロールバー
+	scroll.mouseup(e);
+}
+
+//マウスホイール
+export function mousewheel(e)
+{
+}
 
 
 //画面更新
@@ -251,9 +231,13 @@ function update(delta)
 
 	// ピンチズームの結果をカメラの拡大率に反映する
 	// （プレイヤーは常に画面中心にいるので、これだけで自動的に中心起点のズームになる）
-	world.camera.zoom *= input.virtualZoom.scale;
+	world.camera.zoom *= input.inputZoom.scale;
 	world.camera.zoom = Math.min(Math.max(world.camera.zoom, 0.5), 3); // 拡大率の上限・下限を制限（お好みで調整）
-	input.clearVirtualZoom(); // 使い終わったので今回分のズーム値をリセット
+	input.clearInputZoom(); // 使い終わったので今回分のズーム値をリセット
+
+
+	// 1. フレームの最初にキャンバス全体をクリア
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 	// カメラ計算のため、プレイヤーの中心座標を渡す
 	const center = player.getCenterPosition();
@@ -325,7 +309,7 @@ function showModelDebugInfo()
 		+ "\n ID:" + socket.myPlayerId
 		+ "\n position.x:" + player.position.x.toFixed(1) + " position.y:" + player.position.y.toFixed(1)
 		+ "\n state:" + player.state + " direction:" + player.direction + " flip:" + player.flip
-		+ "\n mobile:" + sub.isMobile()
+		+ "\n useTouch:" + engine.useTouch
 		+ "\n[Network]"
 		+ Player.players
 			.filter((p) => p.id !== socket.myPlayerId)		// 自分以外の全プレイヤーが対象

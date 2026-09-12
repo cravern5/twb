@@ -183,6 +183,8 @@ export class Player
 	//マウス移動
 	mousedown(e)
 	{
+		addLog("info", "mousedown");
+
 		// キャンバス上を左クリックしたら、その場所を目的地にして歩き出す
 		if (input.mouseInfo.left && e.target === engine.canvas)
 			this.setMoveTargetFromScreen(e.clientX, e.clientY);
@@ -225,12 +227,12 @@ export class Player
 		}
 
 		// バーチャル十字キー（スマホ）の入力があれば、それを使う
-		if (input.virtualMove.x !== 0 || input.virtualMove.y !== 0)
+		if (input.crossTouch.x !== 0 || input.crossTouch.y !== 0)
 		{
 			// タッチ操作を優先する（マウスクリックでの目的地移動は中断する）
 			this.moveTarget = null;
 
-			return { x: input.virtualMove.x, y: input.virtualMove.y };
+			return { x: input.crossTouch.x, y: input.crossTouch.y };
 		}
 
 		// マウスの目的地に向かって移動する
