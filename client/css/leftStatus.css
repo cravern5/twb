@@ -223,7 +223,7 @@ display: flex;
 	width: 55px;
 
 	/*テキスト上下中央調整用*/
-	line-height: 23px;
+	/*line-height: 23px;*/
 
 }
 /*値行*/
@@ -232,7 +232,7 @@ display: flex;
 	width: 60px;
 
 	/*テキスト上下中央調整用*/
-	line-height: 18px;
+	/*line-height: 18px;*/
 }
 /*1行*/
 .leftStatusTitle, .leftStatusText {
@@ -243,7 +243,7 @@ display: flex;
 
 	display: flex;
 	/* 上下中央揃え */
-	/*align-items: center;*/
+	align-items: center;
 	/* 左右中央揃え (不要なら削除可) */
 	justify-content: center;
 }
@@ -265,6 +265,10 @@ display: flex;
 	font-family: 'Ethnocentric', 'apt';
 
 	letter-spacing: -1px;
+
+	/* フォント固有の上下のズレを視覚的に補正します */
+	position: relative;
+	top: 2px;
 
 	/* 縁取り 元の色:#39308C*/
 	--huti_color: #1300bd;
