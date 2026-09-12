@@ -92,14 +92,14 @@ let dragStartY = 0;				// ドラッグを開始した瞬間の、マウスのY�
 let dragStartScrollTop = 0;		// ドラッグを開始した瞬間の、ログのscrollTopを覚えておく変数
 
 // つまみの上でマウスボタンを押したらドラッグ開始
-chatScrollBar.addEventListener("mousedown", (event) =>
+chatScrollBar.addEventListener("mousedown", (e) =>
 {
 	isDraggingThumb = true;
 	dragStartY = event.clientY;
 	dragStartScrollTop = chatLog.scrollTop;
 
 	// ドラッグ中に文字などが選択されてしまうのを防ぐ
-	event.preventDefault();
+	e.preventDefault();
 });
 
 // マウスが動いたときの処理（スクロールバードラッグ処理）
