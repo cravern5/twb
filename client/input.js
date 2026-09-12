@@ -1,6 +1,7 @@
 import { print, addLog } from '../shared/sub.js';
 import { canvas } from './engine.js';
 import { player } from './player.js';
+import * as engine from './engine.js';
 import * as game from './game.js';
 
 //キーボード==============================================================
@@ -79,8 +80,13 @@ document.addEventListener('mousedown', (e) =>
 	mouseInfo.clientX = e.clientX;
 	mouseInfo.clientY = e.clientY;
 
-	game.mousedown(e);
+	if (!engine.useTouch)
+	{
+		if (player)
+			player.mousedown(e);
+	}
 
+	game.mousedown(e);
 });
 
 // マウスを動かしているとき
@@ -89,6 +95,12 @@ document.addEventListener('mousemove', (e) =>
 	//状態取得
 	mouseInfo.movementX = e.movementX;
 	mouseInfo.movementY = e.movementY;
+
+	/*if (!engine.useTouch)
+	{
+		if (player)
+			player.mousedown(e);
+	}*/
 
 	game.mousemove(e);
 });
@@ -120,18 +132,6 @@ window.addEventListener('mouseleave', () =>
 
 
 //バーチャル十字キー（スマホ用）==============================================================
-
-//メモ
-
-//順序
-//touchstart touchend mousedown click
-
-//passive: true
-//preventDefaultが無視されます
-
-//タッチがうまく反応しないとき
-//タッチを少し長押しすると右クリック扱いになる＝mousedownが呼ばれなくなる
-//そしてmousedownはタッチが離れたときに呼ばれて少し遅れた感じに発動する
 
 //タッチ保持クラス
 class myTouch
@@ -256,6 +256,20 @@ export const TAP_TIME_THRESHOLD = 300; // これより長く押し続けたら�
 export let lastTapTime = 0;// 最後にタップ（指を離した瞬間）した時刻を覚えておく変数
 export const DOUBLE_TAP_THRESHOLD = 300;// これより短い間隔で2回タップされたら「ダブルタップ」とみなす時間（ミリ秒）
 
+//メモ
+
+//順序
+//touchstart touchend mousedown click
+
+//passive: true
+//preventDefaultが無視されます
+
+//タッチがうまく反応しないとき
+//タッチを少し長押しすると右クリック扱いになる＝mousedownが呼ばれなくなる
+//そしてmousedownはタッチが離れたときに呼ばれて少し遅れた感じに発動する
+
+//仕様
+//mousedownとtouchstart-
 
 //デバッグ用
 function touchDebugLog(message, e = null)

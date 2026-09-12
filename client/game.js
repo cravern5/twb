@@ -186,11 +186,12 @@ export function click(e)
 //マウスを押したとき
 export function mousedown(e)
 {
-	if (!engine.useTouch)
+
+	/*if (!engine.useTouch)
 	{
 		if (player)
 			player.mousedown(e);
-	}
+	}*/
 }
 
 // マウスを動かしているとき
