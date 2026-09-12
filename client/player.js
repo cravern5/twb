@@ -233,6 +233,8 @@ export class Player
 			// タッチ操作を優先する（マウスクリックでの目的地移動は中断する）
 			this.moveTarget = null;
 
+			//addLog("info", "movement x:" + input.crossTouch.x + " y;" + input.crossTouch.y);
+
 			return { x: input.crossTouch.x, y: input.crossTouch.y };
 		}
 
@@ -353,6 +355,8 @@ export class Player
 		{
 			//移動量はここで1回だけ計算し、updatePositionとupdateStateの両方に渡す、2回計算すると、その間にpositionが変わってしまい向きがズレるため
 			const move = this.getMovement();
+
+			//addLog("info", "movement x:" + move.x + " y;" + move.y);
 
 			//移動処理を追加
 			position_changed = this.updatePosition(delta, move);

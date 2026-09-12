@@ -133,6 +133,7 @@ window.addEventListener('mouseleave', () =>
 //タッチを少し長押しすると右クリック扱いになる＝mousedownが呼ばれなくなる
 //そしてmousedownはタッチが離れたときに呼ばれて少し遅れた感じに発動する
 
+//タッチ保持クラス
 class myTouch
 {
 	constructor()
@@ -144,17 +145,21 @@ class myTouch
 		//直接保有しないようにする
 		//this.touch = touch;
 		this.id = touch.identifier;
-		this.x = touch.clientX;
-		this.y = touch.clientY;
 		this.time = Date.now();
+		this.startX = touch.clientX;
+		this.startY = touch.clientY;
+		this.x = 0;
+		this.y = 0;
 	}
 	clear()
 	{
 		//this.touch = null;
 		this.id = null;
+		this.time = null;
+		this.startX = null;
+		this.startY = null;
 		this.x = null;
 		this.y = null;
-		this.time = null;
 	}
 	isEnabled()
 	{
@@ -178,8 +183,8 @@ class myTouch
 		if (!touch)
 			return null;
 
-		const dx = touch.clientX - this.x;
-		const dy = touch.clientY - this.y;
+		const dx = touch.clientX - this.startX;
+		const dy = touch.clientY - this.startY;
 
 		return { x: dx, y: dy };
 	}
@@ -194,7 +199,6 @@ class myTouch
 
 		return dist;
 	}
-	// 最大距離でクランプ（頭打ち）しつつ、-1〜1の範囲の強さに変換する
 	movePower(e, radius)
 	{
 		const touch = this.find(e);
@@ -235,30 +239,16 @@ export function clearInputZoom() { inputZoom.scale = 1; }// フレーム末に�
 
 //十字キー
 export const crossTouch = new myTouch();
-/*
-export const crossTouch = { x: 0, y: 0 };// 現在字キーで入力されている移動方向（-1〜1の範囲、未入力時は0）
-let crossTouchId = null;  // 今操作中のタッチを追跡するためのID（他の指のタッチと混ざらないようにする）
-let crossTouchOriginX = 0;// 指を置いた場所（ここを中心にどれだけ離れたかで、方向と強さを決める）
-let crossTouchOriginY = 0;
-*/
 export const VIRTUAL_MOVE_RADIUS = 50;// スティックが反応する最大距離（px）。これ以上離しても入力の強さは頭打ちになる
-
 
 //タップ(マウスダウンの代わり)
 export const tapTouch = new myTouch();
-/*
-let tapTouchId = null;
-let tapStartX = 0;
-let tapStartY = 0;
-let tapStartTime = 0;
-*/
 export const TAP_MOVE_THRESHOLD = 10;  // これ以上動いたらタップ扱いしない（px）
 export const TAP_TIME_THRESHOLD = 300; // これより長く押し続けたらタップ扱いしない（ms）
 
 //ダブルタップ判定/自動ズームの無効化(game.cssで対策する) https://zenn.dev/kiki_her/articles/0f3e86ba83df08
 export let lastTapTime = 0;// 最後にタップ（指を離した瞬間）した時刻を覚えておく変数
 export const DOUBLE_TAP_THRESHOLD = 300;// これより短い間隔で2回タップされたら「ダブルタップ」とみなす時間（ミリ秒）
-
 
 
 //デバッグ用
@@ -320,7 +310,7 @@ canvas.addEventListener('touchstart', (e) =>
 		// ピンチ中は十字キー操作をキャンセルしておく
 		crossTouch.clear();
 
-		touchDebugLog("touchstart 指2本");
+		touchDebugLog("touchstart 指2本で開始");
 		return;
 	}
 
@@ -333,25 +323,26 @@ canvas.addEventListener('touchstart', (e) =>
 
 	const touch = e.changedTouches[0];
 
+	//タップキー初期化
+	tapTouch.init(touch);
+	touchDebugLog("タップ開始 taptouch.id[" + tapTouch.id + "]");
+
 	// 画面の左半分に置いた指だけを「十字キー操作」として扱う
-	if (touch.clientX > window.innerWidth / 2)
+	if (touch.clientX <= window.innerWidth / 2)
 	{
-		touchDebugLog("touchstart 画面左半分ではないです");
-		return;
+		//十字キー初期化
+		crossTouch.init(touch);
+		touchDebugLog("十字キー開始 taptouch.id[" + crossTouch.id + "]");
+
 	}
+	else
+		return;
+
+
 
 	// 十字キー範囲外＝タップ（移動先指定）候補として追跡する
 	// ここでpreventDefaultして、信頼できないブラウザの合成mousedownには頼らないようにする
 	e.preventDefault();
-
-
-	//十字キー初期化
-	crossTouch.init(touch);
-	//タップキー初期化
-	tapTouch.init(touch);
-
-	touchDebugLog("タップされました taptouch.id[" + tapTouch.id + "]");
-
 
 
 }, { passive: false });
@@ -479,12 +470,17 @@ canvas.addEventListener('touchmove', (e) =>
 	crossTouch.x = pow.x;
 	crossTouch.y = pow.y;
 
-	touchDebugLog("power x:" + crossTouch.x + " y:" + crossTouch.y);
+	//touchDebugLog("power x:" + crossTouch.x + " y:" + crossTouch.y);
 
 }, { passive: false });
 
 //タッチがキャンセルされたとき
 canvas.addEventListener('touchcancel', (e) =>
 {
-
+	touchDebugLog("touchcancel");
+	pinchTouch1.clear();
+	pinchTouch2.clear();
+	pinchLastDist = null;
+	tapTouch.clear();
+	crossTouch.clear();
 }, { passive: false });
