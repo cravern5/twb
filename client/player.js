@@ -226,8 +226,8 @@ export class Player
 			return { x: moveX, y: moveY };
 		}
 
-		// バーチャル十字キー（スマホ）の入力があれば、それを使う
-		if (input.crossTouch.x !== 0 || input.crossTouch.y !== 0)
+		// 十字キー（スマホ）の入力があれば、それを使う
+		if (input.crossTouch.isEnabled())
 		{
 			// タッチ操作を優先する（マウスクリックでの目的地移動は中断する）
 			this.moveTarget = null;

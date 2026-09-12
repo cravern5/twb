@@ -1,6 +1,6 @@
 import * as utils2 from './utils2.js';
 import { canvas, ctx } from './engine.js';
-import * as input from './input.js';
+//import * as input from './input.js';
 
 // マップ設定
 export const MAP_WIDTH = 6800;

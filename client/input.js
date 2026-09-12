@@ -22,8 +22,8 @@ document.addEventListener('keydown', (e) =>
 	const key = e.key === ' ' ? 'space' : e.key.toLowerCase();
 	// keysDownは最初の押下のみ（リピートを除外）
 	if (!e.repeat)
-		keys[key] = true;
-	keysPress[key] = true; // keysはリピート含めて常にtrue（変更なし）
+		keys[key] = true;// keysは最初の押下のみtrueになる（リピートは除外）
+	keysPress[key] = true; // keysPressはリピート含めて押している間ずっとtrue
 
 	game.keydown(e);
 
@@ -133,46 +133,118 @@ window.addEventListener('mouseleave', () =>
 //タッチを少し長押しすると右クリック扱いになる＝mousedownが呼ばれなくなる
 //そしてmousedownはタッチが離れたときに呼ばれて少し遅れた感じに発動する
 
+class Touch
+{
+	constructor()
+	{
+		this.clear();
+	}
+	init(touch)
+	{
+		this.touch = touch;
+		this.id = touch.identifier;
+		this.x = touch.clientX;
+		this.y = touch.clientY;
+		this.time = Date.now();
+	}
+	clear()
+	{
+		this.touch = null;
+		this.id = null;
+		this.x = null;
+		this.y = null;
+		this.time = null;
+	}
+	isEnabled()
+	{
+		return (this.touch !== null)
+	}
+	find(e)
+	{
+		return Array.from(e.changedTouches).find(t => t.identifier === this.id);
+	}
+	// 指を置いた場所からの移動量
+	move()
+	{
+		if (!this.touch)
+			return { x: 0, y: 0 };
 
-//ピンチ
-let pinchTouchId1 = null;// ピンチ中に追跡する2本の指のID
-let pinchTouchId2 = null;
-let pinchLastDist = null;// 直前に計測した2本指の距離（次の距離と比べてズーム量を求めるため）
+		const dx = this.touch.clientX - this.x;
+		const dy = this.touch.clientY - this.y;
+
+		return { x: dx, y: dy };
+	}
+	dist()
+	{
+		if (!this.touch)
+			return;
+
+		const move = this.move();
+		const dist = Math.hypot(move.x, move.y);
+
+		return dist;
+	}
+	// 最大距離でクランプ（頭打ち）しつつ、-1〜1の範囲の強さに変換する
+	movePower(radius)
+	{
+		if (!this.touch)
+			return;
+
+		const move = this.move();
+		const dist = this.dist();
+
+		if (dist > 0)
+		{
+			// 最大距離でクランプ（頭打ち）しつつ、-1〜1の範囲の強さに変換する
+			const power = Math.min(dist, radius) / radius;
+			this.x = (move.x / dist) * power;
+			this.y = (move.y / dist) * power;
+
+			addLog("power x:" + this.x + " y:" + this.y);
+		}
+	}
+	//経過
+	duration()
+	{
+		if (this.time === null)
+			return null;
+
+		return Date.Now() - this.time;
+	}
+}
+
+//ピンチ(ズーム用)
+export const pinchTouch1 = new Touch();
+export const pinchTouch2 = new Touch();
+export let pinchLastDist = null;// 直前に計測した2本指の距離（次の距離と比べてズーム量を求めるため）
 export const inputZoom = { scale: 1 };// 直近のフレームで蓄積されたズーム倍率（1.0 = 変化なし、1.05 = 5%拡大、0.95 = 5%縮小）、指の位置は使わず「距離の変化率」だけを使う
 export function clearInputZoom() { inputZoom.scale = 1; }// フレーム末にズーム倍率をリセットする（clearKeysと同様、engine側のループ末尾で呼ぶ）
 
-//十字キー移動
+//十字キー
+export const crossTouch = new Touch();
+/*
 export const crossTouch = { x: 0, y: 0 };// 現在字キーで入力されている移動方向（-1〜1の範囲、未入力時は0）
 let crossTouchId = null;  // 今操作中のタッチを追跡するためのID（他の指のタッチと混ざらないようにする）
 let crossTouchOriginX = 0;// 指を置いた場所（ここを中心にどれだけ離れたかで、方向と強さを決める）
 let crossTouchOriginY = 0;
-const VIRTUAL_MOVE_RADIUS = 50;// スティックが反応する最大距離（px）。これ以上離しても入力の強さは頭打ちになる
+*/
+export const VIRTUAL_MOVE_RADIUS = 50;// スティックが反応する最大距離（px）。これ以上離しても入力の強さは頭打ちになる
 
-// タップ（十字キー範囲外を、あまり動かさず短く触れて離す操作）の追跡用
+
+//タップ(マウスダウンの代わり)
+export const tapTouch = new Touch();
+/*
 let tapTouchId = null;
 let tapStartX = 0;
 let tapStartY = 0;
 let tapStartTime = 0;
-const TAP_MOVE_THRESHOLD = 10;  // これ以上動いたらタップ扱いしない（px）
-const TAP_TIME_THRESHOLD = 300; // これより長く押し続けたらタップ扱いしない（ms）
+*/
+export const TAP_MOVE_THRESHOLD = 10;  // これ以上動いたらタップ扱いしない（px）
+export const TAP_TIME_THRESHOLD = 300; // これより長く押し続けたらタップ扱いしない（ms）
 
 //ダブルタップ判定/自動ズームの無効化(game.cssで対策する) https://zenn.dev/kiki_her/articles/0f3e86ba83df08
-let lastTapTime = 0;// 最後にタップ（指を離した瞬間）した時刻を覚えておく変数
-const DOUBLE_TAP_THRESHOLD = 300;// これより短い間隔で2回タップされたら「ダブルタップ」とみなす時間（ミリ秒）
-
-
-// 追跡中の2本の指を探して、その間の距離を計算する
-export function getPinchDistance(touches, id1, id2)
-{
-	const t1 = Array.from(touches).find(t => t.identifier === id1);
-	const t2 = Array.from(touches).find(t => t.identifier === id2);
-
-	// 片方でも見つからなければ計算不能
-	if (!t1 || !t2)
-		return null;
-
-	return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
-}
+export let lastTapTime = 0;// 最後にタップ（指を離した瞬間）した時刻を覚えておく変数
+export const DOUBLE_TAP_THRESHOLD = 300;// これより短い間隔で2回タップされたら「ダブルタップ」とみなす時間（ミリ秒）
 
 
 
@@ -190,23 +262,31 @@ function touchDebugLog(message, e = null)
 	const changedCount = e.changedTouches?.length ?? 0;
 
 	// 今画面に触れている「全部の指」の座標一覧を文字列にする
-	// 例: [id0:120,340] [id1:200,410]
-	const touchesInfo = Array.from(e.touches ?? [])
-		.map(t => "[id" + t.identifier + ":" + Math.round(t.clientX) + "," + Math.round(t.clientY) + "]")
-		.join(" ");
+	const touchesInfo = Array.from(e.touches ?? []).map(t => "[id" + t.identifier + ":" + Math.round(t.clientX) + "," + Math.round(t.clientY) + "]").join(" ");
 
 	// 今回のイベントで「動いた・離れた指」だけの座標一覧
-	const changedInfo = Array.from(e.changedTouches ?? [])
-		.map(t => "[id" + t.identifier + ":" + Math.round(t.clientX) + "," + Math.round(t.clientY) + "]")
-		.join(" ");
+	const changedInfo = Array.from(e.changedTouches ?? []).map(t => "[id" + t.identifier + ":" + Math.round(t.clientX) + "," + Math.round(t.clientY) + "]").join(" ");
 
+	// 例: [id0:120,340] [id1:200,410]
 	addLog("info",
 		message
-		+ " touches[" + touchesCount + "]" + (touchesInfo ? " " + touchesInfo : "")
-		+ " changed[" + changedCount + "]" + (changedInfo ? " " + changedInfo : "")
+		+ " touches(" + touchesCount + ")" + (touchesInfo ? " " + touchesInfo : "")
+		+ " changed(" + changedCount + ")" + (changedInfo ? " " + changedInfo : "")
 	);
 }
 
+// 追跡中の2本の指を探して、その間の距離を計算する
+export function getPinchDistance(touches, touch1, touch2)
+{
+	const t1 = Array.from(touches).find(t => t.identifier === touch1.id);
+	const t2 = Array.from(touches).find(t => t.identifier === touch2.id);
+
+	// 片方でも見つからなければ計算不能
+	if (!t1 || !t2)
+		return null;
+
+	return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+}
 
 //画面に指を置いたとき
 canvas.addEventListener('touchstart', (e) =>
@@ -219,14 +299,13 @@ canvas.addEventListener('touchstart', (e) =>
 		// ここでブラウザ標準のピンチズームを止めて、自前でズームを行う
 		e.preventDefault();
 
-		pinchTouchId1 = e.touches[0].identifier;
-		pinchTouchId2 = e.touches[1].identifier;
-		pinchLastDist = getPinchDistance(e.touches, pinchTouchId1, pinchTouchId2);
+		pinchTouch1.init(e.touches[0]);
+		pinchTouch2.init(e.touches[1]);
+
+		pinchLastDist = getPinchDistance(e.touches, pinchTouch1, pinchTouch2);
 
 		// ピンチ中は十字キー操作をキャンセルしておく
-		crossTouchId = null;
-		crossTouch.x = 0;
-		crossTouch.y = 0;
+		crossTouch.clear();
 
 		touchDebugLog("touchstart 指2本");
 		return;
@@ -234,7 +313,7 @@ canvas.addEventListener('touchstart', (e) =>
 
 
 	// 既に別の指で操作中なら何もしない（2本指で同時操作させない）
-	if (crossTouchId !== null)
+	if (crossTouch.isEnabled())
 	{
 		touchDebugLog("touchstart crossTouchIdが既に存在します");
 		return;
@@ -254,16 +333,13 @@ canvas.addEventListener('touchstart', (e) =>
 	e.preventDefault();
 
 
-	touchDebugLog("タップされました[" + touch.identifier + "]");
+	//十字キー初期化
+	crossTouch.init(touch);
+	//タップキー初期化
+	tapTouch.init(touch);
 
-	crossTouchId = touch.identifier;
-	crossTouchOriginX = touch.clientX;
-	crossTouchOriginY = touch.clientY;
+	touchDebugLog("タップされました taptouch.id[" + tapTouch.id + "]");
 
-	tapTouchId = touch.identifier;
-	tapStartX = touch.clientX;
-	tapStartY = touch.clientY;
-	tapStartTime = Date.now();
 	return;
 
 }, { passive: false });
@@ -274,30 +350,24 @@ canvas.addEventListener('touchmove', (e) =>
 	//touchDebugLog("touchmove", e);
 
 	// タップ候補の指が動きすぎたら、タップ扱いをやめる（スワイプ等に譲る）
-	if (tapTouchId !== null)
+	if (tapTouch.find(e))
 	{
-		const touch = Array.from(e.touches).find(t => t.identifier === tapTouchId);
-		if (touch)
+		const move = tapTouch.move();
+		if (Math.hypot(move.x, move.y) > TAP_MOVE_THRESHOLD)
 		{
-			const dx = touch.clientX - tapStartX;
-			const dy = touch.clientY - tapStartY;
-			if (Math.hypot(dx, dy) > TAP_MOVE_THRESHOLD)
-			{
-				touchDebugLog("指が動いたのでタップ中断");
-				tapTouchId = null;
-			}
+			touchDebugLog("指が動いたのでタップ中断");
+			tapTouch.clear();
 		}
 		return;
 	}
 
 
 	// ピンチズーム中（2本の指を追跡している）なら、距離の変化率からズーム倍率を求める
-	if (pinchTouchId1 !== null && pinchTouchId2 !== null)
+	if (pinchTouch1.isEnabled() && pinchTouch2.isEnabled())
 	{
 		e.preventDefault();
 
-		const dist = getPinchDistance(e.touches, pinchTouchId1, pinchTouchId2);
-
+		const dist = getPinchDistance(e.touches, pinchTouch1, pinchTouch2);
 		if (dist !== null && pinchLastDist !== null && pinchLastDist > 0)
 		{
 			// 前回との距離の比率をそのままズーム倍率として積算する、（指が離れていく→比率が1より大きい→拡大、指が近づく→1より小さい→縮小）
@@ -311,32 +381,20 @@ canvas.addEventListener('touchmove', (e) =>
 	// 十字キー操作を強制終了してブラウザの標準ジェスチャーに譲る
 	if (e.touches.length >= 2)
 	{
-		crossTouchId = null;
-		crossTouch.x = 0;
-		crossTouch.y = 0;
+		crossTouch.clear();
 		return;
 	}
 
 	// 今追跡している指を、動いた指の一覧から探す
-	const touch = Array.from(e.changedTouches).find(t => t.identifier === crossTouchId);
-	if (!touch)
+	if (!crossTouch.find(e))
 		return;
 
 	// タッチ操作から発生する余計なマウスイベント（クリック移動）を防ぐ
 	e.preventDefault();
 
 	// 指を置いた場所からの移動量
-	const dx = touch.clientX - crossTouchOriginX;
-	const dy = touch.clientY - crossTouchOriginY;
-	const dist = Math.hypot(dx, dy);
+	crossTouch.movePower(VIRTUAL_MOVE_RADIUS);
 
-	if (dist > 0)
-	{
-		// 最大距離でクランプ（頭打ち）しつつ、-1〜1の範囲の強さに変換する
-		const power = Math.min(dist, VIRTUAL_MOVE_RADIUS) / VIRTUAL_MOVE_RADIUS;
-		crossTouch.x = (dx / dist) * power;
-		crossTouch.y = (dy / dist) * power;
-	}
 }, { passive: false });
 
 //指を離したとき
@@ -344,11 +402,9 @@ canvas.addEventListener('touchend', (e) =>
 {
 	touchDebugLog("touchend", e);
 
-	// 今の時刻を取得
-	const now = Date.now();
-
-	// 前回のタップからの経過時間
-	const interval = now - lastTapTime;
+	//ダブルタップを検知
+	const now = Date.now();// 今の時刻を取得
+	const interval = now - lastTapTime;// 前回のタップからの経過時間
 
 	// 一定時間以内の2回目のタップなら、ブラウザの拡大処理をキャンセルする
 	if (interval > 0 && interval < DOUBLE_TAP_THRESHOLD)
@@ -356,48 +412,43 @@ canvas.addEventListener('touchend', (e) =>
 		touchDebugLog("touchend ダブルタップを確認しました", e);
 		e.preventDefault();
 	}
+	lastTapTime = now;// 今回のタップ時刻を、次回判定用に覚えておく
 
-	// 今回のタップ時刻を、次回判定用に覚えておく
-	lastTapTime = now;
 
 
 	// タップ候補だった指が離れたら、条件を満たしていればタップ成立とする
-	if (tapTouchId !== null)
+	if (tapTouch.isEnabled())
 	{
-		const touch = Array.from(e.changedTouches).find(t => t.identifier === tapTouchId);
-
-		if (touch)
+		touchDebugLog("touchend touch enabled");
+		if (tapTouch.find(e))
 		{
-			const dx = touch.clientX - tapStartX;
-			const dy = touch.clientY - tapStartY;
-			const dist = Math.hypot(dx, dy);
-			const duration = Date.now() - tapStartTime;
+			touchDebugLog("touchend touch find");
 
 			// あまり動かさず、素早く離した場合だけ「タップ」として成立させる
-			if (player && dist <= TAP_MOVE_THRESHOLD && duration <= TAP_TIME_THRESHOLD)
+			if (player && tapTouch.dist() <= TAP_MOVE_THRESHOLD && tapTouch.duration() <= TAP_TIME_THRESHOLD)
 			{
 				touchDebugLog("touchend タップ成功、キャラクター移動");
-				player.setMoveTargetFromScreen(touch.clientX, touch.clientY);
+				player.setMoveTargetFromScreen(tapTouch.touch.clientX, tapTouch.touch.clientY);
 			}
 		}
 		else
 			touchDebugLog("touchend タップ候補見つかりませんでした");
 
-		tapTouchId = null;
+		tapTouch.clear();
 		return;
 	}
 
 
 	// ピンチ中の指（2本のうちどちらか）が離れたら、ピンチズームを終了する
-	if (pinchTouchId1 !== null || pinchTouchId2 !== null)
+	if (pinchTouch1.isEnabled() || pinchTouch2.isEnabled())
 	{
 		//変更のある指でfrom:配列を作って、ピンチの指があるか調べる
-		const released = Array.from(e.changedTouches).some(t => t.identifier === pinchTouchId1 || t.identifier === pinchTouchId2);
+		const released = Array.from(e.changedTouches).some(t => t.identifier === pinchTouch1.id || t.identifier === pinchTouch2.id);
 
 		if (released)
 		{
-			pinchTouchId1 = null;
-			pinchTouchId2 = null;
+			pinchTouch1.clear();
+			pinchTouch2.clear();
 			pinchLastDist = null;
 		}
 
@@ -406,16 +457,8 @@ canvas.addEventListener('touchend', (e) =>
 			return;
 	}
 
-	// 今追跡している指を、動いた指の一覧から探す
-	const touch = Array.from(e.changedTouches).find(t => t.identifier === crossTouchId);
-
-	if (!touch)
-		return;
-
 	// 操作終了。入力をリセットする
-	crossTouchId = null;
-	crossTouch.x = 0;
-	crossTouch.y = 0;
+	crossTouch.clear();
 
 }, { passive: false });
 
