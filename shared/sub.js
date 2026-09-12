@@ -505,7 +505,7 @@ export function waitMObs(element, attrName, timeout = 5000)
 
 
 
-export function isMobile()
+export function isCanTouch()
 {
 	return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 }

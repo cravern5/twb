@@ -1,10 +1,15 @@
 import { print, addLog } from '../shared/sub.js';
+import * as sub from '../shared/sub.js';
 
 export let canvas = document.getElementById("gameCanvas");
 export let ctx = canvas.getContext("2d");
+export let useTouch;
 
 export function init()
 {
+	//タッチ操作が可能なら
+	useTouch = sub.isCanTouch();
+
 	//画像を滑らかに拡大するかどうかを示します　※ここで変更してもダメcanvas.widthなど呼ばれると戻る
 	//ctx.imageSmoothingEnabled = false;
 
