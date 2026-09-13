@@ -19,8 +19,15 @@
 	/*display: flex;
 	flex-direction: column;*/
 
-	/*親が邪魔するのでこれもイベント発生しないようにする*/
+	/* クリックは受け付けず、下のCanvasに素通りさせる */
 	pointer-events: none;
+	/* ブラウザ標準のスクロール・ズーム・長押しメニューなどのジェスチャーを無効化 */
+	/*touch-action: none;*/
+	/* iOS Safari用：長押しで出る画像保存メニューなどを無効化 */
+	/*-webkit-touch-callout: none;*/
+	/*-webkit-user-select: none;*/
+	/* 長押しでのテキスト選択を防ぐ */
+	/*user-select: none;*/
 
 }
 
@@ -193,6 +200,8 @@
 
 	/* クリックは受け付けず、下のCanvasに素通りさせる */
 	pointer-events: none;
+	/* ブラウザ標準のスクロール・ズーム・長押しメニューなどのジェスチャーを無効化 */
+	touch-action: none;
 	/* ドラッグ操作などで文字が選択されてしまうのを防ぐ（Chrome/Edge/Safari用） */
 	-webkit-user-select: none;
 	/* 文字選択そのものを禁止する（標準プロパティ） */
