@@ -259,12 +259,13 @@ export const VIRTUAL_MOVE_RADIUS = 50;// スティックが反応する最大距
 export const TAP_MOVE_THRESHOLD = 10;  // これ以上動いたらタップ扱いしない（px）
 export const TAP_TIME_THRESHOLD = 300; // これより長く押し続けたらタップ扱いしない（ms）
 
+//長押し
+export const PRESS_MOVE_THRESHOLD = 5;  // これ以上動いたら長押し扱いしない（px）
+export const PRESS_TIME_THRESHOLD = 400; // 長押しとみなす時間（ms）
+
 //ダブルタップ判定/自動ズームの無効化(game.cssで対策する) https://zenn.dev/kiki_her/articles/0f3e86ba83df08
 export let lastTapTime = 0;// 最後にタップ（指を離した瞬間）した時刻を覚えておく変数
 export const DOUBLE_TAP_THRESHOLD = 300;// これより短い間隔で2回タップされたら「ダブルタップ」とみなす時間（ミリ秒）
-
-//長押し
-export const PRESS_TIME_THRESHOLD = 400; // 長押しとみなす時間（ms）
 
 //メモ
 
@@ -451,7 +452,7 @@ canvas.addEventListener('touchmove', (e) =>
 			return;
 
 		//長押し判定
-		if (touch1.dist(touch) <= TAP_MOVE_THRESHOLD && touch1.duration(Date.now()) > PRESS_TIME_THRESHOLD)
+		if (touch1.dist(touch) <= PRESS_MOVE_THRESHOLD && touch1.duration(Date.now()) > PRESS_TIME_THRESHOLD)
 		{
 			touchDebugLog("指が長押しされました");
 			clearTouch();
