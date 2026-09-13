@@ -334,11 +334,7 @@ canvas.addEventListener('touchstart', (e) =>
 	//信頼できないブラウザの合成mousedownには頼らないようにする
 	e.preventDefault();
 
-	//タッチ1初期化
-	touchDebugLog("touchstart タップを開始します");
-	touch1.init(e.touches[0]);
-
-	//まだ1本目の指を追跡していない場合のみ初期化、すでに追跡中なら後から増えた指でstartX/startYが上書きされないようにする
+	//タッチ1初期化 まだ1本目の指を追跡していない場合のみ初期化、すでに追跡中なら後から増えた指でstartX/startYが上書きされないようにする
 	if (!touch1.isEnabled())
 	{
 		touchDebugLog("touchstart タップを開始します");
@@ -377,6 +373,11 @@ canvas.addEventListener('touchend', (e) =>
 	if (interval > 0 && interval < DOUBLE_TAP_THRESHOLD)
 	{
 		touchDebugLog("touchend ダブルタップを検知しました");
+		lastTapTime = now;// 今回のタップ時刻を、次回判定用に覚えておく
+
+		if (player)
+			player.setMoveTargetFromScreen(touch1.startX, touch1.startY);
+
 		clearTouch();
 
 		//一定時間以内の2回目のタップなら、ブラウザの拡大処理をキャンセルする
@@ -398,9 +399,8 @@ canvas.addEventListener('touchend', (e) =>
 		// あまり動かさず、素早く離した場合だけ「タップ」として成立させる
 		if (touch1.dist(e) <= TAP_MOVE_THRESHOLD && touch1.duration(now) <= TAP_TIME_THRESHOLD)
 		{
-			lastTapTime = now;// 今回のタップ時刻を、次回判定用に覚えておく
-
 			touchDebugLog("touchend タップ成功", e);
+			lastTapTime = now;// 今回のタップ時刻を、次回判定用に覚えておく
 			if (player)
 				player.setMoveTargetFromScreen(touch1.startX, touch1.startY);
 		}
