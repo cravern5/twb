@@ -230,13 +230,6 @@ function update(delta)
 	if (!player)
 		return;
 
-	// ピンチズームの結果をカメラの拡大率に反映する
-	// （プレイヤーは常に画面中心にいるので、これだけで自動的に中心起点のズームになる）
-	world.camera.zoom *= input.inputZoom.scale;
-	world.camera.zoom = Math.min(Math.max(world.camera.zoom, 0.5), 3); // 拡大率の上限・下限を制限（お好みで調整）
-	input.clearInputZoom(); // 使い終わったので今回分のズーム値をリセット
-
-
 
 	// 1. フレームの最初にキャンバス全体をクリア
 	ctx.clearRect(0, 0, canvas.width, canvas.height);

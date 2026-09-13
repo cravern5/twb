@@ -228,14 +228,14 @@ export class Player
 		}
 
 		// 十字キー（スマホ）の入力があれば、それを使う
-		if (input.crossTouch.isEnabled())
+		if (input.touch1.isEnabled())
 		{
 			// タッチ操作を優先する（マウスクリックでの目的地移動は中断する）
 			this.moveTarget = null;
 
-			//addLog("info", "movement x:" + input.crossTouch.x + " y;" + input.crossTouch.y);
+			//addLog("info", "movement x:" + input.touch1.x + " y;" + input.touch1.y);
 
-			return { x: input.crossTouch.powerX, y: input.crossTouch.powerY };
+			return { x: input.touch1.powerX, y: input.touch1.powerY };
 		}
 
 		// マウスの目的地に向かって移動する
