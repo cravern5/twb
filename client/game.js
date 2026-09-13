@@ -52,9 +52,6 @@ async function init()
 
 ///////全般イベント//////////
 
-const chatWhisperUser = document.getElementById("chatWhisperUser");
-const chatInput = document.getElementById("chatInput");
-
 // 画面リサイズへの対応
 window.addEventListener('resize', () =>
 {
@@ -85,6 +82,9 @@ window.addEventListener('load', () =>
 
 ///////チャット関連イベント//////////
 
+const chatWhisperUser = document.getElementById("chatWhisperUser");
+const chatInput = document.getElementById("chatInput");
+
 const chatOpen = document.getElementById("chatOpen");
 const chatMail = document.getElementById("chatMail");
 const chatMemo = document.getElementById("chatMemo");
@@ -94,10 +94,21 @@ const chatFixedText = document.getElementById("chatFixedText");
 const chatEmote = document.getElementById("chatEmote");
 const chatRange = document.getElementById("chatRange");
 
+
+// 開閉ボタンの要素と、開閉対象の箱の要素を取得
+const leftStatusBtns = document.getElementsByClassName("leftStatusBtn");
+for (let el of leftStatusBtns)
+{
+	// 開閉ボタンがクリックされたら
+	el.addEventListener("click", () =>
+	{
+		// classListのtoggleは、既に付いていれば外す、無ければ付ける便利メソッド
+		el.classList.toggle("downed");
+	});
+}
+
 // 開閉ボタンの要素と、開閉対象の箱の要素を取得
 const rightMenuOpenBtn = document.getElementById("rightMenuOpen");
-
-
 // 開閉ボタンがクリックされたら
 rightMenuOpenBtn.addEventListener("click", () =>
 {

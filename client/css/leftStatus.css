@@ -97,16 +97,6 @@
 	width: 35px;
 	height: 35px;
 }
-
-#leftEnvironment {
-	background-image: url("../assets/ui/Status/environment.png");
-	background-repeat: no-repeat;
-	position: absolute;
-	left: 29px;
-	top: 26px;
-	width: 35px;
-	height: 35px;
-}
 #leftComboCount {
 	background-image: url("../assets/ui/Status/comboCount.png");
 	background-repeat: no-repeat;
@@ -148,10 +138,11 @@
 	background-image: url("../assets/ui/Status/environmentBtn.png");
 	background-repeat: no-repeat;
 	position: absolute;
-	left: 84px;
+	left: 85px;
 	top: 103px;
 	width: 15px;
 	height: 15px;
+	cursor: pointer;
 }
 #leftNoExpandBtn {
 	background-image: url("../assets/ui/Status/noexpand.png");
@@ -182,7 +173,10 @@
 	height: 28px;
 }
 
-
+/* ホバー時は背景位置を右半分にずらして「押された画像」に見せる */
+#leftStatusPanel .downed {
+	background-position: right top;
+}
 /*=======================*/
 
 #leftStatusList {
@@ -208,62 +202,71 @@
 	user-select: none;
 }
 
-.leftStatusTitleCol, .leftStatusValueCol {
-
+/*タイトル列/値列*/
+#leftStatusTitleCol, #leftStatusValueCol {
 	/*縦並び*/
 	display: flex;
 	flex-direction: column;
 }
 
-/* テキスト縦調整メモ
-
-.leftStatusTitleCol、.leftStatusValueColにそれぞれ違うline-heightを設定
-display: flex;
-
-//上下中央揃え 
-//align-items: center;
-これだとちょっとだけ気になる
-
-*/
-
-/*タイトル行*/
-.leftStatusTitleCol {
-	/*background-color: rgb(4, 231, 125);*/
+/*タイトル列*/
+#leftStatusTitleCol {
+	background-color: rgb(4, 231, 125);
 	width: 55px;
 
 	/*テキスト上下中央調整用*/
 	/*line-height: 23px;*/
 
-}
-/*値行*/
-.leftStatusValueCol {
-	/*background-color: rgb(231, 140, 4);*/
-	width: 60px;
-
-	/*テキスト上下中央調整用*/
-	/*line-height: 18px;*/
-}
-/*1行*/
-.leftStatusTitle, .leftStatusText {
-
-	/*background-color: rgb(189, 231, 4);*/
-	/*margin: auto;*/
-	height: 20px;
-
-	display: flex;
 	/* 上下中央揃え */
 	align-items: center;
 	/* 左右中央揃え (不要なら削除可) */
-	justify-content: center;
+	justify-content: left;
+}
+/*値列*/
+#leftStatusValueCol {
+	background-color: rgb(231, 140, 4);
+	width: 60px;
+	/*テキスト上下中央調整用*/
+	/*line-height: 18px;*/
 }
 
+
+/*1行*/
+.leftStatusTitle, .leftStatusText {
+
+	background-color: rgb(189, 231, 4);
+	height: 20px;
+
+	/* 高さ20pxの中で、内側の文字(span)を縦方向の中央に自動で揃える */
+	display: flex;
+	align-items: center;
+}
 
 .leftStatusText span {
 
 	color: rgb(255, 255, 255);
 	/*line-height: 20px;*/
-	font-size: 10px;
-	letter-spacing: -1px;
+	font-size: 14px;
+	font-family: 'maruminya';
+	letter-spacing: 0px;
+
+	/*効果なし*/
+	/* Chrome, Edge, Safari */
+	image-rendering: pixelated;
+	/* Firefox */
+	image-rendering: crisp-edges;
+	/* 標準的なドット表示設定 */
+	-webkit-font-smoothing: none;
+	-moz-osx-font-smoothing: unset;
+	/* ピクセル精度で描画する指示 */
+	text-rendering: optimizeSpeed;
+
+	/* 縁取り 元の色:#39308C*/
+	--huti_color: #000000;
+	--huti_size: 1px;
+	text-shadow:
+		/*右下*/
+		var(--huti_size) var(--huti_size) 0 var(--huti_color)
 }
 
 .leftStatusTitle span {
@@ -276,8 +279,8 @@ display: flex;
 	letter-spacing: -1px;
 
 	/* フォント固有の上下のズレを視覚的に補正します */
-	position: relative;
-	top: 2px;
+	/*position: relative;
+	top: 2px;*/
 
 	/* 縁取り 元の色:#39308C*/
 	--huti_color: #1300bd;

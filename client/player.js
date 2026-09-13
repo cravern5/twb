@@ -36,6 +36,8 @@ export const BUBBLE_PADDING_Y = 6;		// 文字の上下の余白
 export const BUBBLE_LINE_HEIGHT = 20;	// 1行分の高さ（フォントサイズ14pxに行間を足した目安）
 export const BUBBLE_DURATION = 4.5;		// ふきだしを表示しておく秒数
 
+//左ステータス
+const leftStatusList = document.querySelector('#leftStatusValueCol .leftStatusText span');
 
 export class Player
 {
@@ -81,6 +83,17 @@ export class Player
 			const chatFontStyle = getComputedStyle(chatInput);
 			this.bubbleFont = chatFontStyle.fontSize && chatFontStyle.fontFamily ? (`${chatFontStyle.fontSize} ${chatFontStyle.fontFamily}`) : ("");
 			this.bubbleColor = chatFontStyle.color;
+		}
+
+		//左ステータスフォント
+		this.leftStatusListValueFont = "14px 'maruminya'";	//バブルフォント
+		this.leftStatusListValueColor = "#ffffff";								//バブル文字色
+		if (leftStatusList)
+		{
+			// "font-size" と "font-family" をつなげて、ctx.fontで使える形の文字列にしておく（毎フレーム計算すると無駄なので、最初に1回だけ作って使い回す）
+			const leftStatusListStyle = getComputedStyle(leftStatusList);
+			this.leftStatusListValueFont = leftStatusListStyle.fontSize && leftStatusListStyle.fontFamily ? (`${leftStatusListStyle.fontSize} ${leftStatusListStyle.fontFamily}`) : ("");
+			this.leftStatusListValueColor = leftStatusListStyle.color;
 		}
 
 		//他プレイヤーが含まれるのでここでは書かない
@@ -186,7 +199,7 @@ export class Player
 		// キャンバス上を左クリックしたら、その場所を目的地にして歩き出す
 		if (input.mouseInfo.left && e.target === engine.canvas)
 		{
-			addLog("info", "mousedown x:" + e.clientX + " y;" + e.clientY);
+			//addLog("info", "mousedown x:" + e.clientX + " y;" + e.clientY);
 			this.setMoveTargetFromScreen(e.clientX, e.clientY);
 		}
 
@@ -501,6 +514,8 @@ export class Player
 				screen.x * camera.zoom, screen.y * camera.zoom, drawWidth, drawHeight
 			);
 		}
+
+		//this.drawHPText("190/190");
 	}
 
 	//チャット送信
@@ -682,6 +697,42 @@ export class Player
 		}
 	}
 
+	/*drawHPText(text)
+	{
+		// canvas要素を取得
+		const hpCanvas = document.getElementById("hpCanvas");
+
+		// hpCanvas自身の描画用コンテキストを取得する
+		const hpCtx = hpCanvas.getContext("2d");
+
+		// 端末の画面倍率を取得(例:Retinaディスプレイなら2など)
+		const dpr = window.devicePixelRatio || 1;
+
+		// 表示サイズ(CSS上の見た目)はそのまま100x30に保つ
+		hpCanvas.style.width = "100px";
+		hpCanvas.style.height = "30px";
+
+		// 内部の実解像度だけ倍率ぶん引き上げる(これで文字がくっきりする)
+		hpCanvas.width = 100 * dpr;
+		hpCanvas.height = 30 * dpr;
+
+		// 描画命令の座標系も倍率に合わせて拡大しておく(以後は今まで通りの座標で描ける)
+		hpCtx.scale(dpr, dpr);
+
+		// 前回描画した文字を消す(消さないと重ね書きになってしまう)
+		hpCtx.clearRect(0, 0, 100, 30);
+
+		// フォントと色を指定
+		hpCtx.font = "20px sans-serif";
+		hpCtx.fillStyle = "black";
+
+		// フォントと色を指定
+		//hpCtx.font = this.leftStatusListValueFont;
+		//hpCtx.fillStyle = this.leftStatusListValueColor;
+
+		//文字描画
+		hpCtx.fillText(text, 0, 20);
+	}*/
 
 }
 
