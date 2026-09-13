@@ -136,9 +136,11 @@ window.addEventListener('mouseleave', () =>
 //タッチ保持クラス
 class myTouch
 {
-	constructor()
+	constructor(touch)
 	{
 		this.clear();
+		if (touch)
+			this.init(touch);
 	}
 	init(touch)
 	{
@@ -269,7 +271,10 @@ export const DOUBLE_TAP_THRESHOLD = 300;// これより短い間隔で2回タッ
 //そしてmousedownはタッチが離れたときに呼ばれて少し遅れた感じに発動する
 
 //仕様
-//mousedownとtouchstart-
+//- mousedownはPC、touchstartはスマホに完全に分ける
+//- ブラウザ標準のズームインアウトはcanvasスクロールは呼ばないで独自にズームインアウトを作る
+//- ピッチ中でもタッチ移動が止まらないようにしたい　※ピッチしようとすると1度touchstartが挟まれてしまうので難しい
+//- 
 
 //デバッグ用
 function touchDebugLog(message, e = null)
@@ -314,7 +319,7 @@ export function getPinchDistance(touches, touch1, touch2)
 //画面に指を置いたとき
 canvas.addEventListener('touchstart', (e) =>
 {
-	//touchDebugLog("touchstart", e);
+	touchDebugLog("touchstart", e);
 
 	//信頼できないブラウザの合成mousedownには頼らないようにする
 	e.preventDefault();
@@ -345,17 +350,15 @@ canvas.addEventListener('touchstart', (e) =>
 		return;
 	}
 
-	const touch = e.touches[0];//changedTouches[0]から変更
-
 	//タップキー初期化
-	tapTouch.init(touch);
+	tapTouch.init(e.touches[0]);
 	touchDebugLog("touchstart タップ開始 id[" + tapTouch.id + "]");
 
 	// 画面の左半分に置いた指だけを「十字キー操作」として扱う
-	if (touch.clientX <= window.innerWidth / 2)
+	if (tapTouch.startX <= window.innerWidth / 2)
 	{
 		//十字キー初期化
-		crossTouch.init(touch);
+		crossTouch.init(e.touches[0]);
 		touchDebugLog("touchstart 十字キー開始 id[" + crossTouch.id + "]");
 	}
 	//	else
