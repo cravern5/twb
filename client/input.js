@@ -261,6 +261,9 @@ export const TAP_TIME_THRESHOLD = 300; // これより長く押し続けたら�
 export let lastTapTime = 0;// 最後にタップ（指を離した瞬間）した時刻を覚えておく変数
 export const DOUBLE_TAP_THRESHOLD = 300;// これより短い間隔で2回タップされたら「ダブルタップ」とみなす時間（ミリ秒）
 
+//長押し
+export const PRESS_TIME_THRESHOLD = 400; // 長押しとみなす時間（ms）
+
 //メモ
 
 //順序
@@ -445,8 +448,14 @@ canvas.addEventListener('touchmove', (e) =>
 		if (!touch)
 			return;
 
+		//長押し判定
+		if (touch1.dist(touch) <= TAP_MOVE_THRESHOLD && touch1.duration(Date.now()) > PRESS_TIME_THRESHOLD)
+		{
+			touchDebugLog("指が長押しされました");
+			touch1.clear();
+		}
 		//十字キー操作　開始の指が画面左半分の指だけを「十字キー操作」として扱う
-		if (touch1.startLeft)
+		else if (touch1.startLeft)
 		{
 			// 指を置いた場所からの移動量の-1~1を取得
 			const pow = touch1.power(touch, VIRTUAL_MOVE_RADIUS);
