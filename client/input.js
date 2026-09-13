@@ -335,19 +335,27 @@ canvas.addEventListener('touchstart', (e) =>
 	e.preventDefault();
 
 	//タッチ1初期化
-	touchDebugLog("touchstart タップを開始します", e);
+	touchDebugLog("touchstart タップを開始します");
 	touch1.init(e.touches[0]);
 
-	// 指が2本になったらピンチズーム開始（十字キー操作より優先する）
-	if (e.touches.length === 2)
+	//まだ1本目の指を追跡していない場合のみ初期化、すでに追跡中なら後から増えた指でstartX/startYが上書きされないようにする
+	if (!touch1.isEnabled())
 	{
-		//タッチ2初期化
-		touchDebugLog("touchstart タップ(指2本)を開始します");
-		touch2.init(e.touches[1]);
-		pinchLastDist = getPinchDistance(e.touches, touch1, touch2);
+		touchDebugLog("touchstart タップを開始します");
+		touch1.init(e.touches[0]);
 	}
-	else
-		touch2.clear();
+	//1本目を追跡中に、2本目の指が新しく触れたらピンチ開始、3本目以降の指は入らないのでピンチ状態は保たれる
+	else if (!touch2.isEnabled() && e.touches.length >= 2)
+	{
+		const second = Array.from(e.touches).find(t => t.identifier !== touch1.id);
+		if (second)
+		{
+			touchDebugLog("touchstart タップ(指2本)を開始します");
+			touch2.init(second);
+			pinchLastDist = getPinchDistance(e.touches, touch1, touch2);
+		}
+	}
+	//それ以外（3本目以降の指）は何もせず、既存の追跡をそのまま維持する
 
 }, { passive: false });
 
@@ -364,12 +372,11 @@ canvas.addEventListener('touchend', (e) =>
 	//前回のタップからの経過時間
 	const now = Date.now();// 今の時刻を取得
 	const interval = now - lastTapTime;
-	lastTapTime = now;// 今回のタップ時刻を、次回判定用に覚えておく
 
 	//ダブルタップの検知
 	if (interval > 0 && interval < DOUBLE_TAP_THRESHOLD)
 	{
-		touchDebugLog("touchend ダブルタップを検知しました", e);
+		touchDebugLog("touchend ダブルタップを検知しました");
 		clearTouch();
 
 		//一定時間以内の2回目のタップなら、ブラウザの拡大処理をキャンセルする
@@ -391,6 +398,8 @@ canvas.addEventListener('touchend', (e) =>
 		// あまり動かさず、素早く離した場合だけ「タップ」として成立させる
 		if (touch1.dist(e) <= TAP_MOVE_THRESHOLD && touch1.duration(now) <= TAP_TIME_THRESHOLD)
 		{
+			lastTapTime = now;// 今回のタップ時刻を、次回判定用に覚えておく
+
 			touchDebugLog("touchend タップ成功", e);
 			if (player)
 				player.setMoveTargetFromScreen(touch1.startX, touch1.startY);
