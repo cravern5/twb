@@ -28,6 +28,10 @@ export function init()
 //ウィンドウリサイズ時の再描画
 export function repaint()
 {
+	// 実際にサイズが変わっていなければ何もしない（無駄なリセット＝チラつきを防ぐ）
+	if (canvas.width === window.innerWidth && canvas.height === window.innerHeight)
+		return;
+
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
 }

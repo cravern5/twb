@@ -60,7 +60,7 @@ window.addEventListener('resize', () =>
 
 	//はみ出し抑制
 	//for (const win of windows.windows) { win.insideScreen(); }
-	windows.windows.forEach(win => { win.insideScreen(); });
+	//windows.windows.forEach(win => { win.insideScreen(); });
 });
 
 // ページ読み込み時
@@ -75,7 +75,7 @@ window.addEventListener('load', () =>
 	// 両方の要素に対して、クリック時の自動スクロールを止めてフォーカスする
 	for (let el of [chatWhisperUser, chatInput])
 	{
-		//	el.addEventListener("mousedown", (e) => (e.preventDefault(), el.focus({ preventScroll: true })));
+		el.addEventListener("mousedown", (e) => (e.preventDefault(), el.focus({ preventScroll: true })));
 	}
 });
 
