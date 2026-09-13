@@ -56,6 +56,8 @@ export const mouseInfo =
 	wheel_deltaY: 0,//ホイール移動
 	clientX: null,
 	clientY: null,
+	movementX: null,
+	movementY: null,
 };
 
 // chatRange非表示
@@ -310,10 +312,10 @@ function touchDebugLog(message, e = null)
 }
 
 // 追跡中の2本の指を探して、その間の距離を計算する
-export function getPinchDistance(touches, touch1, touch2)
+export function getPinchDistance(touches, _touch1, _touch2)
 {
-	const t1 = Array.from(touches).find(t => t.identifier === touch1.id);
-	const t2 = Array.from(touches).find(t => t.identifier === touch2.id);
+	const t1 = Array.from(touches).find(t => t.identifier === _touch1.id);
+	const t2 = Array.from(touches).find(t => t.identifier === _touch2.id);
 
 	// 片方でも見つからなければ計算不能
 	if (!t1 || !t2)
