@@ -3,6 +3,8 @@
 
 <head>
 	<meta charset="UTF-8">
+	<!-- ユーザーによる拡大縮小操作自体を禁止する(Safari非対応) -->
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 	<!--<link rel="icon" href="data:,">-->
 	<link rel="icon" href="/assets/icon.ico" sizes="any">
 	<title>TalesBeaver</title>
@@ -11,6 +13,12 @@
 	<link rel="stylesheet" href="./css/chat.css">
 	<link rel="stylesheet" href="./css/rightMenu.css">
 	<link rel="stylesheet" href="./css/leftStatus.css">
+	
+	<script>
+		//(いまいち) スクリプトが読み込まれた瞬間、できるだけ早く実行する
+		//if ("scrollRestoration" in history) 
+		//	history.scrollRestoration = "manual";// ブラウザによる自動スクロール位置の復元を無効にする
+	</script>
 </head>
 
 <body>

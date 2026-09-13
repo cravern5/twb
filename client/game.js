@@ -50,7 +50,40 @@ async function init()
 	engine.endProgress();
 }
 
-///////イベント//////////
+///////全般イベント//////////
+
+const chatWhisperUser = document.getElementById("chatWhisperUser");
+const chatInput = document.getElementById("chatInput");
+
+// 画面リサイズへの対応
+window.addEventListener('resize', () =>
+{
+	//キャンバスリフレッシュ
+	engine.repaint();
+
+	//はみ出し抑制
+	//for (const win of windows.windows) { win.insideScreen(); }
+	windows.windows.forEach(win => { win.insideScreen(); });
+});
+
+// ページ読み込み時
+window.addEventListener('load', () =>
+{
+	// ページの準備が完全に整ってからフォーカスを当てる
+	//engine.canvas.focus();
+
+	//(いまいち) ページ全体のスクロールを左上(0,0)にリセットする
+	//window.scrollTo(0, 0);
+
+	// 両方の要素に対して、クリック時の自動スクロールを止めてフォーカスする
+	for (let el of [chatWhisperUser, chatInput])
+	{
+		//	el.addEventListener("mousedown", (e) => (e.preventDefault(), el.focus({ preventScroll: true })));
+	}
+});
+
+
+///////チャット関連イベント//////////
 
 const chatOpen = document.getElementById("chatOpen");
 const chatMail = document.getElementById("chatMail");
@@ -116,28 +149,10 @@ window.addEventListener('blur', () =>
 //メニューが表示されたとき
 document.addEventListener('contextmenu', (e) =>
 {
+	addLog("warning", "contextmenu");
 	//ブラウザの標準右クリックメニューが出ないようにする
 	e.preventDefault();
 });
-
-// 画面リサイズへの対応
-window.addEventListener('resize', () =>
-{
-	//キャンバスリフレッシュ
-	engine.repaint();
-
-	//はみ出し抑制
-	//for (const win of windows.windows) { win.insideScreen(); }
-	windows.windows.forEach(win => { win.insideScreen(); });
-});
-
-// ページ読み込み時
-window.addEventListener('load', () =>
-{
-	// ページの準備が完全に整ってからフォーカスを当てる
-	//engine.canvas.focus();
-});
-
 
 
 ///////入力イベント//////////

@@ -30,6 +30,9 @@ canvas {
 	/* Firefox */
 	/*image-rendering: crisp-edges;*/
 
+	/* canvas要素に対して、ブラウザ標準のタッチ操作(ズーム・スクロール)を禁止する */
+	/*touch-action: none;*/
+
 	display: block;
 	margin: 0px auto;
 	z-index: 1;
