@@ -452,7 +452,7 @@ canvas.addEventListener('touchmove', (e) =>
 		if (touch1.dist(touch) <= TAP_MOVE_THRESHOLD && touch1.duration(Date.now()) > PRESS_TIME_THRESHOLD)
 		{
 			touchDebugLog("指が長押しされました");
-			touch1.clear();
+			clearTouch();
 		}
 		//十字キー操作　開始の指が画面左半分の指だけを「十字キー操作」として扱う
 		else if (touch1.startLeft)
