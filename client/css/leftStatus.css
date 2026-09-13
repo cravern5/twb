@@ -211,20 +211,19 @@
 
 /*タイトル列*/
 #leftStatusTitleCol {
-	background-color: rgb(4, 231, 125);
+	/*background-color: rgb(4, 231, 125);*/
 	width: 55px;
 
 	/*テキスト上下中央調整用*/
 	/*line-height: 23px;*/
 
 	/* 上下中央揃え */
-	align-items: center;
-	/* 左右中央揃え (不要なら削除可) */
-	justify-content: left;
+	/*align-items: center;*/
+
 }
 /*値列*/
 #leftStatusValueCol {
-	background-color: rgb(231, 140, 4);
+	/*background-color: rgb(231, 140, 4);*/
 	width: 60px;
 	/*テキスト上下中央調整用*/
 	/*line-height: 18px;*/
@@ -234,15 +233,57 @@
 /*1行*/
 .leftStatusTitle, .leftStatusText {
 
-	background-color: rgb(189, 231, 4);
 	height: 20px;
 
-	/* 高さ20pxの中で、内側の文字(span)を縦方向の中央に自動で揃える */
+	/* 高さ20pxの中で、内側の文字(span)を縦方向の中央に自動で揃える(縦は共通) */
 	display: flex;
 	align-items: center;
 }
+.leftStatusTitle {
+
+	/* 横方向も中央に揃える */
+	justify-content: center;
+}
+.leftStatusText {
+
+	/* 横方向は左寄せにする */
+	justify-content: flex-start;
+}
+
+.leftStatusTitle span {
+
+	/* フォント固有の上下のズレを視覚的に補正します */
+	position: relative;
+	top: 2.0px;
+
+	color: rgb(255, 255, 255);
+	/*line-height: 10px;*/
+	font-size: 10px;
+	font-family: 'Ethnocentric', 'apt';
+	letter-spacing: -1px;
+
+	/* 縁取り 元の色:#39308C*/
+	--huti_color: #1300bd;
+	--huti_size: 1.9px;
+
+	/*line-height: 30px;*/
+	-webkit-text-stroke: 0.5px var(--huti_color);
+	text-shadow:
+		/*右下*/
+		var(--huti_size) var(--huti_size) 0 var(--huti_color),
+		/*左下*/
+		calc(-1 * var(--huti_size)) var(--huti_size) 0 var(--huti_color),
+		/*右上*/
+		var(--huti_size) calc(-1 * var(--huti_size)) 0 var(--huti_color),
+		/*左上*/
+		calc(-1 * var(--huti_size)) calc(-1 * var(--huti_size)) 0 var(--huti_color);
+}
 
 .leftStatusText span {
+
+	/* フォント固有の上下のズレを視覚的に補正します */
+	position: relative;
+	left: 4px;
 
 	color: rgb(255, 255, 255);
 	/*line-height: 20px;*/
@@ -267,34 +308,4 @@
 	text-shadow:
 		/*右下*/
 		var(--huti_size) var(--huti_size) 0 var(--huti_color)
-}
-
-.leftStatusTitle span {
-
-	color: rgb(255, 255, 255);
-	/*line-height: 10px;*/
-	font-size: 10px;
-	font-family: 'Ethnocentric', 'apt';
-
-	letter-spacing: -1px;
-
-	/* フォント固有の上下のズレを視覚的に補正します */
-	/*position: relative;
-	top: 2px;*/
-
-	/* 縁取り 元の色:#39308C*/
-	--huti_color: #1300bd;
-	--huti_size: 1.9px;
-
-	/*line-height: 30px;*/
-	-webkit-text-stroke: 0.5px var(--huti_color);
-	text-shadow:
-		/*右下*/
-		var(--huti_size) var(--huti_size) 0 var(--huti_color),
-		/*左下*/
-		calc(-1 * var(--huti_size)) var(--huti_size) 0 var(--huti_color),
-		/*右上*/
-		var(--huti_size) calc(-1 * var(--huti_size)) 0 var(--huti_color),
-		/*左上*/
-		calc(-1 * var(--huti_size)) calc(-1 * var(--huti_size)) 0 var(--huti_color);
 }
