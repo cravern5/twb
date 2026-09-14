@@ -48,10 +48,20 @@
 	background-image: url("../assets/ui/LeftStatus/open.png");
 	background-repeat: no-repeat;
 
+	/* 絶対配置にして、他の要素の下に埋もれないようにする */
+	position: absolute;
+	z-index: 10;/* 重なり順を最前面にして、クリックを奪われないようにする */
+	/*pointer-events: auto;*/
+
 	left: 0px;
 	top: 0px;
 	width: 45px;
 	height: 48px;
+}
+
+#leftOpen:active{
+	/* クリック時に左下に移動(左下） */
+	transform: translate(-1px, 1px);
 }
 
 #leftXpBar {
