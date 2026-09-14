@@ -45,7 +45,7 @@
 }
 
 #leftOpen {
-	background-image: url("../assets/ui/Status/open.png");
+	background-image: url("../assets/ui/LeftStatus/open.png");
 	background-repeat: no-repeat;
 
 	left: 0px;
@@ -55,7 +55,7 @@
 }
 
 #leftXpBar {
-	background-image: url("../assets/ui/Status/xpBar.png");
+	background-image: url("../assets/ui/LeftStatus/xpBar.png");
 	background-repeat: no-repeat;
 	background-color: rgb(231, 178, 4);
 	position: absolute;
@@ -67,7 +67,7 @@
 }
 
 #leftCoolTimer {
-	background-image: url("../assets/ui/Status/coolTimer.png");
+	background-image: url("../assets/ui/LeftStatus/coolTimer.png");
 	background-repeat: no-repeat;
 
 	position: absolute;
@@ -78,7 +78,7 @@
 }
 
 #leftPower {
-	background-image: url("../assets/ui/Status/power.png");
+	background-image: url("../assets/ui/LeftStatus/power.png");
 	background-repeat: no-repeat;
 
 	position: absolute;
@@ -89,7 +89,7 @@
 }
 
 #leftEnvironment {
-	background-image: url("../assets/ui/Status/environment.png");
+	background-image: url("../assets/ui/LeftStatus/environment.png");
 	background-repeat: no-repeat;
 	position: absolute;
 	left: 29px;
@@ -98,7 +98,7 @@
 	height: 35px;
 }
 #leftComboCount {
-	background-image: url("../assets/ui/Status/comboCount.png");
+	background-image: url("../assets/ui/LeftStatus/comboCount.png");
 	background-repeat: no-repeat;
 	position: absolute;
 	left: 44px;
@@ -108,7 +108,7 @@
 }
 #leftAfkBtn {
 
-	background-image: url("../assets/ui/Status/afkBtn.png");
+	background-image: url("../assets/ui/LeftStatus/afkBtn.png");
 	background-repeat: no-repeat;
 	position: absolute;
 	left: 78px;
@@ -117,7 +117,7 @@
 	height: 15px;
 }
 #leftFootBtn {
-	background-image: url("../assets/ui/Status/footBtn.png");
+	background-image: url("../assets/ui/LeftStatus/footBtn.png");
 	background-repeat: no-repeat;
 	position: absolute;
 	left: 93px;
@@ -126,7 +126,7 @@
 	height: 15px;
 }
 #leftStatusBtn {
-	background-image: url("../assets/ui/Status/statusBtn.png");
+	background-image: url("../assets/ui/LeftStatus/statusBtn.png");
 	background-repeat: no-repeat;
 	position: absolute;
 	left: 66px;
@@ -135,7 +135,7 @@
 	height: 15px;
 }
 #leftEnvironmentBtn {
-	background-image: url("../assets/ui/Status/environmentBtn.png");
+	background-image: url("../assets/ui/LeftStatus/environmentBtn.png");
 	background-repeat: no-repeat;
 	position: absolute;
 	left: 85px;
@@ -145,7 +145,7 @@
 	cursor: pointer;
 }
 #leftNoExpandBtn {
-	background-image: url("../assets/ui/Status/noexpand.png");
+	background-image: url("../assets/ui/LeftStatus/noexpand.png");
 	background-repeat: no-repeat;
 	position: absolute;
 	left: 100px;
@@ -231,7 +231,7 @@
 
 
 /*1行*/
-.leftStatusTitle, .leftStatusText {
+.leftStatusTitle, .leftStatusValue {
 
 	height: 20px;
 
@@ -244,7 +244,7 @@
 	/* 横方向も中央に揃える */
 	justify-content: center;
 }
-.leftStatusText {
+.leftStatusValue {
 
 	/* 横方向は左寄せにする */
 	justify-content: flex-start;
@@ -279,7 +279,7 @@
 		calc(-1 * var(--huti_size)) calc(-1 * var(--huti_size)) 0 var(--huti_color);
 }
 
-.leftStatusText span {
+.leftStatusValue span {
 
 	/* フォント固有の上下のズレを視覚的に補正します */
 	position: relative;

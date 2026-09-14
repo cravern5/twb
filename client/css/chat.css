@@ -240,14 +240,14 @@
 }
 
 /* 耳打ちユーザー*/
-#chatWhisperUser {
+#chatWhisperInput {
 	max-width: 109px;
 	/*width: 109px;*/
 	height: 25px;
 }
 
 @media (max-width: 600px) {
-	#chatWhisperUser {
+	#chatWhisperInput {
 		max-width: 60px;
 	}
 }

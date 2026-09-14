@@ -72,17 +72,15 @@ window.addEventListener('load', () =>
 	//(いまいち) ページ全体のスクロールを左上(0,0)にリセットする
 	//window.scrollTo(0, 0);
 
-	// 両方の要素に対して、クリック時の自動スクロールを止めてフォーカスする
-	for (let el of [chatWhisperUser, chatInput])
-	{
+	//入力DOMのクリック時の自動スクロールを止めてフォーカスする
+	for (let el of [chatWhisperInput, chatInput])
 		el.addEventListener("mousedown", (e) => (e.preventDefault(), el.focus({ preventScroll: true })));
-	}
 });
 
 
 ///////チャット関連イベント//////////
 
-const chatWhisperUser = document.getElementById("chatWhisperUser");
+const chatWhisperInput = document.getElementById("chatWhisperInput");
 const chatInput = document.getElementById("chatInput");
 
 const chatOpen = document.getElementById("chatOpen");

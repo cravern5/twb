@@ -37,7 +37,7 @@ export const BUBBLE_LINE_HEIGHT = 20;	// 1行分の高さ（フォントサイ�
 export const BUBBLE_DURATION = 4.5;		// ふきだしを表示しておく秒数
 
 //左ステータス
-const leftStatusList = document.querySelector('#leftStatusValueCol .leftStatusText span');
+const leftStatusList = document.querySelector('#leftStatusValueCol .leftStatusValue span');
 
 export class Player
 {
