@@ -212,7 +212,7 @@
 /*タイトル列*/
 #leftStatusTitleCol {
 	/*background-color: rgb(4, 231, 125);*/
-	width: 55px;
+	width: 48px;
 
 	/*テキスト上下中央調整用*/
 	/*line-height: 23px;*/
@@ -250,74 +250,96 @@
 	justify-content: flex-start;
 }
 
-.leftStatusTitle span {
+.leftStatusTitleFont1,.leftStatusTitleFont2
+{
+	/*上下伸縮*/
+	display: inline-block;/* transformを効かせるためにブロック化 */
+	transform: scaleY(1.7);/* 縦方向に1.5倍伸ばす（1より小さいと縮む） */
+	transform-origin: center;/* 伸縮の基準点を中央に設定 */
 
 	/* フォント固有の上下のズレを視覚的に補正します */
 	position: relative;
-	top: 2.0px;
+	top: 3px;
 
 	color: rgb(255, 255, 255);
-	/*line-height: 10px;*/
-	font-size: 10px;
+	font-size: 7px;
 	font-family: 'Ethnocentric', 'apt';
-	letter-spacing: -1px;
+	/*line-height: 10px;*/
+	
 
-	/* 縁取り 元の色:#39308C*/
-	--huti_color: #1300bd;
-	--huti_size: 1.9px;
-
-	/*line-height: 30px;*/
-	-webkit-text-stroke: 0.5px var(--huti_color);
+	--base_color: #0d0085;/*元 #39308C 表示用#1300bd*/
+	--huti_size: 0.5px;
+	--huti_size2: 1px;
+	
+	/* 文字の後ろを塗りつぶす太さ（半径）と色 
+	 最初に輪郭を、それから塗りつぶしを、そしてマーカーを描く */
+	/*
+	paint-order: stroke fill;
+	-webkit-text-stroke: 3px var(--base_color);
+	*/
+	
+	/*影　右下/左下/右上/左上*/
+	/*
 	text-shadow:
-		/*右下*/
-		var(--huti_size) var(--huti_size) 0 var(--huti_color),
-		/*左下*/
-		calc(-1 * var(--huti_size)) var(--huti_size) 0 var(--huti_color),
-		/*右上*/
-		var(--huti_size) calc(-1 * var(--huti_size)) 0 var(--huti_color),
-		/*左上*/
-		calc(-1 * var(--huti_size)) calc(-1 * var(--huti_size)) 0 var(--huti_color);
+		var(--huti_size) var(--huti_size) 0 var(--base_color),
+		calc(-1 * var(--huti_size)) var(--huti_size) 0 var(--base_color),
+		var(--huti_size) calc(-1 * var(--huti_size)) 0 var(--base_color),
+		calc(-1 * var(--huti_size)) calc(-1 * var(--huti_size)) 0 var(--base_color),
+
+		var(--huti_size2) var(--huti_size2) 0 var(--base_color),
+		calc(-1 * var(--huti_size2)) var(--huti_size2) 0 var(--base_color),
+		var(--huti_size2) calc(-1 * var(--huti_size2)) 0 var(--base_color),
+		calc(-1 * var(--huti_size2)) calc(-1 * var(--huti_size2)) 0 var(--base_color)
+		;z
+	
+
+	/*横方向/縦方向/ぼかし/色 */
+	
+	filter: 
+		drop-shadow( 1px 0px 0px var(--base_color))
+		drop-shadow( 0px 1px 0px var(--base_color))
+		drop-shadow( -1px 0px 0px var(--base_color))
+		drop-shadow( 0px -1px 0px var(--base_color))
+		;
+
+	/*マーカーみたいな?
+	background-color:var(--huti_color);
+	-webkit-box-decoration-break: clone;
+	box-decoration-break: clone;
+	*/
 }
-/*テスト*/
-#statusHP {
-
-	/*background-color: rgb(4, 231, 125);*/
-	/*効果なし*/
-	/* Chrome, Edge, Safari */
-	image-rendering: pixelated;
-	/* Firefox */
-	image-rendering: crisp-edges;
-	/* 標準的なドット表示設定 */
-	-webkit-font-smoothing: none;
-	-moz-osx-font-smoothing: unset;
-	/* ピクセル精度で描画する指示 */
-	text-rendering: optimizeSpeed;
-
-	width: 100px;
-	height: 30px;
+.leftStatusTitleFont1
+{
+	letter-spacing: 2px;
+}
+.leftStatusTitleFont2
+{
+	letter-spacing: 0.2px;
 }
 .leftStatusValue span {
+	display :none;
 
 	/* フォント固有の上下のズレを視覚的に補正します */
 	position: relative;
-	left: 4px;
-
+	left: 2 px;
+	/*left: -60px;*/
 	color: rgb(255, 255, 255);
 	/*line-height: 20px;*/
-	font-size: 14px;
+	font-size: 13px;
 	font-family: 'maruminya';
-	letter-spacing: px;
+	letter-spacing: 1px;
 
 	/*効果なし*/
+	/*font-smooth: unset;*/
 	/* Chrome, Edge, Safari */
-	image-rendering: pixelated;
+	/*image-rendering: pixelated;*/
 	/* Firefox */
-	image-rendering: crisp-edges;
-	/* 標準的なドット表示設定 */
-	-webkit-font-smoothing: none;
-	-moz-osx-font-smoothing: unset;
+	/*image-rendering: crisp-edges;*/
+	/*(mac・iOS)標準的なドット表示設定 */
+	/*-webkit-font-smoothing: none;*/
+	/*-moz-osx-font-smoothing: unset;*/
 	/* ピクセル精度で描画する指示 */
-	text-rendering: optimizeSpeed;
+	/*text-rendering: optimizeSpeed;*/
 
 	/* 縁取り 元の色:#39308C*/
 	--huti_color: #000000;
@@ -325,4 +347,24 @@
 	text-shadow:
 		/*右下*/
 		var(--huti_size) var(--huti_size) 0 var(--huti_color)
+}
+
+/*テスト*/
+#statusHP {
+
+
+	/*background-color: rgb(4, 231, 125);*/
+	/*効果なし*/
+	/* Chrome, Edge, Safari */
+	image-rendering: pixelated;
+	/* Firefox */
+	image-rendering: crisp-edges;
+	/* (mac・iOS)標準的なドット表示設定 */
+	-webkit-font-smoothing: none;
+	-moz-osx-font-smoothing: unset;
+	/* ピクセル精度で描画する指示 */
+	text-rendering: optimizeSpeed;
+
+	width: 100px;
+	height: 30px;
 }
