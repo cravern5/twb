@@ -61,8 +61,6 @@ export function endProgress()
 	//loadingScreen.style.display = 'none';
 	setTimeout(() => { loadingScreen.style.display = 'none'; });
 }
-
-
 //自動ページリロード用
 export function autoPageReloader()
 {

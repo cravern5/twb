@@ -697,42 +697,26 @@ export class Player
 		}
 	}
 
-	/*drawHPText(text)
+	drawHPText(text)
 	{
 		// canvas要素を取得
-		const hpCanvas = document.getElementById("hpCanvas");
+		const hpCanvas = document.getElementById("statusHP");
 
 		// hpCanvas自身の描画用コンテキストを取得する
 		const hpCtx = hpCanvas.getContext("2d");
 
-		// 端末の画面倍率を取得(例:Retinaディスプレイなら2など)
-		const dpr = window.devicePixelRatio || 1;
-
-		// 表示サイズ(CSS上の見た目)はそのまま100x30に保つ
-		hpCanvas.style.width = "100px";
-		hpCanvas.style.height = "30px";
-
-		// 内部の実解像度だけ倍率ぶん引き上げる(これで文字がくっきりする)
-		hpCanvas.width = 100 * dpr;
-		hpCanvas.height = 30 * dpr;
-
-		// 描画命令の座標系も倍率に合わせて拡大しておく(以後は今まで通りの座標で描ける)
-		hpCtx.scale(dpr, dpr);
-
-		// 前回描画した文字を消す(消さないと重ね書きになってしまう)
-		hpCtx.clearRect(0, 0, 100, 30);
-
-		// フォントと色を指定
-		hpCtx.font = "20px sans-serif";
-		hpCtx.fillStyle = "black";
-
-		// フォントと色を指定
-		//hpCtx.font = this.leftStatusListValueFont;
-		//hpCtx.fillStyle = this.leftStatusListValueColor;
-
 		//文字描画
-		hpCtx.fillText(text, 0, 20);
-	}*/
+		utils2.drawText({
+			canvas: hpCanvas, ctx: hpCtx,
+			text, x: 0, y: 20, width: 100, height: 30,
+			color: '#FFFFFF', font: "14px maruminya",
+			outline: { color: '#000000', x: 1, y: 1 },
+			letterSpacing: 1
+		});
+
+		//アンチエイリアスを手動で除去する後処理
+		utils2.removeAntiAliasing({ ctx: hpCtx, width: hpCanvas.width, height: hpCanvas.height });
+	}
 
 }
 

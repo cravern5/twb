@@ -278,7 +278,24 @@
 		/*左上*/
 		calc(-1 * var(--huti_size)) calc(-1 * var(--huti_size)) 0 var(--huti_color);
 }
+/*テスト*/
+#statusHP {
 
+	/*background-color: rgb(4, 231, 125);*/
+	/*効果なし*/
+	/* Chrome, Edge, Safari */
+	image-rendering: pixelated;
+	/* Firefox */
+	image-rendering: crisp-edges;
+	/* 標準的なドット表示設定 */
+	-webkit-font-smoothing: none;
+	-moz-osx-font-smoothing: unset;
+	/* ピクセル精度で描画する指示 */
+	text-rendering: optimizeSpeed;
+
+	width: 100px;
+	height: 30px;
+}
 .leftStatusValue span {
 
 	/* フォント固有の上下のズレを視覚的に補正します */
@@ -289,7 +306,7 @@
 	/*line-height: 20px;*/
 	font-size: 14px;
 	font-family: 'maruminya';
-	letter-spacing: 0px;
+	letter-spacing: px;
 
 	/*効果なし*/
 	/* Chrome, Edge, Safari */

@@ -1,3 +1,21 @@
+
+/*アンチエイリアス　メモ
+
+1. imageSmoothingEnabledとimage-rendering: pixelatedは「文字の描画」には効かない
+これらの設定が制御しているのは、画像(ビットマップ)をdrawImageで拡大・縮小するときの補間方法だけです。fillTextで描かれる文字はビットマップ画像ではなく、
+フォントの輪郭(ベクター)をその都度計算して描画しているので、この2つの設定は最初から無関係でした(CSSコメントに「効果なし」と書かれているのは、まさにこれが原因です)。
+
+2. -webkit-font-smoothingとtext-renderingはDOM要素にしか効かない
+これらはブラウザがHTMLの文字要素を画面に描画するときのアンチエイリアス設定です。
+<canvas>の中に描くfillTextはcanvas自体が独自にラスタライズ(輪郭→ピクセルへの変換)を行うため、外側のCSSはcanvasの中身には一切影響しません。
+
+3. Canvas 2DのfillText自体に「アンチエイリアスを切る」公式APIが存在しない
+drawImage用のimageSmoothingEnabledのような、文字専用のオン/オフスイッチはCanvas仕様上用意されていません。
+そのため、TrueType/OpenTypeのような輪郭ベースのフォントをfillTextで描く限り、必ず輪郭の境界がアンチエイリアスされます。
+
+*/
+
+
 //ctx.drawImage関数
 //img	CanvasImageSource	描画する画像
 //sx	number	元画像の切り抜き開始位置（X座標 / Source X）
@@ -136,7 +154,7 @@ export function hexToRgba(hex)
 	};
 }
 
-//putImageDataで線を描画  ※moveTo lineToだと1ピクセル単位の描画にならないため
+//putImageDataで線を描画  ※アンチエイリアス対策　moveTo lineToだと1ピクセル単位の描画にならないため
 export function drawPixelLine(ctx, x0, y0, x1, y1, color)
 {
 	let { r, g, b, a } = hexToRgba(color);
@@ -206,4 +224,85 @@ export function drawPixelLine(ctx, x0, y0, x1, y1, color)
 
 	// 計算し終えたピクセルデータを正しい位置（minX, minY）に描画
 	ctx.putImageData(imageData, minX, minY);
+}
+
+//文字の描画
+export function drawText({ canvas, ctx, text, x, y, width, height, font, color, outline = null, letterSpacing = 0 })
+{
+	//画像に対して有効
+	//hpCtx.imageSmoothingEnabled = false;
+
+	// 端末の画面倍率を取得(例:Retinaディスプレイなら2など)
+	const dpr = window.devicePixelRatio || 1;
+
+	// 表示サイズ(CSS上の見た目)はそのまま100x30に保つ
+	canvas.style.width = width + "px";
+	canvas.style.height = height + "px";
+
+	// 内部の実解像度だけ倍率ぶん引き上げる(これで文字がくっきりする)
+	//呼び出すたびにcanvasの内容がクリア
+	canvas.width = width * dpr;
+	canvas.height = height * dpr;
+
+	// 描画命令の座標系も倍率に合わせて拡大しておく(以後は今まで通りの座標で描ける)
+	ctx.scale(dpr, dpr);
+
+	// 前回描画した文字を消す(消さないと重ね書きになってしまう)
+	//ctx.clearRect(0, 0, 100, 30);
+
+	// フォントと色を指定
+	ctx.fillStyle = color;
+	ctx.font = font;
+
+	//文字描画
+	//ctx.fillText(text, x, y);
+
+	//現在の描画位置(左端)。1文字描くたびにここを右へずらしていく
+	let cursorX = x;
+
+	//絵文字やサロゲートペアの文字も1文字として数えられるように[...text]で分解する
+	for (const char of [...text])
+	{
+		if (outline)
+		{
+			ctx.fillStyle = outline.color;
+			ctx.fillText(char, cursorX + outline.x, y + outline.y);
+		}
+
+		//1文字だけ描画
+		ctx.fillStyle = color;
+		ctx.fillText(char, cursorX, y);
+
+		//この文字の実際の描画幅を測定する(フォントによって幅が違うため)
+		const charWidth = ctx.measureText(char).width;
+
+		//次の文字の開始位置 = 今の文字の幅 + 文字間隔ぶん右へ
+		cursorX += charWidth + letterSpacing;
+	}
+}
+
+//アンチエイリアスを手動で除去する後処理---
+export function removeAntiAliasing({ ctx, width, height })
+{
+	//canvas上の全ピクセルの色情報(RGBA)をまとめて取得する
+	//dataは[R,G,B,A, R,G,B,A, ...]のように4個ずつ並んだ配列になっている
+	const imageData = ctx.getImageData(0, 0, width, height);
+	const data = imageData.data;
+
+	//アンチエイリアスの境界を「完全に透明」か「完全に不透明」かに振り分ける境目(0〜255)
+	const alphaThreshold = 128;
+
+	//R,G,B,Aの4つ1組で進むのでi += 4ずつループする
+	for (let i = 0; i < data.length; i += 4)
+	{
+		//インデックス+3番目がアルファ(透明度)の値
+		const alpha = data[i + 3];
+
+		//閾値未満なら完全に透明、以上なら完全に不透明にする
+		//→ 中間の薄い色(=ボヤけて見える原因)がなくなる
+		data[i + 3] = alpha < alphaThreshold ? 0 : 255;
+	}
+
+	//加工したピクセル情報をcanvasに書き戻して画面に反映させる
+	ctx.putImageData(imageData, 0, 0);
 }
