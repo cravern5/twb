@@ -1,3 +1,38 @@
+
+#leftOpen {
+	background-image: url("../assets/ui/LeftStatus/open.png");
+	background-repeat: no-repeat;
+
+	/* 絶対配置にして、他の要素の下に埋もれないようにする */
+	position: absolute;
+	z-index: 10;/* 重なり順を最前面にして、クリックを奪われないようにする */
+	/*pointer-events: auto;*/
+
+	left: 0px;
+	top: 0px;
+	width: 45px;
+	height: 48px;
+}
+
+#leftOpen:active{
+	/* クリック時に左下に移動(左下） */
+	transform: translate(-1px, 1px);
+}
+
+
+#leftXpBar {
+	background-image: url("../assets/ui/LeftStatus/xpBar.png");
+	background-repeat: no-repeat;
+	/*background-color: rgb(231, 178, 4);*/
+	position: absolute;
+	left: 0px;
+	/*leftOpen+2px*/
+	top: calc(48px + 2px);
+	width: 3px;
+	height: 233px;
+}
+
+
 /*=======================*/
 #leftStatus {
 
@@ -32,49 +67,19 @@
 }
 
 
+
 /*=======================*/
 
 #leftStatusPanel {
 
 	/*background-color: green;*/
-	width: 176px;
+	width: auto;
 	height: 124px;
 
 	/*これは触れる*/
 	pointer-events: auto;
 }
 
-#leftOpen {
-	background-image: url("../assets/ui/LeftStatus/open.png");
-	background-repeat: no-repeat;
-
-	/* 絶対配置にして、他の要素の下に埋もれないようにする */
-	position: absolute;
-	z-index: 10;/* 重なり順を最前面にして、クリックを奪われないようにする */
-	/*pointer-events: auto;*/
-
-	left: 0px;
-	top: 0px;
-	width: 45px;
-	height: 48px;
-}
-
-#leftOpen:active{
-	/* クリック時に左下に移動(左下） */
-	transform: translate(-1px, 1px);
-}
-
-#leftXpBar {
-	background-image: url("../assets/ui/LeftStatus/xpBar.png");
-	background-repeat: no-repeat;
-	background-color: rgb(231, 178, 4);
-	position: absolute;
-	left: 0px;
-	/*leftOpen+2px*/
-	top: calc(48px + 2px);
-	width: 3px;
-	height: 233px;
-}
 
 #leftCoolTimer {
 	background-image: url("../assets/ui/LeftStatus/coolTimer.png");
@@ -87,23 +92,86 @@
 	height: 119px;
 }
 
-#leftPower {
-	background-image: url("../assets/ui/LeftStatus/power.png");
+#leftToolCircle {
+	background-image: url("../assets/ui/LeftStatus/toolCircle.png");
 	background-repeat: no-repeat;
 
 	position: absolute;
 	left: 30px;
-	top: 28px;
-	width: 148px;
-	height: 65px;
+	top: 29px;
+	width: 64px;
+	height: 64px;
 }
+
+
+#leftHPBar
+{
+	/*background-color: red;*/
+	background-image: url("../assets/ui/LeftStatus/hpBar.png");
+	background-repeat: no-repeat;
+
+	position: absolute;
+	left: calc(30px + 29px); /*ToolCircle(30px)+29px*/
+	top: 29px;
+	width: 101px;
+	height: 13px;
+}
+
+#leftMPBar
+{
+	/*background-color: red;*/
+	background-image: url("../assets/ui/LeftStatus/mpBar.png");
+	background-repeat: no-repeat;
+
+	position: absolute;
+	left: calc(30px + 29px); /*ToolCircle+29px*/
+	top: 44px;
+	width: 111px;
+	height: 13px;
+}
+
+#leftSPBar
+{
+	/*background-color: red;*/
+	background-image: url("../assets/ui/LeftStatus/spBar.png");
+	background-repeat: no-repeat;
+
+	position: absolute;
+	left: calc(30px + 29px); /*ToolCircle(30px)+29px*/
+	top: 59px;
+	width: 121px;
+	height: 13px;
+}
+
+
+
+#leftSkillSlot {
+	/*background: radial-gradient(circle, #d80303 0%, #000 100px, transparent 101px);*/
+
+	/* ドットを崩さずに拡大表示する指定 ctx.imageSmoothingEnabled=falseと併用可能*/
+	/* Chrome, Edge, Safari */
+	image-rendering: crisp-edges;
+	/* Firefox */
+	image-rendering: crisp-edges;
+	/* はみ出た画像を丸くカット */
+	overflow: hidden;
+	color: white;
+	background: rgb(0, 0, 0);
+	border-radius: 50%;
+	position: absolute;
+	left: 62px;
+	top: 52px;
+	width: 28px;
+	height: 28px;
+}
+
 
 #leftEnvironment {
 	background-image: url("../assets/ui/LeftStatus/environment.png");
 	background-repeat: no-repeat;
 	position: absolute;
 	left: 29px;
-	top: 29px;
+	top: 28px;
 	width: 35px;
 	height: 35px;
 }
@@ -122,7 +190,7 @@
 	background-repeat: no-repeat;
 	position: absolute;
 	left: 78px;
-	top: 83px;
+	top: 84px;
 	width: 15px;
 	height: 15px;
 }
@@ -131,7 +199,7 @@
 	background-repeat: no-repeat;
 	position: absolute;
 	left: 93px;
-	top: 72px;
+	top: 73px;
 	width: 15px;
 	height: 15px;
 }
@@ -159,28 +227,9 @@
 	background-repeat: no-repeat;
 	position: absolute;
 	left: 100px;
-	top: 92px;
+	top: 91px;
 	width: 15px;
 	height: 15px;
-}
-#leftSkillSlot {
-	/*background: radial-gradient(circle, #d80303 0%, #000 100px, transparent 101px);*/
-
-	/* ドットを崩さずに拡大表示する指定 ctx.imageSmoothingEnabled=falseと併用可能*/
-	/* Chrome, Edge, Safari */
-	image-rendering: crisp-edges;
-	/* Firefox */
-	image-rendering: crisp-edges;
-	/* はみ出た画像を丸くカット */
-	overflow: hidden;
-	color: white;
-	background: rgb(0, 0, 0);
-	border-radius: 50%;
-	position: absolute;
-	left: 62px;
-	top: 52px;
-	width: 28px;
-	height: 28px;
 }
 
 /* ホバー時は背景位置を右半分にずらして「押された画像」に見せる */
