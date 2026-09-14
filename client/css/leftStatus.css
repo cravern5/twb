@@ -1,3 +1,7 @@
+/*位置調整メモ
+- all.pngで絶対で調べるべき
+*/
+
 
 #leftOpen {
 	background-image: url("../assets/ui/LeftStatus/open.png");
@@ -111,7 +115,7 @@
 	background-repeat: no-repeat;
 
 	position: absolute;
-	left: calc(30px + 29px); /*ToolCircle(30px)+29px*/
+	left: 58px; /*ToolCircle(30px)+29px*/
 	top: 29px;
 	width: 101px;
 	height: 13px;
@@ -124,7 +128,7 @@
 	background-repeat: no-repeat;
 
 	position: absolute;
-	left: calc(30px + 29px); /*ToolCircle+29px*/
+	left: 58px; /*ToolCircle+29px*/
 	top: 44px;
 	width: 111px;
 	height: 13px;
@@ -137,7 +141,7 @@
 	background-repeat: no-repeat;
 
 	position: absolute;
-	left: calc(30px + 29px); /*ToolCircle(30px)+29px*/
+	left: 58px; /*ToolCircle(30px)+29px*/
 	top: 59px;
 	width: 121px;
 	height: 13px;
@@ -145,7 +149,7 @@
 
 
 
-#leftSkillSlot {
+#leftSkillHolder {
 	/*background: radial-gradient(circle, #d80303 0%, #000 100px, transparent 101px);*/
 
 	/* ドットを崩さずに拡大表示する指定 ctx.imageSmoothingEnabled=falseと併用可能*/
@@ -159,7 +163,7 @@
 	background: rgb(0, 0, 0);
 	border-radius: 50%;
 	position: absolute;
-	left: 62px;
+	left: 61px;
 	top: 52px;
 	width: 28px;
 	height: 28px;
@@ -189,7 +193,7 @@
 	background-image: url("../assets/ui/LeftStatus/afkBtn.png");
 	background-repeat: no-repeat;
 	position: absolute;
-	left: 78px;
+	left: 77px;
 	top: 84px;
 	width: 15px;
 	height: 15px;
@@ -198,7 +202,7 @@
 	background-image: url("../assets/ui/LeftStatus/footBtn.png");
 	background-repeat: no-repeat;
 	position: absolute;
-	left: 93px;
+	left: 92px;
 	top: 73px;
 	width: 15px;
 	height: 15px;
@@ -245,7 +249,7 @@
 	padding: 0;
 	position: relative;
 	left: 14px;
-	top: 5px;
+	top: 9px;
 
 	/*横並び*/
 	display: flex;
@@ -271,7 +275,7 @@
 /*タイトル列*/
 #leftStatusTitleCol {
 	/*background-color: rgb(4, 231, 125);*/
-	width: 47px;
+	width: 48px;
 
 	/*テキスト上下中央調整用*/
 	/*line-height: 23px;*/
