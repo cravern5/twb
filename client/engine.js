@@ -50,6 +50,9 @@ export function endProgress()
 //保存時の自動ページリロード用
 export function autoPageReloader()
 {
+	if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1')
+		return;
+
 	// サーバーとの常時接続を開始する
 	const eventSource = new EventSource('/events');
 
