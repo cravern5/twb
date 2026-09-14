@@ -3,36 +3,16 @@
 	src: url('../assets/fonts/ethnocentric/Ethnocentric-Regular.otf') format('opentype');
 }
 @font-face {
-	font-family: 'apt';
-	src: url('../assets/fonts/あんずもじ等幅2020/APT.ttf') format('opentype');
-}
-@font-face {
-	font-family: 'vt323';
-	src: url('../assets/fonts/vt323/VT323-Regular.ttf') format('opentype');
-}
-@font-face {
-	font-family: 'vga932';
-	src: url('../assets/fonts/vga932/VGA932.ttf') format('opentype');
-}
-@font-face {
-	font-family: 'dotGothic16';
-	src: url('../assets/fonts/DotGothic16/DotGothic16-Regular.ttf') format('opentype');
-}
-@font-face {
 	font-family: 'maruminya';
 	src: url('../assets/fonts/x0y0pxFreeFont/x12y12pxMaruMinya.ttf') format('opentype');
 }
 @font-face {
-	font-family: 'marumonika';
-	src: url('../assets/fonts/x0y0pxFreeFont/x12y16pxMaruMonica.ttf') format('opentype');
-}
-@font-face {
-	font-family: 'khdot_kodenma';
+	font-family: 'kodenma';
 	src: url('../assets/fonts/khdotfont/KH-Dot-Kodenmachou-16-Ki.ttf') format('opentype');
 }
 html {
 	/*manipulationはダブルタップでのズームなど、標準外のジェスチャーを無効します*/
-	touch-action: manipulation;
+	/*touch-action: manipulation;*/
 }
 
 html, body {
@@ -49,9 +29,9 @@ canvas {
 
 	/* ドットを崩さずに拡大表示する指定 ctx.imageSmoothingEnabled=falseと併用可能*/
 	/* Chrome, Edge, Safari */
-	/*image-rendering: pixelated;*/
+	image-rendering: pixelated;
 	/* Firefox */
-	/*image-rendering: crisp-edges;*/
+	image-rendering: crisp-edges;
 
 	/* canvas要素に対して、ブラウザ標準のタッチ操作(ズーム・スクロール)を禁止する */
 	/*touch-action: none;*/

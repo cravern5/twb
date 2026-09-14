@@ -8,6 +8,7 @@
 
 	/* 読みやすいゲーム風のゴシック体を指定（環境になければ次の候補にフォールバックする） */
 	font-family: "MS PGothic", "Meiryo", sans-serif;
+	/*font-family:'kodenma';*/
 	/* 1行ずつの間隔を少し空けて見やすくする */
 	line-height: 1.2;
 	color: #CEFFCE;
