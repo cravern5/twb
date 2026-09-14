@@ -185,7 +185,7 @@
 	margin: 0;
 	padding: 0;
 	position: relative;
-	left: 12px;
+	left: 14px;
 	top: 5px;
 
 	/*横並び*/
@@ -233,21 +233,19 @@
 /*1行*/
 .leftStatusTitle, .leftStatusValue {
 
-	height: 20px;
+	/*background-color: rgb(4, 231, 125);*/
+	height: 14px;
 
 	/* 高さ20pxの中で、内側の文字(span)を縦方向の中央に自動で揃える(縦は共通) */
 	display: flex;
 	align-items: center;
 }
-.leftStatusTitle {
-
-	/* 横方向も中央に揃える */
-	justify-content: center;
-}
-.leftStatusValue {
-
-	/* 横方向は左寄せにする */
-	justify-content: flex-start;
+.leftStatusTitle {justify-content: center;/* 横方向も中央に揃える */}
+.leftStatusValue {justify-content: flex-start;/* 横方向は左寄せにする */}
+.leftStatusEmpty
+{
+	/*background-color: rgb(4, 76, 231);*/
+	height:8px;
 }
 
 .leftStatusTitleFont1,.leftStatusTitleFont2
@@ -268,8 +266,6 @@
 	
 
 	--base_color: #0d0085;/*元 #39308C 表示用#1300bd*/
-	--huti_size: 0.5px;
-	--huti_size2: 1px;
 	
 	/* 文字の後ろを塗りつぶす太さ（半径）と色 
 	 最初に輪郭を、それから塗りつぶしを、そしてマーカーを描く */
@@ -279,7 +275,8 @@
 	*/
 	
 	/*影　右下/左下/右上/左上*/
-	/*
+	/*--huti_size: 0.5px;
+	--huti_size2: 1px;
 	text-shadow:
 		var(--huti_size) var(--huti_size) 0 var(--base_color),
 		calc(-1 * var(--huti_size)) var(--huti_size) 0 var(--base_color),
@@ -290,11 +287,9 @@
 		calc(-1 * var(--huti_size2)) var(--huti_size2) 0 var(--base_color),
 		var(--huti_size2) calc(-1 * var(--huti_size2)) 0 var(--base_color),
 		calc(-1 * var(--huti_size2)) calc(-1 * var(--huti_size2)) 0 var(--base_color)
-		;z
-	
+		;*/	
 
 	/*横方向/縦方向/ぼかし/色 */
-	
 	filter: 
 		drop-shadow( 1px 0px 0px var(--base_color))
 		drop-shadow( 0px 1px 0px var(--base_color))
@@ -308,20 +303,13 @@
 	box-decoration-break: clone;
 	*/
 }
-.leftStatusTitleFont1
-{
-	letter-spacing: 2px;
-}
-.leftStatusTitleFont2
-{
-	letter-spacing: 0.2px;
-}
-.leftStatusValue span {
-	display :none;
+.leftStatusTitleFont1{letter-spacing: 2px;}
+.leftStatusTitleFont2{letter-spacing: 0.2px;}
+.leftStatusValueFont {
 
 	/* フォント固有の上下のズレを視覚的に補正します */
 	position: relative;
-	left: 2 px;
+	left: -1px;
 	/*left: -60px;*/
 	color: rgb(255, 255, 255);
 	/*line-height: 20px;*/
