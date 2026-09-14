@@ -21,12 +21,6 @@ export let fps = 0;			// 直近1秒間に実際に描画できたフレーム数
 export let frameCount = 0;		// 1秒間のフレームカウンター
 export let fpsTimer = 0;		// 1秒経過したかを計るための経過時間
 
-const debugInfo = document.getElementById('debugInfo');
-const chatLog = document.getElementById('chatLog');
-const chatArea = document.getElementById("chatArea");
-const rightMenuButtons = document.getElementById("rightMenuButtons");
-
-
 //初期化
 async function init()
 {
@@ -46,73 +40,12 @@ async function init()
 	//engine.updateProgress("接続処理中");
 	//engine.endProgress();
 
-	engine.updateProgress("接続処理中");
+	engine.updateProgress("接続処理中...");
 	engine.endProgress();
 }
 
-///////全般イベント//////////
 
-// 画面リサイズへの対応
-window.addEventListener('resize', () =>
-{
-	//キャンバスリフレッシュ
-	engine.repaint();
-
-	//はみ出し抑制
-	//for (const win of windows.windows) { win.insideScreen(); }
-	//windows.windows.forEach(win => { win.insideScreen(); });
-});
-
-// ページ読み込み時
-window.addEventListener('load', () =>
-{
-	// ページの準備が完全に整ってからフォーカスを当てる
-	//engine.canvas.focus();
-
-	//(いまいち) ページ全体のスクロールを左上(0,0)にリセットする
-	//window.scrollTo(0, 0);
-
-	//入力DOMのクリック時の自動スクロールを止めてフォーカスする
-	for (let el of [chatWhisperInput, chatInput])
-		el.addEventListener("mousedown", (e) => (e.preventDefault(), el.focus({ preventScroll: true })));
-});
-
-
-///////チャット関連イベント//////////
-
-const chatWhisperInput = document.getElementById("chatWhisperInput");
-const chatInput = document.getElementById("chatInput");
-
-const chatOpen = document.getElementById("chatOpen");
-const chatMail = document.getElementById("chatMail");
-const chatMemo = document.getElementById("chatMemo");
-const chatMessanger = document.getElementById("chatMessanger");
-const chatDM = document.getElementById("chatDM");
-const chatFixedText = document.getElementById("chatFixedText");
-const chatEmote = document.getElementById("chatEmote");
-const chatRange = document.getElementById("chatRange");
-
-
-// 開閉ボタンの要素と、開閉対象の箱の要素を取得
-const leftStatusBtns = document.getElementsByClassName("leftStatusBtn");
-for (let el of leftStatusBtns)
-{
-	// 開閉ボタンがクリックされたら
-	el.addEventListener("click", () =>
-	{
-		// classListのtoggleは、既に付いていれば外す、無ければ付ける便利メソッド
-		el.classList.toggle("downed");
-	});
-}
-
-// 開閉ボタンの要素と、開閉対象の箱の要素を取得
-const rightMenuOpenBtn = document.getElementById("rightMenuOpen");
-// 開閉ボタンがクリックされたら
-rightMenuOpenBtn.addEventListener("click", () =>
-{
-	// classListのtoggleは、既に付いていれば外す、無ければ付ける便利メソッド
-	rightMenuButtons.classList.toggle("closed");
-});
+///////チャットボタンイベント//////////
 
 //チャット範囲選択
 chatOpen.addEventListener('click', (e) =>
@@ -131,7 +64,7 @@ chatOpen.addEventListener('click', (e) =>
 //デバッグ表示
 chatMail.addEventListener('click', (e) =>
 {
-	windows.debugInfo.show(-1);
+	windows.debugWindow.show(-1);
 });
 
 //BGM再生
@@ -149,20 +82,6 @@ chatFixedText.addEventListener('click', (e) =>
 {
 	windows.chatWindow.restoreFullScreen();
 });
-
-// タブが切り替わったり別ウィンドウに移った
-window.addEventListener('blur', () =>
-{
-});
-
-//メニューが表示されたとき
-document.addEventListener('contextmenu', (e) =>
-{
-	addLog("warning", "contextmenu");
-	//ブラウザの標準右クリックメニューが出ないようにする
-	e.preventDefault();
-});
-
 
 ///////入力イベント//////////
 
@@ -248,6 +167,8 @@ export function mousewheel(e)
 }
 
 
+///////ゲーム//////////
+
 //画面更新
 function update(delta)
 {
@@ -301,7 +222,6 @@ function animate(currentTime)
 
 	lastTime = currentTime;
 }
-
 
 //初期化
 await init();

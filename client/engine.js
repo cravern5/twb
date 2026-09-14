@@ -18,24 +18,10 @@ export function init()
 	// 外枠の黒い線を消す（フォーカス時に青い枠線などが出ないようにする）
 	canvas.style.outline = 'none';
 
-	repaint();
-
 	autoPageReloader();
 
 	return true;
 }
-
-//ウィンドウリサイズ時の再描画
-export function repaint()
-{
-	// 実際にサイズが変わっていなければ何もしない（無駄なリセット＝チラつきを防ぐ）
-	if (canvas.width === window.innerWidth && canvas.height === window.innerHeight)
-		return;
-
-	canvas.width = window.innerWidth;
-	canvas.height = window.innerHeight;
-}
-
 
 // プログレスバーとテキストの更新=================
 let loadedCount = 0;
@@ -61,7 +47,7 @@ export function endProgress()
 	//loadingScreen.style.display = 'none';
 	setTimeout(() => { loadingScreen.style.display = 'none'; });
 }
-//自動ページリロード用
+//保存時の自動ページリロード用
 export function autoPageReloader()
 {
 	// サーバーとの常時接続を開始する

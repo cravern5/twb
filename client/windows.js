@@ -1,26 +1,116 @@
 //windows.js
 import { addLog } from '../shared/sub.js';
+import { canvas } from './engine.js';
 
 export let activeWindow = null;
+export let debugWindow;
+export let chatWindow;
 export let windows = [];
 
-export let debugInfo;
-export let chatWindow;
+export const debugInfo = document.getElementById('debugInfo');
 
 //チャットバー
 export const chatArea = document.getElementById("chatArea");
+export const chatWhisperInput = document.getElementById("chatWhisperInput");
 export const chatInput = document.getElementById("chatInput");
 export const chatLog = document.getElementById("chatLog");
+//チャットバーボタン
+export const chatOpen = document.getElementById("chatOpen");
+export const chatMail = document.getElementById("chatMail");
+export const chatMemo = document.getElementById("chatMemo");
+export const chatMessanger = document.getElementById("chatMessanger");
+export const chatDM = document.getElementById("chatDM");
+export const chatFixedText = document.getElementById("chatFixedText");
+export const chatEmote = document.getElementById("chatEmote");
+export const chatRange = document.getElementById("chatRange");
+
+//左ステータス 開閉ボタンの要素と、開閉対象の箱の要素を取得
+export const leftStatusBtns = document.getElementsByClassName("leftStatusBtn");
+
+//右メニュー
+export const rightMenuButtons = document.getElementById("rightMenuButtons");
+
 
 //ウィンドウクラス追加 呼び出し
 export function init()
 {
+	//ウィンドウコンテナ作成
 	chatWindow = new WindowController({ container: '#chatArea', drager: '#chatLog', minWidth: 300, minHeight: 90, childLock: true, defaultDisplay: 'flex' });
-	debugInfo = new WindowController({ container: '#debugInfo', defaultDisplay: "block" });
+	debugWindow = new WindowController({ container: '#debugInfo', defaultDisplay: "block" });
 
 	windows.push(chatWindow);
+
+
+	//左ステータス
+
+	// 開閉ボタンの要素と、開閉対象の箱の要素を取得
+	for (let el of leftStatusBtns)
+	{
+		// 開閉ボタンがクリックされたら
+		el.addEventListener("click", () =>
+		{
+			// classListのtoggleは、既に付いていれば外す、無ければ付ける便利メソッド
+			el.classList.toggle("downed");
+		});
+	}
+
+	//ステータスタブが初期値
+	leftStatusBtn.classList.toggle("downed");
+
+
+	//右メニュー
+
+	// 開閉ボタンの要素と、開閉対象の箱の要素を取得
+	const rightMenuOpenBtn = document.getElementById("rightMenuOpen");
+	// 開閉ボタンがクリックされたら
+	rightMenuOpenBtn.addEventListener("click", () =>
+	{
+		// classListのtoggleは、既に付いていれば外す、無ければ付ける便利メソッド
+		rightMenuButtons.classList.toggle("closed");
+	});
+
+
+	//canvasサイズ初期化
+	repaint();
 }
 
+// 画面リサイズへの対応
+window.addEventListener('resize', () =>
+{
+	//キャンバスリフレッシュ
+	repaint();
+
+	//はみ出し抑制
+	//for (const win of windows.windows) { win.insideScreen(); }
+	//windows.windows.forEach(win => { win.insideScreen(); });
+});
+
+// ページ読み込み時
+window.addEventListener('load', () =>
+{
+	// ページの準備が完全に整ってからフォーカスを当てる
+	//engine.canvas.focus();
+
+	//(いまいち) ページ全体のスクロールを左上(0,0)にリセットする
+	//window.scrollTo(0, 0);
+
+	//入力DOMのクリック時の自動スクロールを止めてフォーカスする
+	for (let el of [chatWhisperInput, chatInput])
+		el.addEventListener("mousedown", (e) => (e.preventDefault(), el.focus({ preventScroll: true })));
+});
+
+// タブが切り替わったり別ウィンドウに移った
+window.addEventListener('blur', () =>
+{
+});
+
+//メニューが表示されたとき
+document.addEventListener('contextmenu', (e) =>
+{
+	//addLog("warning", "contextmenu");
+	//ブラウザの標準右クリックメニューが出ないようにする
+	e.preventDefault();
+});
 
 
 //ウィンドウズクラス
@@ -476,4 +566,15 @@ export async function fullScreen(flg = -1)
 	{
 		console.log("全画面化の切替に失敗しました:", err);
 	}
+}
+
+//ウィンドウリサイズ時の再描画
+export function repaint()
+{
+	// 実際にサイズが変わっていなければ何もしない（無駄なリセット＝チラつきを防ぐ）
+	if (canvas.width === window.innerWidth && canvas.height === window.innerHeight)
+		return;
+
+	canvas.width = window.innerWidth;
+	canvas.height = window.innerHeight;
 }
