@@ -249,7 +249,7 @@
 	padding: 0;
 	position: relative;
 	left: 14px;
-	top: 9px;
+	top: 10px;
 
 	/*横並び*/
 	display: flex;
@@ -297,7 +297,7 @@
 .leftStatusTitle, .leftStatusValue {
 
 	/*background-color: rgb(4, 231, 125);*/
-	height: 14px;
+	height: 14.5px;
 
 	/* 高さ20pxの中で、内側の文字(span)を縦方向の中央に自動で揃える(縦は共通) */
 	display: flex;
@@ -305,11 +305,7 @@
 }
 .leftStatusTitle {justify-content: center;/* 横方向も中央に揃える */}
 .leftStatusValue {justify-content: flex-start;/* 横方向は左寄せにする */}
-.leftStatusEmpty
-{
-	/*background-color: rgb(4, 76, 231);*/
-	height:8px;
-}
+.leftStatusEmpty{height:6px;}
 
 .leftStatusTitleFont1,.leftStatusTitleFont2
 {
@@ -370,13 +366,18 @@
 .leftStatusTitleFont2{letter-spacing: 0.2px;}
 .leftStatusValueFont {
 
+	/*上下伸縮*/
+	display: inline-block;/* transformを効かせるためにブロック化 */
+	transform: scaleY(1.2);/* 縦方向に1.5倍伸ばす（1より小さいと縮む） */
+	transform-origin: center;/* 伸縮の基準点を中央に設定 */
+
 	/* フォント固有の上下のズレを視覚的に補正します */
 	position: relative;
-	/*left: -1px;*/
+	/*top: -1px;*/
 	/*left: -60px;*/
 	color: rgb(255, 255, 255);
 	/*line-height: 20px;*/
-	font-size: 13px;
+	font-size: 12px;
 	font-family: 'maruminya';
 	letter-spacing: 1px;
 
