@@ -16,8 +16,8 @@
 	top: 0px;
 	padding: 0;
 	margin: 0;
-	/*display: flex;
-	flex-direction: column;*/
+	display: flex;
+	flex-direction: column;
 
 	/* クリックは受け付けず、下のCanvasに素通りさせる */
 	pointer-events: none;
@@ -135,7 +135,7 @@
 	width: 15px;
 	height: 15px;
 }
-#leftStatusBtn {
+#leftStatusTab {
 	background-image: url("../assets/ui/LeftStatus/statusBtn.png");
 	background-repeat: no-repeat;
 	position: absolute;
@@ -144,7 +144,7 @@
 	width: 15px;
 	height: 15px;
 }
-#leftEnvironmentBtn {
+#leftEnvironmentTab {
 	background-image: url("../assets/ui/LeftStatus/environmentBtn.png");
 	background-repeat: no-repeat;
 	position: absolute;
@@ -154,7 +154,7 @@
 	height: 15px;
 	cursor: pointer;
 }
-#leftNoExpandBtn {
+#leftNoExpandTab {
 	background-image: url("../assets/ui/LeftStatus/noexpand.png");
 	background-repeat: no-repeat;
 	position: absolute;

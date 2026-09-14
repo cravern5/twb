@@ -103,6 +103,12 @@ export function keydown(e)
 	{
 		windows.chatWindow.show(-1);
 	}
+	else if (key === "f12")
+	{
+		windows.leftStatusWindow.show(-1);
+		e.stopPropagation();
+		e.preventDefault();//デベロップツールが出る
+	}
 	else
 	{
 

@@ -5,6 +5,7 @@ import { canvas } from './engine.js';
 export let activeWindow = null;
 export let debugWindow;
 export let chatWindow;
+export let leftStatusWindow;
 export let windows = [];
 
 export const debugInfo = document.getElementById('debugInfo');
@@ -26,92 +27,12 @@ export const chatRange = document.getElementById("chatRange");
 
 //左ステータス 開閉ボタンの要素と、開閉対象の箱の要素を取得
 export const leftStatusBtns = document.getElementsByClassName("leftStatusBtn");
+export const leftStatus = document.getElementById("leftStatus");
+export const leftStatusTab = document.getElementById("leftStatusTab");
+export const leftOpen = document.getElementById("leftOpen");
 
 //右メニュー
 export const rightMenuButtons = document.getElementById("rightMenuButtons");
-
-
-//ウィンドウクラス追加 呼び出し
-export function init()
-{
-	//ウィンドウコンテナ作成
-	chatWindow = new WindowController({ container: '#chatArea', drager: '#chatLog', minWidth: 300, minHeight: 90, childLock: true, defaultDisplay: 'flex' });
-	debugWindow = new WindowController({ container: '#debugInfo', defaultDisplay: "block" });
-
-	windows.push(chatWindow);
-
-
-	//左ステータス
-
-	// 開閉ボタンの要素と、開閉対象の箱の要素を取得
-	for (let el of leftStatusBtns)
-	{
-		// 開閉ボタンがクリックされたら
-		el.addEventListener("click", () =>
-		{
-			// classListのtoggleは、既に付いていれば外す、無ければ付ける便利メソッド
-			el.classList.toggle("downed");
-		});
-	}
-
-	//ステータスタブが初期値
-	leftStatusBtn.classList.toggle("downed");
-
-
-	//右メニュー
-
-	// 開閉ボタンの要素と、開閉対象の箱の要素を取得
-	const rightMenuOpenBtn = document.getElementById("rightMenuOpen");
-	// 開閉ボタンがクリックされたら
-	rightMenuOpenBtn.addEventListener("click", () =>
-	{
-		// classListのtoggleは、既に付いていれば外す、無ければ付ける便利メソッド
-		rightMenuButtons.classList.toggle("closed");
-	});
-
-
-	//canvasサイズ初期化
-	repaint();
-}
-
-// 画面リサイズへの対応
-window.addEventListener('resize', () =>
-{
-	//キャンバスリフレッシュ
-	repaint();
-
-	//はみ出し抑制
-	//for (const win of windows.windows) { win.insideScreen(); }
-	//windows.windows.forEach(win => { win.insideScreen(); });
-});
-
-// ページ読み込み時
-window.addEventListener('load', () =>
-{
-	// ページの準備が完全に整ってからフォーカスを当てる
-	//engine.canvas.focus();
-
-	//(いまいち) ページ全体のスクロールを左上(0,0)にリセットする
-	//window.scrollTo(0, 0);
-
-	//入力DOMのクリック時の自動スクロールを止めてフォーカスする
-	for (let el of [chatWhisperInput, chatInput])
-		el.addEventListener("mousedown", (e) => (e.preventDefault(), el.focus({ preventScroll: true })));
-});
-
-// タブが切り替わったり別ウィンドウに移った
-window.addEventListener('blur', () =>
-{
-});
-
-//メニューが表示されたとき
-document.addEventListener('contextmenu', (e) =>
-{
-	//addLog("warning", "contextmenu");
-	//ブラウザの標準右クリックメニューが出ないようにする
-	e.preventDefault();
-});
-
 
 //ウィンドウズクラス
 class WindowController
@@ -503,6 +424,98 @@ class WindowController
 	}
 }
 
+//ウィンドウクラス追加 呼び出し
+export function init()
+{
+	//ウィンドウコンテナ作成
+	chatWindow = new WindowController({ container: '#chatArea', drager: '#chatLog', minWidth: 300, minHeight: 90, childLock: true, defaultDisplay: 'flex' });
+	debugWindow = new WindowController({ container: '#debugInfo', defaultDisplay: "block" });
+	leftStatusWindow = new WindowController({ container: '#leftStatus', defaultDisplay: "flex" });
+
+	windows.push(chatWindow);
+
+
+	//左ステータス
+
+	// 開閉ボタンの要素と、開閉対象の箱の要素を取得
+	for (let el of leftStatusBtns)
+	{
+		// 開閉ボタンがクリックされたら
+		el.addEventListener("click", () =>
+		{
+			el.classList.toggle("downed");
+		});
+	}
+	//ステータスタブが初期値
+	leftStatusTab.classList.toggle("downed");
+
+	leftOpen.addEventListener("click", () =>
+	{
+		if (leftStatus.style.display === 'none')
+			leftStatus.style.display = '';
+		else
+			leftStatus.style.display = 'none';
+	});
+
+
+	//右メニュー
+
+	// 開閉ボタンの要素と、開閉対象の箱の要素を取得
+	const rightMenuOpenBtn = document.getElementById("rightMenuOpen");
+	// 開閉ボタンがクリックされたら
+	rightMenuOpenBtn.addEventListener("click", () =>
+	{
+		rightMenuButtons.classList.toggle("closed");
+	});
+
+
+	//canvasサイズ初期化
+	repaint();
+}
+
+
+
+
+
+// 画面リサイズへの対応
+window.addEventListener('resize', () =>
+{
+	//キャンバスリフレッシュ
+	repaint();
+
+	//はみ出し抑制
+	//for (const win of windows.windows) { win.insideScreen(); }
+	//windows.windows.forEach(win => { win.insideScreen(); });
+});
+
+// ページ読み込み時
+window.addEventListener('load', () =>
+{
+	// ページの準備が完全に整ってからフォーカスを当てる
+	//engine.canvas.focus();
+
+	//(いまいち) ページ全体のスクロールを左上(0,0)にリセットする
+	//window.scrollTo(0, 0);
+
+	//入力DOMのクリック時の自動スクロールを止めてフォーカスする
+	for (let el of [chatWhisperInput, chatInput])
+		el.addEventListener("mousedown", (e) => (e.preventDefault(), el.focus({ preventScroll: true })));
+});
+
+// タブが切り替わったり別ウィンドウに移った
+window.addEventListener('blur', () =>
+{
+});
+
+//メニューが表示されたとき
+document.addEventListener('contextmenu', (e) =>
+{
+	//addLog("warning", "contextmenu");
+	//ブラウザの標準右クリックメニューが出ないようにする
+	e.preventDefault();
+});
+
+
 
 export function mousemove(e)
 {
@@ -578,3 +591,4 @@ export function repaint()
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
 }
+
