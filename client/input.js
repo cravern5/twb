@@ -288,6 +288,8 @@ export const DOUBLE_TAP_THRESHOLD = 300;// これより短い間隔で2回タッ
 //デバッグ用
 function touchDebugLog(message, e = null)
 {
+	return;
+
 	if (!e)
 	{
 		addLog("info", message);

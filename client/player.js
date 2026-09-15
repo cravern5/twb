@@ -32,6 +32,7 @@ export const INTERP_SPEED = 12;						// 他プレイヤー座標を目標地点�
 const chatInput = document.getElementById("chatInput");
 //const chatLog = document.getElementById("chatLog");
 //バブル用の各種サイズ設定（調整・描画の両方で使うので関数の外に出しておく）
+export const BUBBLE_SCALE_WITH_ZOOM = true;	//trueなら、これ以降の描画をズーム倍率ぶん拡大縮小しておく
 export const BUBBLE_MAX_WIDTH = 197;	// ふきだしの最大の幅
 export const BUBBLE_MAX_HEIGHT = 73;	// ふきだしの最大の高さ
 export const BUBBLE_PADDING_X = 10;		// 文字の左右の余白
@@ -620,11 +621,26 @@ export class Player
 
 		//ワールド座標(position)からカメラ位置を引いて「画面上の描画位置」を求める、プレイヤーが動いてもカメラが追従して常に画面中央に見える
 		const screen = this.getWorldPosition();
-		const x = (screen.x + SPRITE_WIDTH / 2) * camera.zoom;
-		const y = (screen.y - 5) * camera.zoom;
+
+		//・ズームする場合　　：ワールド基準のそのままの座標を使う（このあとctx.scaleでまとめて拡大される）
+		//・ズームしない場合　：今まで通り、位置だけを先にズーム倍率で掛けておく
+		const x = BUBBLE_SCALE_WITH_ZOOM ? (screen.x + SPRITE_WIDTH / 2) : (screen.x + SPRITE_WIDTH / 2) * camera.zoom;
+		const y = BUBBLE_SCALE_WITH_ZOOM ? (screen.y - 5) : (screen.y - 5) * camera.zoom;
+
+		//（座標系ごと拡大するので、位置だけでなくフォントサイズ・余白なども自動で一緒にズームされる）
+		if (BUBBLE_SCALE_WITH_ZOOM)
+			ctx.save();
+
+		// これ以降の描画をズーム倍率ぶん拡大縮小する
+		if (BUBBLE_SCALE_WITH_ZOOM)
+			ctx.scale(camera.zoom, camera.zoom);
 
 		//adjustBubbleTextで既に設定してある
 		//ctx.font = bubbleFont;
+
+		// xを中心にして描く// yを縦方向の中心にして描く
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
 
 		// 実際に表示する行の中で、一番幅が広い行に合わせて背景の横幅を決める（最大幅は超えない）
 		let widestLineWidth = 0;
@@ -633,10 +649,6 @@ export class Player
 
 		const boxWidth = Math.min(BUBBLE_MAX_WIDTH, widestLineWidth + BUBBLE_PADDING_X * 2);
 		const boxHeight = this.bubbleLines.length * BUBBLE_LINE_HEIGHT + BUBBLE_PADDING_Y * 2;
-
-		// xを中心にして描く// yを縦方向の中心にして描く
-		ctx.textAlign = "center";
-		ctx.textBaseline = "middle";
 
 		// 四角の左上座標（xを中心にしたいので、幅の半分だけ左にずらす）
 		const boxX = x - boxWidth / 2;
@@ -654,6 +666,9 @@ export class Player
 			ctx.fillText(this.bubbleLines[i], x, lineY);
 		}
 
+		// 保存しておいた「変形前の状態」に戻す（これを忘れると次の描画も拡大されたままになる）
+		if (BUBBLE_SCALE_WITH_ZOOM)
+			ctx.restore();
 	}
 
 	//HPバー描画　per=hp / maxを入れる
