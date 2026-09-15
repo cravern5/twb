@@ -62,8 +62,8 @@ export class Player
 		this.frameTimer = 0;						// コマ切り替え用の経過時間カウンター
 		this.moveTarget = null;						// マウスクリックで指定した「目的地」（ワールド座標）、null のときは目的地なし＝マウスでは移動していない状態
 
-		this.sendInterval = 1 / 20;	// 座標送信は1秒間に最大20回まで（20Hz）に制限する
-		this.sendTimer = 0;			// 前回送信してからの経過時間
+		this.sendInterval = 1 / 20;					// 座標送信は1秒間に最大20回まで（20Hz 0.05秒に1回)に制限する、　自キャラ(60fps 16.67ミリ秒)
+		this.sendTimer = 0;							// 前回送信してからの経過時間
 
 		this.lastReceiveTime = null;				// 前回STATEを受信した時刻（ミリ秒）。まだ1回も受信していなければnull
 		this.lastReceiveInterval = 0;				// 前回受信からの間隔（ミリ秒）＝これが不規則だと表示もカクつく
