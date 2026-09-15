@@ -136,6 +136,25 @@ window.addEventListener('mouseleave', () =>
 
 //バーチャル十字キー（スマホ用）==============================================================
 
+//十字キー
+//export const crossTouch = new myTouch();
+export const VIRTUAL_MOVE_RADIUS = 50;// スティックが反応する最大距離（px）。これ以上離しても入力の強さは頭打ちになる
+
+//タップ(マウスダウンの代わり)
+//export const tapTouch = new myTouch();
+export const TAP_MOVE_THRESHOLD = 10;  // これ以上動いたらタップ扱いしない（px）
+export const TAP_TIME_THRESHOLD = 150; // これより長く押し続けたらタップ扱いしない（ms）
+
+//長押し
+export const PRESS_MOVE_THRESHOLD = 5;  // これ以上動いたら長押し扱いしない（px）
+export const PRESS_TIME_THRESHOLD = 400; // 長押しとみなす時間（ms）
+
+//ダブルタップ判定/自動ズームの無効化(game.cssで対策する) https://zenn.dev/kiki_her/articles/0f3e86ba83df08
+export let lastTapTime = 0;// 最後にタップ（指を離した瞬間）した時刻を覚えておく変数
+export const DOUBLE_TAP_THRESHOLD = 300;// これより短い間隔で2回タップされたら「ダブルタップ」とみなす時間（ミリ秒）
+
+
+
 //タッチ保持クラス
 class myTouch
 {
@@ -155,6 +174,7 @@ class myTouch
 		this.startLeft = null;
 		this.powerX = null;
 		this.powerY = null;
+		this.maxMove = null;
 	}
 	init(touch)
 	{
@@ -250,22 +270,6 @@ export let pinchLastDist = null;// 直前に計測した2本指の距離（次�
 //export const inputZoom = { scale: 1 };// 直近のフレームで蓄積されたズーム倍率（1.0 = 変化なし、1.05 = 5%拡大、0.95 = 5%縮小）、指の位置は使わず「距離の変化率」だけを使う
 //export function clearInputZoom() { inputZoom.scale = 1; }// フレーム末にズーム倍率をリセットする（clearKeysと同様、engine側のループ末尾で呼ぶ）
 
-//十字キー
-//export const crossTouch = new myTouch();
-export const VIRTUAL_MOVE_RADIUS = 50;// スティックが反応する最大距離（px）。これ以上離しても入力の強さは頭打ちになる
-
-//タップ(マウスダウンの代わり)
-//export const tapTouch = new myTouch();
-export const TAP_MOVE_THRESHOLD = 10;  // これ以上動いたらタップ扱いしない（px）
-export const TAP_TIME_THRESHOLD = 300; // これより長く押し続けたらタップ扱いしない（ms）
-
-//長押し
-export const PRESS_MOVE_THRESHOLD = 5;  // これ以上動いたら長押し扱いしない（px）
-export const PRESS_TIME_THRESHOLD = 400; // 長押しとみなす時間（ms）
-
-//ダブルタップ判定/自動ズームの無効化(game.cssで対策する) https://zenn.dev/kiki_her/articles/0f3e86ba83df08
-export let lastTapTime = 0;// 最後にタップ（指を離した瞬間）した時刻を覚えておく変数
-export const DOUBLE_TAP_THRESHOLD = 300;// これより短い間隔で2回タップされたら「ダブルタップ」とみなす時間（ミリ秒）
 
 //メモ
 
@@ -453,8 +457,11 @@ canvas.addEventListener('touchmove', (e) =>
 		if (!touch)
 			return;
 
+		//移動した最大距離を保持
+		touch1.maxMove = Math.max(touch1.maxMove, touch1.dist(touch));
+
 		//長押し判定
-		if (touch1.dist(touch) <= PRESS_MOVE_THRESHOLD && touch1.duration(Date.now()) > PRESS_TIME_THRESHOLD)
+		if (touch1.maxMove <= PRESS_MOVE_THRESHOLD && touch1.duration(Date.now()) > PRESS_TIME_THRESHOLD)
 		{
 			touchDebugLog("指が長押しされました");
 			clearTouch();
@@ -468,7 +475,7 @@ canvas.addEventListener('touchmove', (e) =>
 			touch1.powerY = pow.y;
 		}
 		// タップ候補の指が動きすぎたら、タップ扱いをやめる（スワイプ等に譲る）
-		else if (touch1.dist(touch) > TAP_MOVE_THRESHOLD)
+		else if (touch1.maxMove > TAP_MOVE_THRESHOLD)
 		{
 			touchDebugLog("指が動いたのでタップ中断");
 			touch1.clear();
