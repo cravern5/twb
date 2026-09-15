@@ -214,10 +214,7 @@ export class Player
 			return this.SendChat(e);
 		//走り
 		else if (key === "r")
-		{
-			this.moveTarget = null;
 			player.isRunning = !player.isRunning;
-		}
 		//座り
 		else if (key === "insert")
 		{
@@ -242,118 +239,6 @@ export class Player
 	}
 
 	//キーの移動量取得
-	getMovement()
-	{
-		//このプレイヤーが「自分自身」でなければ、キーボード・マウスの入力を反映しない
-		//（他人のキャラは、通信で受け取った座標(onMove)だけで動かすべきで、自分のキー入力を混ぜてはいけない）
-		//if (this.id !== socket.myPlayerId)
-		//	return { x: 0, y: 0 };
-
-		//座り状態のときは、目的地やキー入力に関係なくその場から動かさない
-		if (this.isSitting)
-		{
-			this.moveTarget = null;
-			return { x: 0, y: 0 };
-		}
-
-		// キーボード入力があれば、そちらを優先する（マウス移動は中断する）
-		const key = input.keysPress;
-		if (key.w || key.a || key.s || key.d)
-		{
-			// タッチ操作を優先する（マウスクリックでの目的地移動は中断する）
-			this.moveTarget = null;
-
-			let moveX = 0;
-			let moveY = 0;
-
-			// キー入力状態に応じて移動方向を設定
-			if (key.w) moveY -= 1;
-			if (key.s) moveY += 1;
-			if (key.a) moveX -= 1;
-			if (key.d) moveX += 1;
-
-			// 斜め移動時に移動速度が速くならないよう正規化
-			if (moveX !== 0 && moveY !== 0)
-			{
-				moveX *= Math.SQRT1_2; // 1 / sqrt(2)
-				moveY *= Math.SQRT1_2;
-			}
-
-			return { x: moveX, y: moveY };
-		}
-
-		// 十字キー（スマホ）の入力があれば、それを使う
-		if (input.touch1.isEnabled())
-		{
-			// タッチ操作を優先する（マウスクリックでの目的地移動は中断する）
-			this.moveTarget = null;
-
-			//addLog("info", "movement x:" + input.touch1.x + " y;" + input.touch1.y);
-
-			return { x: input.touch1.powerX, y: input.touch1.powerY };
-		}
-
-		// マウスの目的地に向かって移動する
-		if (this.moveTarget)
-		{
-			// スプライトの中央ではなく「足元（下端の中央）」を基準にする、クリックした場所に、見た目の足がぴったり来るようにするため
-			const foot = this.getFootPosition(this.position.x, this.position.y);
-
-			const dx = this.moveTarget.x - foot.x;
-			const dy = this.moveTarget.y - foot.y;
-			const dist = Math.hypot(dx, dy);
-
-			// 十分近づいたら到着とみなし、目的地をクリアする
-			if (dist < MOVE_TARGET_THRESHOLD)
-			{
-				this.moveTarget = null;
-				return { x: 0, y: 0 };
-			}
-
-			// 目的地の方向を向いた「長さ1のベクトル」を返す
-			return { x: dx / dist, y: dy / dist };
-		}
-
-
-		return { x: 0, y: 0 };
-	}
-
-	//位置移動
-	updatePosition(delta, move)
-	{
-		let changed = false;
-		if (move.x !== 0 || move.y !== 0)
-		{
-			const move_speed = this.isRunning ? MOVE_SPEED_RUN : MOVE_SPEED_WALK;
-
-			if (this.moveTarget)
-			{
-				//マウス移動中は、x/yを別々に加速するのではなく
-				// 「進む向き」に応じた1つの速度を、x・yどちらにも同じ倍率でかける
-				// （move.xが1に近い＝横方向に近いほど、速度がMOVE_SPEED_X_RATIO倍に近づく）
-				// こうすることで実際に進む向きが必ずmove.x, move.yと一致し、
-				// 目的地付近で急に向きが変わらなくなる
-				const speed = move_speed * (1 + Math.abs(move.x) * (MOVE_SPEED_X_RATIO - 1));
-
-				this.position.x += move.x * speed * delta;
-				this.position.y += move.y * speed * delta;
-			}
-			else
-			{
-				// キーボード・バーチャル十字キーの場合は、これまで通り横方向にだけ比率を掛ける
-				this.position.x += move.x * move_speed * MOVE_SPEED_X_RATIO * delta;
-				this.position.y += move.y * move_speed * delta;
-			}
-
-			// 画面(canvas)の外ではなく、マップ全体(MAP_WIDTH/MAP_HEIGHT)の外に出ないよう制限する
-			this.position.x = Math.max(0, Math.min(MAP_WIDTH - SPRITE_WIDTH, this.position.x));
-			this.position.y = Math.max(0, Math.min(MAP_HEIGHT - SPRITE_HEIGHT, this.position.y));
-
-			changed = true;
-		}
-
-		return changed;
-	}
 
 	//キャラ(状態、方向、反転)の設定
 	updateState(move)
@@ -423,20 +308,113 @@ export class Player
 		//状態を更新して送信(自分自身の場合)
 		if (this.id === socket.myPlayerId)
 		{
-			//移動量はここで1回だけ計算し、updatePositionとupdateStateの両方に渡す、2回計算すると、その間にpositionが変わってしまい向きがズレるため
-			const move = this.getMovement();
-			//addLog("info", "movement x:" + move.x + " y;" + move.y);
+			//キーボード
+			const key = input.keysPress;
+			let position_changed = false;
 
-			//移動処理を追加
-			const position_changed = this.updatePosition(delta, move);
+			//移動量の計算
+			const move = { x: 0, y: 0 };
+
+			//座り状態のときは、目的地やキー入力に関係なくその場から動かさない
+			if (this.isSitting)
+			{
+				this.moveTarget = null;
+				move.x = 0;
+				move.y = 0;
+			}
+			// キーボード入力があれば、そちらを優先する（マウス移動は中断する）
+			else if (key.w || key.a || key.s || key.d)
+			{
+				// タッチ操作を優先する（マウスクリックでの目的地移動は中断する）
+				this.moveTarget = null;
+
+				// キー入力状態に応じて移動方向を設定
+				if (key.w) move.y -= 1;
+				if (key.s) move.y += 1;
+				if (key.a) move.x -= 1;
+				if (key.d) move.x += 1;
+
+				// 斜め移動時に移動速度が速くならないよう正規化
+				if (move.x !== 0 && move.y !== 0)
+				{
+					move.x *= Math.SQRT1_2; // 1 / sqrt(2)
+					move.y *= Math.SQRT1_2;
+				}
+			}
+			// 十字キー（スマホ）の入力があれば、それを使う
+			else if (input.touch1.isEnabled())
+			{
+				// タッチ操作を優先する（マウスクリックでの目的地移動は中断する）
+				this.moveTarget = null;
+
+				move.x = input.touch1.powerX;
+				move.y = input.touch1.powerY;
+			}
+			// マウスの目的地に向かって移動する
+			else if (this.moveTarget)
+			{
+				// スプライトの中央ではなく「足元（下端の中央）」を基準にする、クリックした場所に、見た目の足がぴったり来るようにするため
+				const foot = this.getFootPosition(this.position.x, this.position.y);
+
+				const dx = this.moveTarget.x - foot.x;
+				const dy = this.moveTarget.y - foot.y;
+				const dist = Math.hypot(dx, dy);
+
+				// 十分近づいたら到着とみなし、目的地をクリアする
+				if (dist < MOVE_TARGET_THRESHOLD)
+				{
+					this.moveTarget = null;
+					move.x = 0;
+					move.y = 0;
+				}
+
+				// 目的地の方向を向いた「長さ1のベクトル」を返す
+				move.x = dx / dist;
+				move.y = dy / dist;
+			}
+
+			//addLog("info", "move x:" + move.x + " y:" + move.y);
+
+			//移動処理
+			if (move.x !== 0 || move.y !== 0)
+			{
+				const move_speed = this.isRunning ? MOVE_SPEED_RUN : MOVE_SPEED_WALK;
+
+				//マウス移動
+				if (this.moveTarget)
+				{
+					//マウス移動中は、x/yを別々に加速するのではなく「進む向き」に応じた1つの速度を、x・yどちらにも同じ倍率でかける
+					// move.xが1に近い＝横方向に近いほど、速度がMOVE_SPEED_X_RATIO倍に近づく
+					// こうすることで実際に進む向きが必ずmove.x, move.yと一致し、目的地付近で急に向きが変わらなくなる
+					const speed = move_speed * (1 + Math.abs(move.x) * (MOVE_SPEED_X_RATIO - 1));
+
+					this.position.x += move.x * speed * delta;
+					this.position.y += move.y * speed * delta;
+				}
+				// キーボード・バーチャル十字キー
+				else
+				{
+					// 横方向にだけ比率を掛ける
+					this.position.x += move.x * move_speed * MOVE_SPEED_X_RATIO * delta;
+					this.position.y += move.y * move_speed * delta;
+				}
+
+				// 画面(canvas)の外ではなく、マップ全体(MAP_WIDTH/MAP_HEIGHT)の外に出ないよう制限する
+				this.position.x = Math.max(0, Math.min(MAP_WIDTH - SPRITE_WIDTH, this.position.x));
+				this.position.y = Math.max(0, Math.min(MAP_HEIGHT - SPRITE_HEIGHT, this.position.y));
+
+				position_changed = true;
+			}
+
 			//状態変化
 			const state_changed = this.updateState(move);
-			// 前回送信からの経過時間を積算しておく
-			this.sendTimer += delta;
 
-			//状態変化（止まる/歩く/走る切替など）したらフレームは最初に
+			//止まる/歩く/走る切替などしたらフレームは最初に
 			if (state_changed)
 				this.currentFrame = 0;
+
+			// 前回送信からの経過時間を積算しておく
+			this.sendTimer += delta;
 
 			//状態変化は遅らせず即送信、位置だけの更新はsendIntervalごとに間引いて送信（負荷軽減）
 			if (state_changed || (position_changed && this.sendTimer >= SEND_INTERVAL))
