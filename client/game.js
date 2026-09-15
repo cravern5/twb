@@ -6,14 +6,16 @@ import * as windows from './windows.js';
 import { ctx, canvas } from './engine.js';
 import * as engine from './engine.js';
 import * as socket from './ws_bin_client.js';
-import { myPlayerId } from './ws_bin_client.js';
+//import { player } from './ws_bin_client.js';
 import * as input from './input.js';
 import { keys, keysPress, mouseInfo } from './input.js';
 import * as world from './world.js';
 import * as Player from './player.js';
-import { player } from './player.js';
+//import { player } from './player.js';
 import * as scroll from './scroll.js';
 import * as sound from './sound.js';
+
+let player = null;
 
 export let firstUpdate = false;
 export let lastTime = null;
@@ -28,29 +30,39 @@ async function init()
 	//chatArea.style.display = 'none';
 	//rightMenuButtons.classList.toggle("closed");
 
-	engine.init(); engine.updateProgress("<エンジン初期化>");
-	windows.init(); engine.updateProgress("<ウィンドウコントローラー初期化>");
-	socket.init(); engine.updateProgress("<通信初期化>");
-	//scroll.init(); updateProgress();
-	await world.init(); engine.updateProgress("<ワールド初期化>");
+	engine.updateProgress("<エンジン初期化>");
+	engine.init();
+	engine.updateProgress("<ウィンドウコントローラー初期化>");
+	windows.init();
+	engine.updateProgress("<通信初期化>");
+	socket.init();
+	engine.updateProgress("<ワールド初期化>");
+	await world.init();
 
+	engine.updateProgress("<プレイヤー初期化>");
+	player = await sub.wait({ obj: Player, propName: "player" });
+	print("info", player.myPlayerId);
 
-	//const id = await sub.wait({ obj: socket, propName: "myPlayerId" });
-	//print("info", id);
-	//Player.onJoinで
-	//player = await Player.addPlayer(0, playerName, character);
-	//engine.updateProgress("接続処理中");
-	//engine.endProgress();
-
-	engine.updateProgress("接続処理中...");
 	engine.endProgress();
 }
 
 
-///////チャットボタンイベント//////////
+///////ボタンイベント//////////
 
-//はみ出し抑制
-leftAfkBtn.addEventListener('click', (e) =>
+//run/walk
+leftFootBtn.addEventListener('click', (e) =>
+{
+	if (player) player.isRunning = !player.isRunning;
+});
+
+//stand/sit
+leftFootBtn.addEventListener('click', (e) =>
+{
+	if (player) player.isSitting = !player.isSitting;
+});
+
+//afkはみ出し抑制
+leftEnvironmentTab.addEventListener('click', (e) =>
 {
 	//はみ出し抑制
 	//for (const win of windows.windows) { win.insideScreen(); }
