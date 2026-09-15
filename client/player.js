@@ -18,7 +18,7 @@ export const SPRITE_HEIGHT = 95;	//キャラ画像1コマの高さ
 export const ASSETSDIR = '/assets/player';	//キャラ画のディレクトリ
 export const CHARACTERS = ['maximin', 'tichiel'];
 export const DIRECTIONS = ['forward', 'forside', 'side', 'backside', 'backward'];
-export const STATES = ["idle", "run", "sit", "walk"];
+export const STATES = ["idle", "run", "sit", "walk"];//, "attack"];
 export const MOVE_SPEED_RUN = 150; 					// 1秒あたりの移動ピクセル数
 export const MOVE_SPEED_WALK = 90;					// 1秒あたりの移動ピクセル数
 export const MOVE_SPEED_X_RATIO = 1.66;				//横方向の体感速度を補正するための倍率、横長なほど横移動が遅く感じる
@@ -62,7 +62,7 @@ export class Player
 		this.direction = "forward";					//キャラの向き
 		this.flip = false;							//false=左
 		this.position = { x: 2585, y: 1956 };		//プレイヤー位置
-		this.remotePosition = { x: this.position.x, y: this.position.y };	//他プレイヤー用：サーバーから届いた「本当の位置」（画面上のposを毎フレーム少しずつここへ近づける）
+		this.remotePosition = { ...this.position };	//他プレイヤー用：サーバーから届いた「本当の位置」（画面上のposを毎フレーム少しずつここへ近づける）
 		this.currentFrame = 0; 						// 何コマ目を表示しているか(0番目からスタート)
 		this.frameTimer = 0;						// コマ切り替え用の経過時間カウンター
 		this.moveTarget = null;						// マウスクリックで指定した「目的地」（ワールド座標）、null のときは目的地なし＝マウスでは移動していない状態
@@ -403,13 +403,25 @@ export class Player
 				socket.sendState(this.position.x, this.position.y, this.state, this.direction, this.flip);
 			}
 		}
-		//自分以外のプレイヤーは、見た目の位置(position)を目標地点(remotePosition)へ 毎フレーム少しずつ近づける（＝補間）ことで、カクつかず滑らかに動いて見えるようにする
+		//自分以外のプレイヤー
 		else
 		{
-			//deltaが大きい(処理落ち等)場合でも1.0を超えないように制限しておく
-			const t = Math.min(1, delta * INTERP_SPEED);
-			this.position.x += (this.remotePosition.x - this.position.x) * t;
-			this.position.y += (this.remotePosition.y - this.position.y) * t;
+			//見た目の位置(position)を目標地点(remotePosition)へ 毎フレーム少しずつ近づける（＝補間）ことで、カクつかず滑らかに動いて見えるようにする
+
+			//idle（立ち止まり）のときは補間せず即座にピッタリ合わせる、動いていないはずなのに惰性でツーっと滑って見える現象（アイス・スケーティング）を防ぐため
+			if (this.state === "idle")
+			{
+				this.position.x = this.remotePosition.x;
+				this.position.y = this.remotePosition.y;
+			}
+			//歩き・走り中は今まで通り滑らかに近づける
+			else
+			{
+				//deltaが大きい(処理落ち等)場合でも1.0を超えないように制限しておく
+				const t = Math.min(1, delta * INTERP_SPEED);
+				this.position.x += (this.remotePosition.x - this.position.x) * t;
+				this.position.y += (this.remotePosition.y - this.position.y) * t;
+			}
 		}
 
 		//ステートアセット
