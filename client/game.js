@@ -125,17 +125,17 @@ export function dblTap(touch)
 //長押しタッチ
 export function holdTouch(touch)
 {
-	if (player)
-		player.holdTouch(touch.startX, touch.startY);
+	//if (player)
+	//	player.holdTouch(touch.startX, touch.startY);
 
 	//input.keysPress.shift = true;
 	//addLog("info", "hold");
 }
 //長押しタッチ
-export function endHold(touch)
+export function HoldEnd(touch)
 {
-	if (player)
-		player.holdTouch(touch.startX, touch.startY);
+	//if (player)
+	//	player.holdTouch(touch.startX, touch.startY);
 
 	//input.keysPress.shift = true;
 	//addLog("info", "hold");

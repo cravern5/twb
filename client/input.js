@@ -411,6 +411,7 @@ canvas.addEventListener('touchend', (e) =>
 		{
 			touchDebugLog("touchend ホールド終了を終了します", e);
 			lastTapTime = now;// 今回のタップ時刻を、次回判定用に覚えておく
+			game.HoldEnd(touch1);
 		}
 		// あまり動かさず、素早く離した場合だけ「タップ」として成立させる
 		else if (touch1.dist(e) <= TAP_MOVE_THRESHOLD && touch1.duration(now) <= TAP_TIME_THRESHOLD)
@@ -457,8 +458,13 @@ canvas.addEventListener('touchmove', (e) =>
 		//移動した最大距離を保持
 		touch1.maxMove = Math.max(touch1.maxMove, touch1.dist(touch));
 
+		//長押し中は他の判定を一切行わない（十字キー操作やタップ中断に流れ込まないようにする）
+		if (touch1.hold)
+		{
+			//指を離すまで何もしない（HoldEndはtouchendで呼ばれる）
+		}
 		//長押し判定
-		if (!touch1.hold && touch1.maxMove <= PRESS_MOVE_THRESHOLD && touch1.duration(Date.now()) > PRESS_TIME_THRESHOLD)
+		else if (touch1.maxMove <= PRESS_MOVE_THRESHOLD && touch1.duration(Date.now()) > PRESS_TIME_THRESHOLD)
 		{
 			touchDebugLog("指が長押しされました");
 			touch1.hold = true;
