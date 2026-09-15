@@ -23,6 +23,7 @@ export const MOVE_SPEED = 150; 						// 1秒あたりの移動ピクセル数
 export const MOVE_SPEED_X_RATIO = 1.66;				//横方向の体感速度を補正するための倍率、横長なほど横移動が遅く感じる
 export const MOVE_TARGET_THRESHOLD = 4;				// 目的地にどれだけ近づいたら「到着」とみなすか（px）
 export const FRAME_DURATION = 0.07;					// アニメーションの更新間隔（秒単位：例 0.1秒ごとに1コマ進める）
+export const SEND_INTERVAL = 1 / 20;				// 座標送信は1秒間に最大20回まで（20Hz 0.05秒に1回)に制限する、　自キャラ(60fps 16.67ミリ秒)
 
 //チャット
 //const chatArea = document.getElementById("chatArea");
@@ -62,8 +63,7 @@ export class Player
 		this.frameTimer = 0;						// コマ切り替え用の経過時間カウンター
 		this.moveTarget = null;						// マウスクリックで指定した「目的地」（ワールド座標）、null のときは目的地なし＝マウスでは移動していない状態
 
-		this.sendInterval = 1 / 20;					// 座標送信は1秒間に最大20回まで（20Hz 0.05秒に1回)に制限する、　自キャラ(60fps 16.67ミリ秒)
-		this.sendTimer = 0;							// 前回送信してからの経過時間
+		this.sendTimer = 0;							// ポジションを前回送信してからの経過時間、SEND_INTERVALを超えたら送信可能
 
 		this.lastReceiveTime = null;				// 前回STATEを受信した時刻（ミリ秒）。まだ1回も受信していなければnull
 		this.lastReceiveInterval = 0;				// 前回受信からの間隔（ミリ秒）＝これが不規則だと表示もカクつく
@@ -385,7 +385,7 @@ export class Player
 
 			//状態変化（止まる/歩く/走る切替など）は遅らせず即送信、
 			//位置だけの更新はsendIntervalごとに間引いて送信（負荷軽減）
-			if (state_changed || (position_changed && this.sendTimer >= this.sendInterval))
+			if (state_changed || (position_changed && this.sendTimer >= SEND_INTERVAL))
 			{
 				this.sendTimer = 0;	// 送信したのでタイマーをリセット
 				socket.sendState(this.position.x, this.position.y, this.state, this.direction, this.flip);
