@@ -55,12 +55,6 @@ leftFootBtn.addEventListener('click', (e) =>
 	if (player) player.isRunning = !player.isRunning;
 });
 
-//stand/sit
-leftFootBtn.addEventListener('click', (e) =>
-{
-	if (player) player.isSitting = !player.isSitting;
-});
-
 //afkはみ出し抑制
 leftEnvironmentTab.addEventListener('click', (e) =>
 {

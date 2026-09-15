@@ -18,7 +18,7 @@ export const SPRITE_HEIGHT = 95;	//キャラ画像1コマの高さ
 export const ASSETSDIR = '/assets/player';	//キャラ画のディレクトリ
 export const CHARACTERS = ['maximin', 'tichiel'];
 export const DIRECTIONS = ['forward', 'forside', 'side', 'backside', 'backward'];
-export const STATES = ["idle", "run", "sit", "walk"];//, "attack"];
+export const STATES = ["idle", "run", "sit", "walk"]//, "attack"];
 export const MOVE_SPEED_RUN = 150; 					// 1秒あたりの移動ピクセル数
 export const MOVE_SPEED_WALK = 90;					// 1秒あたりの移動ピクセル数
 export const MOVE_SPEED_X_RATIO = 1.66;				//横方向の体感速度を補正するための倍率、横長なほど横移動が遅く感じる
@@ -218,6 +218,13 @@ export class Player
 		if (this.id !== socket.myPlayerId)
 			return { x: 0, y: 0 };
 
+		//座り状態のときは、目的地やキー入力に関係なくその場から動かさない
+		if (this.isSitting)
+		{
+			this.moveTarget = null;
+			return { x: 0, y: 0 };
+		}
+
 		// キーボード入力があれば、そちらを優先する（マウス移動は中断する）
 		const key = input.keysPress;
 		if (key.w || key.a || key.s || key.d)
@@ -326,8 +333,11 @@ export class Player
 		let f = this.flip;
 
 
+		//座り状態なら、向きは変えずにステートだけ"sit"にする
+		if (this.isSitting)
+			s = "sit";
 		// 動いていない場合は、直前の向きをそのまま維持する
-		if (move.x === 0 && move.y === 0)
+		else if (move.x === 0 && move.y === 0)
 			s = "idle";
 		else
 		{
