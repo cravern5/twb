@@ -187,6 +187,27 @@ export class Player
 		return asset;
 	}
 
+	//タップ
+	oneTap(x, y)
+	{
+		this.setMoveTargetFromScreen(x, y);
+	}
+	//ダブルタップ
+	dblTap(x, y)
+	{
+		this.setMoveTargetFromScreen(x, y);
+	}
+	//長押しタッチ
+	holdTouch(x, y)
+	{
+
+	}
+	//十字キー
+	crossTouch(powX, powY)
+	{
+		this.moveTarget = null;
+	}
+
 	//マウス移動
 	mousedown(e)
 	{
@@ -198,8 +219,22 @@ export class Player
 			//シフトキーのキャラ向き更新
 			if (e.shiftKey)
 			{
-				this.moveTarget = null;
-				this.direction = "side";
+				/*// 足元からクリック位置への「向きベクトル」だけを計算する（移動はしない）
+				const worldX = e.clientX / world.camera.zoom + world.camera.x;
+				const worldY = e.clientY / world.camera.zoom + world.camera.y;
+				const foot = this.getFootPosition(this.position.x, this.position.y);
+				const move = { x: worldX - foot.x, y: worldY - foot.y };
+
+				// 新しい向きを求めて反映
+				[this.direction, this.flip] = this.getDirection(move);
+
+				// 向きが変わったのでアニメーションのコマを最初に戻す（コマ数不足による一瞬消えるのを防止）
+				this.currentFrame = 0;
+
+				// 状態変化は即送信のルールに合わせ、ここでも即座にサーバーへ送る（他プレイヤーの画面にも反映させるため）
+				socket.sendState(this.position.x, this.position.y, this.state, this.direction, this.flip);*/
+
+				this.setMoveTargetFromScreen(e.clientX, e.clientY);
 			}
 			else
 				this.setMoveTargetFromScreen(e.clientX, e.clientY);
@@ -210,22 +245,35 @@ export class Player
 	{
 		const key = e.key.toLowerCase();
 
-		if (key === 'Enter')
+		if (key === 'enter')
 			return this.SendChat(e);
+		//Enter以外でチャットバーにフォーカスがある状態でのキー入力
+		else if (document.activeElement === chatInput)
+		{
+			return true;
+		}
 		//走り
 		else if (key === "r")
+		{
 			player.isRunning = !player.isRunning;
+			return true;
+		}
 		//座り
 		else if (key === "insert")
 		{
+			// マウス操作は無視
 			this.moveTarget = null;
 			player.isSitting = !player.isSitting;
+			return true;
 		}
-		else//Enter以外
+		//移動キー
+		else if (key === "w" || key === "a" || key === "s" || key === "d")
 		{
-			//チャットバーにフォーカスがある状態でのキー入力
-			return document.activeElement === chatInput;
+			// キー操作を優先する（マウスクリックでの目的地移動は中断する）
+			this.moveTarget = null;
+			return true;
 		}
+		return false;
 	}
 
 	//画面座標→ワールド座標に変換して移動先をセットする（マウスクリック・タップの共通処理）
@@ -239,6 +287,93 @@ export class Player
 	}
 
 	//キーの移動量取得
+	getMovement()
+	{
+		const move = { x: 0, y: 0 };
+		const key = input.keysPress;
+
+		//座り状態のときは、目的地やキー入力に関係なくその場から動かさない
+		if (this.isSitting)
+		{
+			//this.moveTarget = null;
+			move.x = 0;
+			move.y = 0;
+		}
+		// キーボード入力があれば、そちらを優先する（マウス移動は中断する）
+		else if (key.w || key.a || key.s || key.d)
+		{
+			// キー入力状態に応じて移動方向を設定
+			if (key.w) move.y -= 1;
+			if (key.s) move.y += 1;
+			if (key.a) move.x -= 1;
+			if (key.d) move.x += 1;
+
+			// 斜め移動時に移動速度が速くならないよう正規化
+			if (move.x !== 0 && move.y !== 0)
+			{
+				move.x *= Math.SQRT1_2; // 1 / sqrt(2)
+				move.y *= Math.SQRT1_2;
+			}
+		}
+		// 十字キー（スマホ）の入力があれば、それを使う
+		else if (input.touch1.isEnabled())
+		{
+			move.x = input.touch1.powerX;
+			move.y = input.touch1.powerY;
+		}
+		// マウスの目的地に向かって移動する
+		else if (this.moveTarget)
+		{
+			// スプライトの中央ではなく「足元（下端の中央）」を基準にする、クリックした場所に、見た目の足がぴったり来るようにするため
+			const foot = this.getFootPosition(this.position.x, this.position.y);
+
+			const dx = this.moveTarget.x - foot.x;
+			const dy = this.moveTarget.y - foot.y;
+			const dist = Math.hypot(dx, dy);
+
+			// 十分近づいたら到着とみなし、目的地をクリアする
+			if (dist < MOVE_TARGET_THRESHOLD)
+			{
+				this.moveTarget = null;
+				move.x = 0;
+				move.y = 0;
+			}
+
+			// 目的地の方向を向いた「長さ1のベクトル」を返す
+			move.x = dx / dist;
+			move.y = dy / dist;
+		}
+
+		return move;
+	}
+
+	//方向を取得
+	getDirection(move)
+	{
+		let d = this.direction;
+		let f = this.flip;
+
+		// 移動ベクトルの向いている角度を求める（画面はyが下向きなので、0=右、90°=下、180°=左、-90°=上）
+		const angle = Math.atan2(move.y, move.x);
+
+		// 角度を45度(=PI/4)刻みに丸めて、8方向のうちどれに一番近いかを求める（0〜7の整数）
+		const octant = Math.round(angle / (Math.PI / 4)) & 7;
+
+		// 求めた8方向の番号を、実際のスプライトの向き(d)と反転(f)に変換する
+		switch (octant)
+		{
+			case 0: d = 'side'; f = true; break;			// 右
+			case 1: d = 'forside'; f = true; break;			// 右下（左下を反転）
+			case 2: d = 'forward'; f = false; break;		// 下
+			case 3: d = 'forside'; f = false; break;		// 左下
+			case 4: d = 'side'; f = false; break;			// 左
+			case 5: d = 'backside'; f = false; break;		// 左上
+			case 6: d = 'backward'; f = false; break;		// 上
+			case 7: d = 'backside'; f = true; break;		// 右上（左上を反転）
+		}
+
+		return [d, f];
+	}
 
 	//キャラ(状態、方向、反転)の設定
 	updateState(move)
@@ -258,25 +393,7 @@ export class Player
 		else
 		{
 			s = this.isRunning ? "run" : "walk";
-
-			// 移動ベクトルの向いている角度を求める（画面はyが下向きなので、0=右、90°=下、180°=左、-90°=上）
-			const angle = Math.atan2(move.y, move.x);
-
-			// 角度を45度(=PI/4)刻みに丸めて、8方向のうちどれに一番近いかを求める（0〜7の整数）
-			const octant = Math.round(angle / (Math.PI / 4)) & 7;
-
-			// 求めた8方向の番号を、実際のスプライトの向き(d)と反転(f)に変換する
-			switch (octant)
-			{
-				case 0: d = 'side'; f = true; break;			// 右
-				case 1: d = 'forside'; f = true; break;			// 右下（左下を反転）
-				case 2: d = 'forward'; f = false; break;		// 下
-				case 3: d = 'forside'; f = false; break;		// 左下
-				case 4: d = 'side'; f = false; break;			// 左
-				case 5: d = 'backside'; f = false; break;		// 左上
-				case 6: d = 'backward'; f = false; break;		// 上
-				case 7: d = 'backside'; f = true; break;		// 右上（左上を反転）
-			}
+			[d, f] = this.getDirection(move);
 		}
 
 		if (s != this.state || d != this.direction || f != this.flip)
@@ -313,98 +430,40 @@ export class Player
 			let position_changed = false;
 
 			//移動量の計算
-			const move = { x: 0, y: 0 };
-
-			//座り状態のときは、目的地やキー入力に関係なくその場から動かさない
-			if (this.isSitting)
-			{
-				this.moveTarget = null;
-				move.x = 0;
-				move.y = 0;
-			}
-			// キーボード入力があれば、そちらを優先する（マウス移動は中断する）
-			else if (key.w || key.a || key.s || key.d)
-			{
-				// タッチ操作を優先する（マウスクリックでの目的地移動は中断する）
-				this.moveTarget = null;
-
-				// キー入力状態に応じて移動方向を設定
-				if (key.w) move.y -= 1;
-				if (key.s) move.y += 1;
-				if (key.a) move.x -= 1;
-				if (key.d) move.x += 1;
-
-				// 斜め移動時に移動速度が速くならないよう正規化
-				if (move.x !== 0 && move.y !== 0)
-				{
-					move.x *= Math.SQRT1_2; // 1 / sqrt(2)
-					move.y *= Math.SQRT1_2;
-				}
-			}
-			// 十字キー（スマホ）の入力があれば、それを使う
-			else if (input.touch1.isEnabled())
-			{
-				// タッチ操作を優先する（マウスクリックでの目的地移動は中断する）
-				this.moveTarget = null;
-
-				move.x = input.touch1.powerX;
-				move.y = input.touch1.powerY;
-			}
-			// マウスの目的地に向かって移動する
-			else if (this.moveTarget)
-			{
-				// スプライトの中央ではなく「足元（下端の中央）」を基準にする、クリックした場所に、見た目の足がぴったり来るようにするため
-				const foot = this.getFootPosition(this.position.x, this.position.y);
-
-				const dx = this.moveTarget.x - foot.x;
-				const dy = this.moveTarget.y - foot.y;
-				const dist = Math.hypot(dx, dy);
-
-				// 十分近づいたら到着とみなし、目的地をクリアする
-				if (dist < MOVE_TARGET_THRESHOLD)
-				{
-					this.moveTarget = null;
-					move.x = 0;
-					move.y = 0;
-				}
-
-				// 目的地の方向を向いた「長さ1のベクトル」を返す
-				move.x = dx / dist;
-				move.y = dy / dist;
-			}
-
+			const move = this.getMovement();
 			//addLog("info", "move x:" + move.x + " y:" + move.y);
 
 			//移動処理
-			if (move.x !== 0 || move.y !== 0)
-			{
-				const move_speed = this.isRunning ? MOVE_SPEED_RUN : MOVE_SPEED_WALK;
-
-				//マウス移動
-				if (this.moveTarget)
+			if (input.)
+				if (move.x !== 0 || move.y !== 0)
 				{
-					//マウス移動中は、x/yを別々に加速するのではなく「進む向き」に応じた1つの速度を、x・yどちらにも同じ倍率でかける
-					// move.xが1に近い＝横方向に近いほど、速度がMOVE_SPEED_X_RATIO倍に近づく
-					// こうすることで実際に進む向きが必ずmove.x, move.yと一致し、目的地付近で急に向きが変わらなくなる
-					const speed = move_speed * (1 + Math.abs(move.x) * (MOVE_SPEED_X_RATIO - 1));
+					const move_speed = this.isRunning ? MOVE_SPEED_RUN : MOVE_SPEED_WALK;
 
-					this.position.x += move.x * speed * delta;
-					this.position.y += move.y * speed * delta;
+					position_changed = true;
+
+					//マウス移動
+					if (this.moveTarget)
+					{
+						//マウス移動中は、x/yを別々に加速するのではなく「進む向き」に応じた1つの速度を、x・yどちらにも同じ倍率でかける
+						// move.xが1に近い＝横方向に近いほど、速度がMOVE_SPEED_X_RATIO倍に近づく
+						// こうすることで実際に進む向きが必ずmove.x, move.yと一致し、目的地付近で急に向きが変わらなくなる
+						const speed = move_speed * (1 + Math.abs(move.x) * (MOVE_SPEED_X_RATIO - 1));
+
+						this.position.x += move.x * speed * delta;
+						this.position.y += move.y * speed * delta;
+					}
+					// キーボード・バーチャル十字キー
+					else
+					{
+						// 横方向にだけ比率を掛ける
+						this.position.x += move.x * move_speed * MOVE_SPEED_X_RATIO * delta;
+						this.position.y += move.y * move_speed * delta;
+					}
+
+					// 画面(canvas)の外ではなく、マップ全体(MAP_WIDTH/MAP_HEIGHT)の外に出ないよう制限する
+					this.position.x = Math.max(0, Math.min(MAP_WIDTH - SPRITE_WIDTH, this.position.x));
+					this.position.y = Math.max(0, Math.min(MAP_HEIGHT - SPRITE_HEIGHT, this.position.y));
 				}
-				// キーボード・バーチャル十字キー
-				else
-				{
-					// 横方向にだけ比率を掛ける
-					this.position.x += move.x * move_speed * MOVE_SPEED_X_RATIO * delta;
-					this.position.y += move.y * move_speed * delta;
-				}
-
-				// 画面(canvas)の外ではなく、マップ全体(MAP_WIDTH/MAP_HEIGHT)の外に出ないよう制限する
-				this.position.x = Math.max(0, Math.min(MAP_WIDTH - SPRITE_WIDTH, this.position.x));
-				this.position.y = Math.max(0, Math.min(MAP_HEIGHT - SPRITE_HEIGHT, this.position.y));
-
-				position_changed = true;
-			}
 
 			//状態変化
 			const state_changed = this.updateState(move);

@@ -1,6 +1,6 @@
 import { print, addLog } from '../shared/sub.js';
 import { canvas } from './engine.js';
-import * as world from './world.js';
+//import * as world from './world.js';
 import { player } from './player.js';
 import * as engine from './engine.js';
 import * as game from './game.js';
@@ -386,10 +386,7 @@ canvas.addEventListener('touchend', (e) =>
 	{
 		touchDebugLog("touchend ダブルタップを検知しました");
 		lastTapTime = now;// 今回のタップ時刻を、次回判定用に覚えておく
-
-		if (player)
-			player.setMoveTargetFromScreen(touch1.startX, touch1.startY);
-
+		game.dblTap(touch1.startX, touch1.startY);
 		clearTouch();
 
 		//一定時間以内の2回目のタップなら、ブラウザの拡大処理をキャンセルする
@@ -413,8 +410,7 @@ canvas.addEventListener('touchend', (e) =>
 		{
 			touchDebugLog("touchend タップ成功", e);
 			lastTapTime = now;// 今回のタップ時刻を、次回判定用に覚えておく
-			if (player)
-				player.setMoveTargetFromScreen(touch1.startX, touch1.startY);
+			game.oneTap(touch1.startX, touch1.startY);
 		}
 		clearTouch();
 
@@ -443,8 +439,7 @@ canvas.addEventListener('touchmove', (e) =>
 			//world.camera.zoom *= input.inputZoom.scale;
 
 			// ピンチズームの結果をカメラの拡大率に反映する（プレイヤーは常に画面中心にいるので、これだけで自動的に中心起点のズームになる）
-			world.camera.zoom *= dist / pinchLastDist;
-			world.camera.zoom = Math.min(Math.max(world.camera.zoom, 0.5), 3); // 拡大率の上限・下限を制限（お好みで調整）
+			game.pinch(dist / pinchLastDist);
 		}
 
 		pinchLastDist = dist;
@@ -464,6 +459,7 @@ canvas.addEventListener('touchmove', (e) =>
 		if (touch1.maxMove <= PRESS_MOVE_THRESHOLD && touch1.duration(Date.now()) > PRESS_TIME_THRESHOLD)
 		{
 			touchDebugLog("指が長押しされました");
+			game.holdTouch(touch.startX, touch.startY);
 			clearTouch();
 		}
 		//十字キー操作　開始の指が画面左半分の指だけを「十字キー操作」として扱う
@@ -471,8 +467,10 @@ canvas.addEventListener('touchmove', (e) =>
 		{
 			// 指を置いた場所からの移動量の-1~1を取得
 			const pow = touch1.power(touch, VIRTUAL_MOVE_RADIUS);
+
 			touch1.powerX = pow.x;
 			touch1.powerY = pow.y;
+			game.crossTouch(pow.x, pow.y);
 		}
 		// タップ候補の指が動きすぎたら、タップ扱いをやめる（スワイプ等に譲る）
 		else if (touch1.maxMove > TAP_MOVE_THRESHOLD)

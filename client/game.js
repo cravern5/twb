@@ -102,6 +102,40 @@ chatFixedText.addEventListener('click', (e) =>
 
 ///////入力イベント//////////
 
+//タップ
+export function oneTap(x, y)
+{
+	if (player)
+		player.oneTap(x, y);
+}
+//ダブルタップ
+export function dblTap(x, y)
+{
+	if (player)
+		player.dblTap(x, y);
+}
+//長押しタッチ
+export function holdTouch(x, y)
+{
+	if (player)
+		player.holdTouch(x, y);
+}
+//十字キー
+export function crossTouch(powX, powY)
+{
+	if (player)
+		player.crossTouch(powX, powY);
+}
+//2本指ピンチ
+export function pinch(dist)
+{
+	if (!world)
+		return;
+	world.camera.zoom *= dist;
+	world.camera.zoom = Math.min(Math.max(world.camera.zoom, 0.5), 3); // 拡大率の上限・下限を制限（お好みで調整）
+}
+
+
 //キーが押されたとき
 export function keydown(e)
 {
