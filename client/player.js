@@ -24,6 +24,7 @@ export const MOVE_SPEED_X_RATIO = 1.66;				//横方向の体感速度を補正�
 export const MOVE_TARGET_THRESHOLD = 4;				// 目的地にどれだけ近づいたら「到着」とみなすか（px）
 export const FRAME_DURATION = 0.07;					// アニメーションの更新間隔（秒単位：例 0.1秒ごとに1コマ進める）
 export const SEND_INTERVAL = 1 / 20;				// 座標送信は1秒間に最大20回まで（20Hz 0.05秒に1回)に制限する、　自キャラ(60fps 16.67ミリ秒)
+export const INTERP_SPEED = 12;						// 他プレイヤー座標を目標地点へ近づける速さ（大きいほどすぐ追いつく）
 
 //チャット
 //const chatArea = document.getElementById("chatArea");
@@ -59,6 +60,7 @@ export class Player
 		this.direction = "forward";					//キャラの向き
 		this.flip = false;							//false=左
 		this.position = { x: 2585, y: 1956 };		//プレイヤー位置
+		this.remotePosition = { x: this.position.x, y: this.position.y };	//他プレイヤー用：サーバーから届いた「本当の位置」（画面上のposを毎フレーム少しずつここへ近づける）
 		this.currentFrame = 0; 						// 何コマ目を表示しているか(0番目からスタート)
 		this.frameTimer = 0;						// コマ切り替え用の経過時間カウンター
 		this.moveTarget = null;						// マウスクリックで指定した「目的地」（ワールド座標）、null のときは目的地なし＝マウスでは移動していない状態
@@ -357,66 +359,6 @@ export class Player
 		return changed;
 	}
 
-	//再計算(位置・状態)　(自身の場合)deltaだけ、(他ユーザーの場合)delta以外直接入力
-	recalc({ delta, x, y, state, direction, flip })
-	{
-		let position_changed = false;
-		let state_changed = false;
-
-		//状態を更新して送信(自分自身の場合)
-		if (this.id === socket.myPlayerId)
-		{
-			//移動量はここで1回だけ計算し、updatePositionとupdateStateの両方に渡す、2回計算すると、その間にpositionが変わってしまい向きがズレるため
-			const move = this.getMovement();
-
-			//addLog("info", "movement x:" + move.x + " y;" + move.y);
-
-			//移動処理を追加
-			position_changed = this.updatePosition(delta, move);
-
-			//状態変化
-			state_changed = this.updateState(move);
-
-			//if (state_changed)
-			//	this.currentFrame = 0;	//状態変化したらフレームは最初に
-
-			// 前回送信からの経過時間を積算しておく
-			this.sendTimer += delta;
-
-			//状態変化（止まる/歩く/走る切替など）は遅らせず即送信、
-			//位置だけの更新はsendIntervalごとに間引いて送信（負荷軽減）
-			if (state_changed || (position_changed && this.sendTimer >= SEND_INTERVAL))
-			{
-				this.sendTimer = 0;	// 送信したのでタイマーをリセット
-				socket.sendState(this.position.x, this.position.y, this.state, this.direction, this.flip);
-			}
-		}
-		else
-		{
-			if (this.position.x !== x || this.position.y !== y)
-				position_changed = true;
-
-			//状態更新
-			this.position.x = x;
-			this.position.y = y;
-
-			//状態か向きが変わった瞬間だけ、アニメーションのコマ数を最初に戻す
-			if (this.state !== state || this.direction !== direction || this.flip != flip)
-				state_changed = true;
-			//this.currentFrame = 0;
-
-			this.state = state;
-			this.direction = direction;
-			this.flip = flip;
-		}
-
-		//状態変化したらフレームは最初に
-		if (state_changed)
-			this.currentFrame = 0;
-
-		return state_changed;
-	}
-
 	//画面更新
 	update(delta)
 	{
@@ -433,11 +375,38 @@ export class Player
 		}
 
 		//再計算(位置・状態)
-		//if (this.id === socket.myPlayerId)
-		//{
-		//	if (this.recalc({ delta }))
-		//		this.currentFrame = 0;
-		//}
+		//状態を更新して送信(自分自身の場合)
+		if (this.id === socket.myPlayerId)
+		{
+			//移動量はここで1回だけ計算し、updatePositionとupdateStateの両方に渡す、2回計算すると、その間にpositionが変わってしまい向きがズレるため
+			const move = this.getMovement();
+			//addLog("info", "movement x:" + move.x + " y;" + move.y);
+			//移動処理を追加
+			const position_changed = this.updatePosition(delta, move);
+			//状態変化
+			const state_changed = this.updateState(move);
+			// 前回送信からの経過時間を積算しておく
+			this.sendTimer += delta;
+
+			//状態変化（止まる/歩く/走る切替など）したらフレームは最初に
+			if (state_changed)
+				this.currentFrame = 0;
+
+			//状態変化は遅らせず即送信、位置だけの更新はsendIntervalごとに間引いて送信（負荷軽減）
+			if (state_changed || (position_changed && this.sendTimer >= SEND_INTERVAL))
+			{
+				this.sendTimer = 0;	// 送信したのでタイマーをリセット
+				socket.sendState(this.position.x, this.position.y, this.state, this.direction, this.flip);
+			}
+		}
+		//自分以外のプレイヤーは、見た目の位置(position)を目標地点(remotePosition)へ 毎フレーム少しずつ近づける（＝補間）ことで、カクつかず滑らかに動いて見えるようにする
+		else
+		{
+			//deltaが大きい(処理落ち等)場合でも1.0を超えないように制限しておく
+			const t = Math.min(1, delta * INTERP_SPEED);
+			this.position.x += (this.remotePosition.x - this.position.x) * t;
+			this.position.y += (this.remotePosition.y - this.position.y) * t;
+		}
 
 		//ステートアセット
 		const asset = this.getStateAsset();
@@ -842,7 +811,23 @@ export function onState(id, x, y, stateIndex, directionIndex, flip)
 	const direction = DIRECTIONS[directionIndex] || DIRECTIONS[0];
 
 	//再計算
-	player.recalc({ x, y, state, direction, flip });
+	//player.recalc({ x, y, state, direction, flip });
+
+	//状態更新
+	//player.position.x = x;
+	//player.position.y = y;
+
+	//位置は直接書き換えず、まず「目標地点」だけ更新する（実際の見た目の位置はupdate()の中で少しずつ近づけて滑らかにする）
+	player.remotePosition.x = x;
+	player.remotePosition.y = y;
+
+	//状態か向きが変わった瞬間だけ、アニメーションのコマ数を最初に戻す
+	if (player.state !== state || player.direction !== direction || player.flip != flip)
+		player.currentFrame = 0;//状態変化したらフレームは最初に
+
+	player.state = state;
+	player.direction = direction;
+	player.flip = flip;
 }
 
 //プレイヤー一覧をYSortしたものを出力
@@ -863,8 +848,8 @@ export function playerYSort()
 export function updateAll(delta)
 {
 	//自分自身の再計算
-	if (player)
-		player.recalc({ delta });
+	//if (player)
+	//		player.recalc({ delta });
 
 	//足元のY座標が小さい（奥）順に並べ替える
 	const sortedPlayers = playerYSort();
