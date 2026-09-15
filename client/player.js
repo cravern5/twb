@@ -187,6 +187,50 @@ export class Player
 		return asset;
 	}
 
+	//マウス移動
+	mousedown(e)
+	{
+		// キャンバス上を左クリックしたら、その場所を目的地にして歩き出す
+		if (input.mouseInfo.left && e.target === engine.canvas)
+		{
+			//addLog("info", "mousedown x:" + e.clientX + " y;" + e.clientY);
+
+			//シフトキーのキャラ向き更新
+			if (e.shiftKey)
+			{
+				this.moveTarget = null;
+				this.direction = "side";
+			}
+			else
+				this.setMoveTargetFromScreen(e.clientX, e.clientY);
+		}
+	}
+	//キー移動
+	keydown(e)
+	{
+		const key = e.key.toLowerCase();
+
+		if (key === 'Enter')
+			return this.SendChat(e);
+		//走り
+		else if (key === "r")
+		{
+			this.moveTarget = null;
+			player.isRunning = !player.isRunning;
+		}
+		//座り
+		else if (key === "insert")
+		{
+			this.moveTarget = null;
+			player.isSitting = !player.isSitting;
+		}
+		else//Enter以外
+		{
+			//チャットバーにフォーカスがある状態でのキー入力
+			return document.activeElement === chatInput;
+		}
+	}
+
 	//画面座標→ワールド座標に変換して移動先をセットする（マウスクリック・タップの共通処理）
 	setMoveTargetFromScreen(clientX, clientY)
 	{
@@ -197,26 +241,13 @@ export class Player
 		this.moveTarget = { x: worldX, y: worldY };
 	}
 
-	//マウス移動
-	mousedown(e)
-	{
-		// キャンバス上を左クリックしたら、その場所を目的地にして歩き出す
-		if (input.mouseInfo.left && e.target === engine.canvas)
-		{
-			//addLog("info", "mousedown x:" + e.clientX + " y;" + e.clientY);
-			this.setMoveTargetFromScreen(e.clientX, e.clientY);
-		}
-
-		//addLog("info", "moveTarget worldX(" + worldX.toFixed(1) + ") worldY(" + worldY.toFixed(1) + ")");
-	}
-
 	//キーの移動量取得
 	getMovement()
 	{
 		//このプレイヤーが「自分自身」でなければ、キーボード・マウスの入力を反映しない
 		//（他人のキャラは、通信で受け取った座標(onMove)だけで動かすべきで、自分のキー入力を混ぜてはいけない）
-		if (this.id !== socket.myPlayerId)
-			return { x: 0, y: 0 };
+		//if (this.id !== socket.myPlayerId)
+		//	return { x: 0, y: 0 };
 
 		//座り状態のときは、目的地やキー入力に関係なくその場から動かさない
 		if (this.isSitting)
@@ -395,6 +426,7 @@ export class Player
 			//移動量はここで1回だけ計算し、updatePositionとupdateStateの両方に渡す、2回計算すると、その間にpositionが変わってしまい向きがズレるため
 			const move = this.getMovement();
 			//addLog("info", "movement x:" + move.x + " y;" + move.y);
+
 			//移動処理を追加
 			const position_changed = this.updatePosition(delta, move);
 			//状態変化
@@ -516,59 +548,51 @@ export class Player
 	//チャット送信
 	SendChat(e)
 	{
-		if (e.key === 'Enter')
+		const text = chatInput.value.trim();
+
+		//サーバー未接続
+		if (!socket.connected)
 		{
-			const text = chatInput.value.trim();
-
-			//サーバー未接続
-			if (!socket.connected)
+			addLog("ERROR", "サーバーに接続されていません")
+		}
+		//チャットウィンドウ非表示中
+		if (!windows.chatWindow.isVisible())
+		{
+			windows.chatWindow.restore();
+			chatInput.focus();
+		}
+		//チャットバーにフォーカスある
+		else if (document.activeElement === chatInput)
+		{
+			//テキスト入力
+			if (text === '')
+				engine.canvas.focus();//キャンバスに戻る
+			else if (text.toUpperCase() === '/SHOWFPS')
 			{
-				addLog("ERROR", "サーバーに接続されていません")
+				windows.debugInfo.show(-1);
+				chatInput.value = '';// 入力欄をクリア
+				engine.canvas.focus();//キャンバスに戻る
 			}
-			//チャットウィンドウ非表示中
-			if (!windows.chatWindow.isVisible())
-			{
-				windows.chatWindow.restore();
-				chatInput.focus();
-			}
-			//チャットバーにフォーカスある
-			else if (document.activeElement === chatInput)
-			{
-				//テキスト入力
-				if (text === '')
-					engine.canvas.focus();//キャンバスに戻る
-				else if (text.toUpperCase() === '/SHOWFPS')
-				{
-					windows.debugInfo.show(-1);
-					chatInput.value = '';// 入力欄をクリア
-					engine.canvas.focus();//キャンバスに戻る
-				}
-				else
-				{
-					//ログに送られる文字列
-					const sendText = this.playerName + " ： " + text;
-
-					//改行を取り除いて1行のテキストにする（\r\nの場合も考慮）
-					//const oneLineText = text.replace(/\r?\n/g, "");
-
-					//サーバーへチャット
-					socket.sendChat(sendText);
-
-					chatInput.value = '';// 入力欄をクリア
-					engine.canvas.focus();//キャンバスに戻る
-				}
-			}
-			//チャットバーにフォーカス
 			else
-				chatInput.focus();
+			{
+				//ログに送られる文字列
+				const sendText = this.playerName + " ： " + text;
 
-			return true;
+				//改行を取り除いて1行のテキストにする（\r\nの場合も考慮）
+				//const oneLineText = text.replace(/\r?\n/g, "");
+
+				//サーバーへチャット
+				socket.sendChat(sendText);
+
+				chatInput.value = '';// 入力欄をクリア
+				engine.canvas.focus();//キャンバスに戻る
+			}
 		}
-		else//Enter以外
-		{
-			//チャットバーにフォーカスがある状態でのキー入力
-			return document.activeElement === chatInput;
-		}
+		//チャットバーにフォーカス
+		else
+			chatInput.focus();
+
+		return true;
 	}
 
 	//テキストを、指定した幅(maxWidth)に収まるように1行ずつ分割する

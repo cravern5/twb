@@ -109,12 +109,8 @@ export function keydown(e)
 		return;
 
 	const key = e.key.toLowerCase();
-	if (player.SendChat(e))//送信したらtrue
+	if (player.keydown(e))//イベントが起きたらtrue
 	{
-	}
-	else if (key === "insert")//座り
-	{
-		player.isSitting = !player.isSitting;
 	}
 	else if (key === "c")//チャット表示切替
 	{
