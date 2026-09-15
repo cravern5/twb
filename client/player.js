@@ -219,22 +219,14 @@ export class Player
 			//シフトキーのキャラ向き更新
 			if (e.shiftKey)
 			{
-				/*// 足元からクリック位置への「向きベクトル」だけを計算する（移動はしない）
-				const worldX = e.clientX / world.camera.zoom + world.camera.x;
-				const worldY = e.clientY / world.camera.zoom + world.camera.y;
-				const foot = this.getFootPosition(this.position.x, this.position.y);
-				const move = { x: worldX - foot.x, y: worldY - foot.y };
-
-				// 新しい向きを求めて反映
-				[this.direction, this.flip] = this.getDirection(move);
-
-				// 向きが変わったのでアニメーションのコマを最初に戻す（コマ数不足による一瞬消えるのを防止）
-				this.currentFrame = 0;
-
-				// 状態変化は即送信のルールに合わせ、ここでも即座にサーバーへ送る（他プレイヤーの画面にも反映させるため）
-				socket.sendState(this.position.x, this.position.y, this.state, this.direction, this.flip);*/
-
+				//シフト中は移動させず、向きだけ変えて目的地を破棄する
 				this.setMoveTargetFromScreen(e.clientX, e.clientY);
+				const move = this.getMovement();
+				this.moveTarget = null;
+
+				[this.direction, this.flip] = this.getDirection(move);
+				this.currentFrame = 0;	//コマがズレて一瞬消えるのを防ぐ
+				socket.sendState(this.position.x, this.position.y, this.state, this.direction, this.flip);
 			}
 			else
 				this.setMoveTargetFromScreen(e.clientX, e.clientY);
@@ -292,10 +284,9 @@ export class Player
 		const move = { x: 0, y: 0 };
 		const key = input.keysPress;
 
-		//座り状態のときは、目的地やキー入力に関係なくその場から動かさない
-		if (this.isSitting)
+		//座り状態のときは、目的地やキー入力に関係なくその場から動かさない、
+		if (this.isSitting && !key.shift)
 		{
-			//this.moveTarget = null;
 			move.x = 0;
 			move.y = 0;
 		}
@@ -375,6 +366,41 @@ export class Player
 		return [d, f];
 	}
 
+	//移動処理
+	updatePosition(move, delta)
+	{
+		if (move.x !== 0 || move.y !== 0)
+		{
+			const move_speed = this.isRunning ? MOVE_SPEED_RUN : MOVE_SPEED_WALK;
+
+			//マウス移動
+			if (this.moveTarget)
+			{
+				//マウス移動中は、x/yを別々に加速するのではなく「進む向き」に応じた1つの速度を、x・yどちらにも同じ倍率でかける
+				// move.xが1に近い＝横方向に近いほど、速度がMOVE_SPEED_X_RATIO倍に近づく
+				// こうすることで実際に進む向きが必ずmove.x, move.yと一致し、目的地付近で急に向きが変わらなくなる
+				const speed = move_speed * (1 + Math.abs(move.x) * (MOVE_SPEED_X_RATIO - 1));
+
+				this.position.x += move.x * speed * delta;
+				this.position.y += move.y * speed * delta;
+			}
+			// キーボード・バーチャル十字キー
+			else
+			{
+				// 横方向にだけ比率を掛ける
+				this.position.x += move.x * move_speed * MOVE_SPEED_X_RATIO * delta;
+				this.position.y += move.y * move_speed * delta;
+			}
+
+			// 画面(canvas)の外ではなく、マップ全体(MAP_WIDTH/MAP_HEIGHT)の外に出ないよう制限する
+			this.position.x = Math.max(0, Math.min(MAP_WIDTH - SPRITE_WIDTH, this.position.x));
+			this.position.y = Math.max(0, Math.min(MAP_HEIGHT - SPRITE_HEIGHT, this.position.y));
+
+			return true;
+		}
+		return false;
+	}
+
 	//キャラ(状態、方向、反転)の設定
 	updateState(move)
 	{
@@ -425,45 +451,12 @@ export class Player
 		//状態を更新して送信(自分自身の場合)
 		if (this.id === socket.myPlayerId)
 		{
-			//キーボード
-			const key = input.keysPress;
-			let position_changed = false;
-
 			//移動量の計算
 			const move = this.getMovement();
 			//addLog("info", "move x:" + move.x + " y:" + move.y);
 
 			//移動処理
-			if (input.)
-				if (move.x !== 0 || move.y !== 0)
-				{
-					const move_speed = this.isRunning ? MOVE_SPEED_RUN : MOVE_SPEED_WALK;
-
-					position_changed = true;
-
-					//マウス移動
-					if (this.moveTarget)
-					{
-						//マウス移動中は、x/yを別々に加速するのではなく「進む向き」に応じた1つの速度を、x・yどちらにも同じ倍率でかける
-						// move.xが1に近い＝横方向に近いほど、速度がMOVE_SPEED_X_RATIO倍に近づく
-						// こうすることで実際に進む向きが必ずmove.x, move.yと一致し、目的地付近で急に向きが変わらなくなる
-						const speed = move_speed * (1 + Math.abs(move.x) * (MOVE_SPEED_X_RATIO - 1));
-
-						this.position.x += move.x * speed * delta;
-						this.position.y += move.y * speed * delta;
-					}
-					// キーボード・バーチャル十字キー
-					else
-					{
-						// 横方向にだけ比率を掛ける
-						this.position.x += move.x * move_speed * MOVE_SPEED_X_RATIO * delta;
-						this.position.y += move.y * move_speed * delta;
-					}
-
-					// 画面(canvas)の外ではなく、マップ全体(MAP_WIDTH/MAP_HEIGHT)の外に出ないよう制限する
-					this.position.x = Math.max(0, Math.min(MAP_WIDTH - SPRITE_WIDTH, this.position.x));
-					this.position.y = Math.max(0, Math.min(MAP_HEIGHT - SPRITE_HEIGHT, this.position.y));
-				}
+			let position_changed = this.updatePosition(move, delta);
 
 			//状態変化
 			const state_changed = this.updateState(move);
