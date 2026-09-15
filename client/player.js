@@ -19,7 +19,8 @@ export const ASSETSDIR = '/assets/player';	//キャラ画のディレクトリ
 export const CHARACTERS = ['maximin', 'tichiel'];
 export const DIRECTIONS = ['forward', 'forside', 'side', 'backside', 'backward'];
 export const STATES = ["idle", "run", "sit", "walk"];
-export const MOVE_SPEED = 150; 						// 1秒あたりの移動ピクセル数
+export const MOVE_SPEED_RUN = 150; 					// 1秒あたりの移動ピクセル数
+export const MOVE_SPEED_WALK = 90;					// 1秒あたりの移動ピクセル数
 export const MOVE_SPEED_X_RATIO = 1.66;				//横方向の体感速度を補正するための倍率、横長なほど横移動が遅く感じる
 export const MOVE_TARGET_THRESHOLD = 4;				// 目的地にどれだけ近づいたら「到着」とみなすか（px）
 export const FRAME_DURATION = 0.07;					// アニメーションの更新間隔（秒単位：例 0.1秒ごとに1コマ進める）
@@ -284,6 +285,8 @@ export class Player
 		let changed = false;
 		if (move.x !== 0 || move.y !== 0)
 		{
+			const move_speed = this.isRunning ? MOVE_SPEED_RUN : MOVE_SPEED_WALK;
+
 			if (this.moveTarget)
 			{
 				//マウス移動中は、x/yを別々に加速するのではなく
@@ -291,7 +294,7 @@ export class Player
 				// （move.xが1に近い＝横方向に近いほど、速度がMOVE_SPEED_X_RATIO倍に近づく）
 				// こうすることで実際に進む向きが必ずmove.x, move.yと一致し、
 				// 目的地付近で急に向きが変わらなくなる
-				const speed = MOVE_SPEED * (1 + Math.abs(move.x) * (MOVE_SPEED_X_RATIO - 1));
+				const speed = move_speed * (1 + Math.abs(move.x) * (MOVE_SPEED_X_RATIO - 1));
 
 				this.position.x += move.x * speed * delta;
 				this.position.y += move.y * speed * delta;
@@ -299,8 +302,8 @@ export class Player
 			else
 			{
 				// キーボード・バーチャル十字キーの場合は、これまで通り横方向にだけ比率を掛ける
-				this.position.x += move.x * MOVE_SPEED * MOVE_SPEED_X_RATIO * delta;
-				this.position.y += move.y * MOVE_SPEED * delta;
+				this.position.x += move.x * move_speed * MOVE_SPEED_X_RATIO * delta;
+				this.position.y += move.y * move_speed * delta;
 			}
 
 			// 画面(canvas)の外ではなく、マップ全体(MAP_WIDTH/MAP_HEIGHT)の外に出ないよう制限する
