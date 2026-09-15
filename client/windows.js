@@ -30,6 +30,7 @@ export const leftStatusBtns = document.getElementsByClassName("leftStatusBtn");
 export const leftStatus = document.getElementById("leftStatus");
 export const leftStatusTab = document.getElementById("leftStatusTab");
 export const leftOpen = document.getElementById("leftOpen");
+export const leftAfkBtn = document.getElementById("leftAfkBtn");
 
 //右メニュー
 export const rightMenuButtons = document.getElementById("rightMenuButtons");
@@ -474,66 +475,6 @@ export function init()
 }
 
 
-
-
-
-// 画面リサイズへの対応
-window.addEventListener('resize', () =>
-{
-	//キャンバスリフレッシュ
-	repaint();
-
-	//はみ出し抑制
-	//for (const win of windows.windows) { win.insideScreen(); }
-	//windows.windows.forEach(win => { win.insideScreen(); });
-});
-
-// ページ読み込み時
-window.addEventListener('load', () =>
-{
-	// ページの準備が完全に整ってからフォーカスを当てる
-	//engine.canvas.focus();
-
-	//(いまいち) ページ全体のスクロールを左上(0,0)にリセットする
-	//window.scrollTo(0, 0);
-
-	//入力DOMのクリック時の自動スクロールを止めてフォーカスする
-	for (let el of [chatWhisperInput, chatInput])
-		el.addEventListener("mousedown", (e) => (e.preventDefault(), el.focus({ preventScroll: true })));
-});
-
-// タブが切り替わったり別ウィンドウに移った
-window.addEventListener('blur', () =>
-{
-});
-
-//メニューが表示されたとき
-document.addEventListener('contextmenu', (e) =>
-{
-	//addLog("warning", "contextmenu");
-	//ブラウザの標準右クリックメニューが出ないようにする
-	e.preventDefault();
-});
-
-
-
-export function mousemove(e)
-{
-	//if (activeWindow)
-	//	activeWindow.handleMouseMove(e);
-	//全ウィンドウクラスの移動・リサイズ
-	//windows.forEach(win => win.handleMouseMove(e));
-}
-
-export function mouseup(e)
-{
-	//if (activeWindow)
-	//	activeWindow.handleMouseUp(e);
-
-	//全ウィンドウクラスの移動・リサイズ
-	//windows.forEach(win => win.handleMouseUp(e));
-}
-
 //リサイズイベントを待つ
 // 画面のリサイズイベント完了を待つ非同期ヘルパー関数
 export function waitForResize(timeout = 100)
@@ -590,5 +531,61 @@ export function repaint()
 
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
+}
+
+
+
+
+// 画面リサイズへの対応
+window.addEventListener('resize', () =>
+{
+	//キャンバスリフレッシュ
+	repaint();
+});
+
+// ページ読み込み時
+window.addEventListener('load', () =>
+{
+	// ページの準備が完全に整ってからフォーカスを当てる
+	//engine.canvas.focus();
+
+	//(いまいち) ページ全体のスクロールを左上(0,0)にリセットする
+	//window.scrollTo(0, 0);
+
+	//入力DOMのクリック時の自動スクロールを止めてフォーカスする
+	for (let el of [chatWhisperInput, chatInput])
+		el.addEventListener("mousedown", (e) => (e.preventDefault(), el.focus({ preventScroll: true })));
+});
+
+// タブが切り替わったり別ウィンドウに移った
+window.addEventListener('blur', () =>
+{
+});
+
+//メニューが表示されたとき
+document.addEventListener('contextmenu', (e) =>
+{
+	//addLog("warning", "contextmenu");
+	//ブラウザの標準右クリックメニューが出ないようにする
+	e.preventDefault();
+});
+
+
+
+export function mousemove(e)
+{
+	//if (activeWindow)
+	//	activeWindow.handleMouseMove(e);
+	//全ウィンドウクラスの移動・リサイズ
+	//windows.forEach(win => win.handleMouseMove(e));
+}
+
+export function mouseup(e)
+{
+	//if (activeWindow)
+	//	activeWindow.handleMouseUp(e);
+
+	//全ウィンドウクラスの移動・リサイズ
+	//windows.forEach(win => win.handleMouseUp(e));
 }
 

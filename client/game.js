@@ -33,6 +33,8 @@ async function init()
 	socket.init(); engine.updateProgress("<通信初期化>");
 	//scroll.init(); updateProgress();
 	await world.init(); engine.updateProgress("<ワールド初期化>");
+
+
 	//const id = await sub.wait({ obj: socket, propName: "myPlayerId" });
 	//print("info", id);
 	//Player.onJoinで
@@ -46,6 +48,15 @@ async function init()
 
 
 ///////チャットボタンイベント//////////
+
+//はみ出し抑制
+leftAfkBtn.addEventListener('click', (e) =>
+{
+	//はみ出し抑制
+	//for (const win of windows.windows) { win.insideScreen(); }
+	windows.windows.forEach(win => { win.insideScreen(); });
+});
+
 
 //チャット範囲選択
 chatOpen.addEventListener('click', (e) =>
