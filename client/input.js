@@ -175,6 +175,7 @@ class myTouch
 		this.powerX = null;
 		this.powerY = null;
 		this.maxMove = null;
+		this.hold = null;
 	}
 	init(touch)
 	{
@@ -292,7 +293,7 @@ export let pinchLastDist = null;// 直前に計測した2本指の距離（次�
 //デバッグ用
 function touchDebugLog(message, e = null)
 {
-	return;
+	//return;
 
 	if (!e)
 	{
@@ -386,7 +387,7 @@ canvas.addEventListener('touchend', (e) =>
 	{
 		touchDebugLog("touchend ダブルタップを検知しました");
 		lastTapTime = now;// 今回のタップ時刻を、次回判定用に覚えておく
-		game.dblTap(touch1.startX, touch1.startY);
+		game.dblTap(touch1);
 		clearTouch();
 
 		//一定時間以内の2回目のタップなら、ブラウザの拡大処理をキャンセルする
@@ -405,15 +406,20 @@ canvas.addEventListener('touchend', (e) =>
 	// タップ
 	else if (touch1.isEnabled())
 	{
+		//ホールドしたタッチ
+		if (touch1.hold)
+		{
+			touchDebugLog("touchend ホールド終了を終了します", e);
+			lastTapTime = now;// 今回のタップ時刻を、次回判定用に覚えておく
+		}
 		// あまり動かさず、素早く離した場合だけ「タップ」として成立させる
-		if (touch1.dist(e) <= TAP_MOVE_THRESHOLD && touch1.duration(now) <= TAP_TIME_THRESHOLD)
+		else if (touch1.dist(e) <= TAP_MOVE_THRESHOLD && touch1.duration(now) <= TAP_TIME_THRESHOLD)
 		{
 			touchDebugLog("touchend タップ成功", e);
 			lastTapTime = now;// 今回のタップ時刻を、次回判定用に覚えておく
-			game.oneTap(touch1.startX, touch1.startY);
+			game.oneTap(touch1);
 		}
 		clearTouch();
-
 	}
 	else
 		touchDebugLog("touchend タップ候補見つかりませんでした");
@@ -435,10 +441,6 @@ canvas.addEventListener('touchmove', (e) =>
 		if (dist !== null && pinchLastDist !== null && pinchLastDist > 0)
 		{
 			// 前回との距離の比率をそのままズーム倍率として積算する、（指が離れていく→比率が1より大きい→拡大、指が近づく→1より小さい→縮小）
-			//inputZoom.scale *= dist / pinchLastDist;
-			//world.camera.zoom *= input.inputZoom.scale;
-
-			// ピンチズームの結果をカメラの拡大率に反映する（プレイヤーは常に画面中心にいるので、これだけで自動的に中心起点のズームになる）
 			game.pinch(dist / pinchLastDist);
 		}
 
@@ -456,11 +458,13 @@ canvas.addEventListener('touchmove', (e) =>
 		touch1.maxMove = Math.max(touch1.maxMove, touch1.dist(touch));
 
 		//長押し判定
-		if (touch1.maxMove <= PRESS_MOVE_THRESHOLD && touch1.duration(Date.now()) > PRESS_TIME_THRESHOLD)
+		if (!touch1.hold && touch1.maxMove <= PRESS_MOVE_THRESHOLD && touch1.duration(Date.now()) > PRESS_TIME_THRESHOLD)
 		{
 			touchDebugLog("指が長押しされました");
-			game.holdTouch(touch.startX, touch.startY);
-			clearTouch();
+			touch1.hold = true;
+			game.holdTouch(touch1);
+
+			//clearTouch();
 		}
 		//十字キー操作　開始の指が画面左半分の指だけを「十字キー操作」として扱う
 		else if (touch1.startLeft)
@@ -470,7 +474,7 @@ canvas.addEventListener('touchmove', (e) =>
 
 			touch1.powerX = pow.x;
 			touch1.powerY = pow.y;
-			game.crossTouch(pow.x, pow.y);
+			game.crossTouch(touch1);
 		}
 		// タップ候補の指が動きすぎたら、タップ扱いをやめる（スワイプ等に譲る）
 		else if (touch1.maxMove > TAP_MOVE_THRESHOLD)

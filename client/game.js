@@ -55,7 +55,15 @@ leftFootBtn.addEventListener('click', (e) =>
 	if (player) player.isRunning = !player.isRunning;
 });
 
-//afkはみ出し抑制
+//afk=座り
+leftAfkBtn.addEventListener('click', (e) =>
+{
+	player.moveTarget = null;
+	if (player) player.isSitting = !player.isSitting;
+});
+
+
+//はみ出し抑制
 leftEnvironmentTab.addEventListener('click', (e) =>
 {
 	//はみ出し抑制
@@ -103,28 +111,40 @@ chatFixedText.addEventListener('click', (e) =>
 ///////入力イベント//////////
 
 //タップ
-export function oneTap(x, y)
+export function oneTap(touch)
 {
 	if (player)
-		player.oneTap(x, y);
+		player.oneTap(touch.startX, touch.startY);
 }
 //ダブルタップ
-export function dblTap(x, y)
+export function dblTap(touch)
 {
 	if (player)
-		player.dblTap(x, y);
+		player.dblTap(touch.startX, touch.startY);
 }
 //長押しタッチ
-export function holdTouch(x, y)
+export function holdTouch(touch)
 {
 	if (player)
-		player.holdTouch(x, y);
+		player.holdTouch(touch.startX, touch.startY);
+
+	//input.keysPress.shift = true;
+	//addLog("info", "hold");
+}
+//長押しタッチ
+export function endHold(touch)
+{
+	if (player)
+		player.holdTouch(touch.startX, touch.startY);
+
+	//input.keysPress.shift = true;
+	//addLog("info", "hold");
 }
 //十字キー
-export function crossTouch(powX, powY)
+export function crossTouch(touch)
 {
 	if (player)
-		player.crossTouch(powX, powY);
+		player.crossTouch(touch.powerX, touch.powerY);
 }
 //2本指ピンチ
 export function pinch(dist)
