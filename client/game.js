@@ -245,22 +245,20 @@ export function mousewheel(e)
 //画面更新
 function update(delta)
 {
-	if (!player)
+	if (!player || !world)
 		return;
 
 
-	// 1. フレームの最初にキャンバス全体をクリア
+	// フレームの最初にキャンバス全体をクリア
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 	// カメラ計算のため、プレイヤーの中心座標を渡す
 	const center = player.getCenterPosition();
 
 	// プレイヤー位置に合わせてカメラを更新
-	world.updateCamera(center.x, center.y);
-
 	// カメラ変形（ズーム・平行移動）を開始する
 	// これ以降、マップやプレイヤーの描画はズームを意識せずワールド座標のまま書ける
-	world.beginCameraTransform();
+	world.beginCameraTransform(center.x, center.y);
 
 	//マップ描画
 	world.update(delta);

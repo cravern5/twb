@@ -257,13 +257,7 @@ export class Player
 	//画面座標→ワールド座標に変換して移動先をセットする（マウスクリック・タップの共通処理）
 	setMoveTargetFromScreen(clientX, clientY)
 	{
-		// 画面座標 = (ワールド座標 - camera.x) * zoom の逆算
-		//const worldX = clientX / world.camera.zoom + world.camera.x;
-		//const worldY = clientY / world.camera.zoom + world.camera.y;
-
-		//this.moveTarget = { x: worldX, y: worldY };
-
-		// キャンバスの位置とズームを考慮した変換は、world.js側の関数にまとめてある
+		// キャンバスの位置とズームを考慮した変換
 		this.moveTarget = world.screenToWorld(clientX, clientY);
 	}
 

@@ -1,3 +1,5 @@
+import { print, addLog } from '../shared/sub.js';
+
 import * as utils2 from './utils2.js';
 import { canvas, ctx } from './engine.js';
 //import * as input from './input.js';
@@ -18,8 +20,10 @@ export async function init()
 	img = await utils2.loadImage(path);
 }
 
-// プレイヤーの中心座標をもとに、カメラの位置を計算する関数
-export function updateCamera(targetX, targetY)
+// 中心座標をもとに、カメラの位置を計算
+// カメラ変形（ズーム・平行移動）を開始する。呼び出し後は、マップやプレイヤーの描画で
+// カメラやズームを意識せず、そのままワールド座標を使って描画できるようになる
+export function beginCameraTransform(targetX, targetY)
 {
 	// zoomを考慮した「実際に画面に映る範囲」の幅と高さ zoomが大きいほど範囲が狭くなる＝拡大して見える
 	const viewWidth = canvas.width / camera.zoom;
@@ -32,12 +36,7 @@ export function updateCamera(targetX, targetY)
 	// マップの端でカメラが止まるように、値の範囲を制限する（端の外側が映らないように）
 	camera.x = Math.max(0, Math.min(MAP_WIDTH - viewWidth, camera.x));
 	camera.y = Math.max(0, Math.min(MAP_HEIGHT - viewHeight, camera.y));
-}
 
-// カメラ変形（ズーム・平行移動）を開始する。呼び出し後は、マップやプレイヤーの描画で
-// カメラやズームを意識せず、そのままワールド座標を使って描画できるようになる
-export function beginCameraTransform()
-{
 	ctx.save();                          // 変形前の状態を退避しておく（あとで必ずrestoreで戻す）
 	ctx.scale(camera.zoom, camera.zoom); // これ以降の描画すべてに、ズーム倍率がかかるようにする
 	ctx.translate(-camera.x, -camera.y); // カメラの位置ぶん、描画位置をずらす
