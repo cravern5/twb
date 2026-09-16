@@ -442,7 +442,7 @@ canvas.addEventListener('touchmove', (e) =>
 		if (dist !== null && pinchLastDist !== null && pinchLastDist > 0)
 		{
 			// 前回との距離の比率をそのままズーム倍率として積算する、（指が離れていく→比率が1より大きい→拡大、指が近づく→1より小さい→縮小）
-			game.pinch(dist / pinchLastDist);
+			game.pinchTouch(dist / pinchLastDist);
 		}
 
 		pinchLastDist = dist;

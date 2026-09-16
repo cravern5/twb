@@ -147,7 +147,7 @@ export function crossTouch(touch)
 		player.crossTouch(touch.powerX, touch.powerY);
 }
 //2本指ピンチ
-export function pinch(dist)
+export function pinchTouch(dist)
 {
 	if (!world)
 		return;
