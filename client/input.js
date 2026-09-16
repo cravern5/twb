@@ -146,7 +146,7 @@ export const TAP_MOVE_THRESHOLD = 10;  // これ以上動いたらタップ扱�
 export const TAP_TIME_THRESHOLD = 150; // これより長く押し続けたらタップ扱いしない（ms）
 
 //長押し
-export const PRESS_MOVE_THRESHOLD = 5;  // これ以上動いたら長押し扱いしない（px）
+export const PRESS_MOVE_THRESHOLD = 7;  // これ以上動いたら長押し扱いしない（px）
 export const PRESS_TIME_THRESHOLD = 400; // 長押しとみなす時間（ms）
 
 //ダブルタップ判定/自動ズームの無効化(game.cssで対策する) https://zenn.dev/kiki_her/articles/0f3e86ba83df08

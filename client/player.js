@@ -149,44 +149,6 @@ export class Player
 		return this;
 	}
 
-	//足元座標
-	getFootPosition(screenX, screenY)
-	{
-		return { x: screenX + (SPRITE_WIDTH / 2), y: screenY + (SPRITE_HEIGHT - 14.5) };
-		//return { x: screenX + SPRITE_WIDTH / 2 + 0, y: screenY + SPRITE_HEIGHT - 14.5 };
-	}
-
-	//中央の座標取得
-	getCenterPosition()
-	{
-		const x = this.position.x + SPRITE_WIDTH / 2;
-		const y = this.position.y + SPRITE_HEIGHT / 2;
-		return { x: x, y: y };
-	}
-
-	//ワールド座標(position)からカメラ位置を引いて「画面上の描画位置」を求める、プレイヤーが動いてもカメラが追従して常に画面中央に見える
-	getWorldPosition()
-	{
-		const screenX = (this.position.x - camera.x);
-		const screenY = (this.position.y - camera.y);
-
-		return { x: screenX, y: screenY };
-	}
-
-	//現在の状態のアセットを取得
-	getStateAsset()
-	{
-		const stateKey = this.character + "_" + this.state + "_" + this.direction;
-		const asset = this.assets[stateKey];
-		if (!asset)
-		{
-			print("error", "指定されたステートイメージはありません(" + this.stateKey + ")")
-			return null;
-		}
-
-		return asset;
-	}
-
 	//タップ
 	oneTap(x, y)
 	{
@@ -268,6 +230,30 @@ export class Player
 		return false;
 	}
 
+	//足元座標
+	getFootPosition(screenX, screenY)
+	{
+		return { x: screenX + (SPRITE_WIDTH / 2), y: screenY + (SPRITE_HEIGHT - 14.5) };
+		//return { x: screenX + SPRITE_WIDTH / 2 + 0, y: screenY + SPRITE_HEIGHT - 14.5 };
+	}
+
+	//中央の座標取得
+	getCenterPosition()
+	{
+		const x = this.position.x + SPRITE_WIDTH / 2;
+		const y = this.position.y + SPRITE_HEIGHT / 2;
+		return { x: x, y: y };
+	}
+
+	//ワールド座標(position)からカメラ位置を引いて「画面上の描画位置」を求める、プレイヤーが動いてもカメラが追従して常に画面中央に見える
+	getWorldPosition()
+	{
+		const screenX = (this.position.x - camera.x);
+		const screenY = (this.position.y - camera.y);
+
+		return { x: screenX, y: screenY };
+	}
+
 	//画面座標→ワールド座標に変換して移動先をセットする（マウスクリック・タップの共通処理）
 	setMoveTargetFromScreen(clientX, clientY)
 	{
@@ -276,6 +262,20 @@ export class Player
 		const worldY = clientY / world.camera.zoom + world.camera.y;
 
 		this.moveTarget = { x: worldX, y: worldY };
+	}
+
+	//現在の状態のアセットを取得
+	getStateAsset()
+	{
+		const stateKey = this.character + "_" + this.state + "_" + this.direction;
+		const asset = this.assets[stateKey];
+		if (!asset)
+		{
+			print("error", "指定されたステートイメージはありません(" + this.stateKey + ")")
+			return null;
+		}
+
+		return asset;
 	}
 
 	//キーの移動量取得
@@ -307,10 +307,11 @@ export class Player
 			}
 		}
 		// 十字キー（スマホ）の入力があれば、それを使う
-		else if (input.touch1.isEnabled())
+		else if (input.touch1.isEnabled() && input.touch1.powerX && input.touch1.powerY)
 		{
 			move.x = input.touch1.powerX;
 			move.y = input.touch1.powerY;
+			//addLog("info", move.x + "," + move.y);
 		}
 		// マウスの目的地に向かって移動する
 		else if (this.moveTarget)
@@ -369,7 +370,7 @@ export class Player
 	//移動処理
 	updatePosition(move, delta)
 	{
-		if (move.x !== 0 || move.y !== 0)
+		if ((move.x !== 0 || move.y !== 0) && !input.keysPress.shift)
 		{
 			const move_speed = this.isRunning ? MOVE_SPEED_RUN : MOVE_SPEED_WALK;
 
