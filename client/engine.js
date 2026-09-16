@@ -1,9 +1,9 @@
 import { print, addLog } from '../shared/sub.js';
 import * as sub from '../shared/sub.js';
 
+export let useTouch;
 export let canvas = document.getElementById("gameCanvas");
 export let ctx = canvas.getContext("2d");
-export let useTouch;
 
 export function init()
 {
@@ -67,5 +67,76 @@ export function autoPageReloader()
 	eventSource.onerror = function ()
 	{
 		eventSource.close();
+	};
+}
+
+
+// カメラ（視点）関連 ==========================
+
+// zoom: 1が等倍。2なら「画面の半分の範囲」を切り出して拡大表示＝2倍ズームになる
+// カメラが動ける範囲（＝現在のマップサイズ）。マップ側からsetCameraBoundsで教えてもらう
+export const camera = { x: 0, y: 0, zoom: 1, width: 0, height: 0 };
+
+// マップを読み込んだとき（マップ切り替え時も）に、カメラが動ける範囲を設定する
+export function setCameraBounds(width, height)
+{
+	camera.width = width;
+	camera.height = height;
+}
+
+
+// 中心座標をもとに、カメラの位置を計算
+// 中心座標をもとにカメラ位置を計算し、カメラ変形（ズーム・平行移動）を開始する
+// 呼び出し後は、マップやプレイヤーの描画でカメラやズームを意識せず、そのままワールド座標を使って描画できる
+export function beginCameraTransform(targetX, targetY)
+{
+	// zoomを考慮した「実際に画面に映る範囲」の幅と高さ zoomが大きいほど範囲が狭くなる＝拡大して見える
+	const viewWidth = canvas.width / camera.zoom;
+	const viewHeight = canvas.height / camera.zoom;
+
+	// プレイヤーが常に画面の中心に来るように、カメラの左上座標を逆算する
+	camera.x = targetX - viewWidth / 2;
+	camera.y = targetY - viewHeight / 2;
+
+	// マップの端でカメラが止まるように、値の範囲を制限する（端の外側が映らないように）
+	camera.x = Math.max(0, Math.min(camera.width - viewWidth, camera.x));
+	camera.y = Math.max(0, Math.min(camera.height - viewHeight, camera.y));
+
+	ctx.save();                          // 変形前の状態を退避しておく（あとで必ずrestoreで戻す）
+	ctx.scale(camera.zoom, camera.zoom); // これ以降の描画すべてに、ズーム倍率がかかるようにする
+	ctx.translate(-camera.x, -camera.y); // カメラの位置ぶん、描画位置をずらす
+}
+
+// カメラ変形を終了し、変形前の状態に戻す（beginCameraTransformと必ずセットで呼ぶこと）
+export function endCameraTransform()
+{
+	ctx.restore();
+}
+
+// スクリーン座標（ページ基準のe.clientX/clientY）をワールド座標に変換する
+// マウスクリック位置から「地図上のどこがクリックされたか」を求めるときに使う
+export function screenToWorld(clientX, clientY)
+{
+	// キャンバスがページ内のどこに表示されているかを取得する
+	const rect = canvas.getBoundingClientRect();
+
+	// client座標から、キャンバス内のローカル座標（キャンバス左上を(0,0)とする座標）に直す
+	const localX = clientX - rect.left;
+	const localY = clientY - rect.top;
+
+	// ローカル座標をズーム倍率で割り戻し、カメラ位置を足してワールド座標にする
+	return {
+		x: localX / camera.zoom + camera.x,
+		y: localY / camera.zoom + camera.y
+	};
+}
+
+// ワールド座標を、実際のキャンバス上のピクセル座標に変換する（ズームを計算済みの値）
+// カメラ変形をかけずに描きたいUI要素（ズームしても大きさを変えたくないもの）で使う
+export function worldToScreen(worldX, worldY)
+{
+	return {
+		x: (worldX - camera.x) * camera.zoom,
+		y: (worldY - camera.y) * camera.zoom
 	};
 }

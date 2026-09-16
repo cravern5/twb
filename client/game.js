@@ -151,10 +151,9 @@ export function pinch(dist)
 {
 	if (!world)
 		return;
-	world.camera.zoom *= dist;
-	world.camera.zoom = Math.min(Math.max(world.camera.zoom, 0.5), 3); // 拡大率の上限・下限を制限（お好みで調整）
+	engine.camera.zoom *= dist;
+	engine.camera.zoom = Math.min(Math.max(engine.camera.zoom, 0.5), 3); // 拡大率の上限・下限を制限（お好みで調整）
 }
-
 
 //キーが押されたとき
 export function keydown(e)
@@ -258,7 +257,7 @@ function update(delta)
 	// プレイヤー位置に合わせてカメラを更新
 	// カメラ変形（ズーム・平行移動）を開始する
 	// これ以降、マップやプレイヤーの描画はズームを意識せずワールド座標のまま書ける
-	world.beginCameraTransform(center.x, center.y);
+	engine.beginCameraTransform(center.x, center.y);
 
 	//マップ描画
 	world.update(delta);
@@ -267,7 +266,7 @@ function update(delta)
 	Player.updateAll(delta);
 
 	// カメラ変形を元に戻す（beginCameraTransformと必ずセットで呼ぶ）
-	world.endCameraTransform();
+	engine.endCameraTransform();
 
 	firstUpdate = true;
 }
@@ -321,8 +320,8 @@ function showModelDebugInfo()
 		+ "\n Log:" + chatLog.children.length
 		+ "\n useTouch:" + engine.useTouch
 		+ "\n[World]"
-		+ "\n camera.x:" + world.camera.x.toFixed(1) + " camera.y:" + world.camera.y.toFixed(1)
-		+ "\n camera.zoom:" + world.camera.zoom.toFixed(3)
+		+ "\n camera.x:" + engine.camera.x.toFixed(1) + " camera.y:" + engine.camera.y.toFixed(1)
+		+ "\n camera.zoom:" + engine.camera.zoom.toFixed(3)
 		+ "\n[Player]"
 		+ "\n ID:" + socket.myPlayerId
 		+ "\n position.x:" + player.position.x.toFixed(1) + " position.y:" + player.position.y.toFixed(1)

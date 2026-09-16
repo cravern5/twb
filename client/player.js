@@ -258,7 +258,7 @@ export class Player
 	setMoveTargetFromScreen(clientX, clientY)
 	{
 		// キャンバスの位置とズームを考慮した変換
-		this.moveTarget = world.screenToWorld(clientX, clientY);
+		this.moveTarget = engine.screenToWorld(clientX, clientY);
 	}
 
 	//現在の状態のアセットを取得
@@ -531,7 +531,7 @@ export class Player
 		//画像を滑らかに拡大するかどうか css image-rendering: pixelatedと併用可能
 		ctx.imageSmoothingEnabled = false;
 
-		// world.beginCameraTransform()で既にズーム・カメラ移動の変形がかかっているので、
+		// engine.beginCameraTransform()で既にズーム・カメラ移動の変形がかかっているので、
 		// this.position（ワールド座標）をそのまま使って描画できる
 		const foot = this.getFootPosition(this.position.x, this.position.y);
 
@@ -702,7 +702,7 @@ export class Player
 			ctx.save();							// 今の変形（カメラ変形）を退避しておく
 			ctx.setTransform(1, 0, 0, 1, 0, 0);	// 変形を一旦まっさらな状態に戻す
 
-			const screen = world.worldToScreen(worldX, worldY);
+			const screen = engine.worldToScreen(worldX, worldY);
 			x = screen.x;
 			y = screen.y;
 		}
