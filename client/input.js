@@ -1,8 +1,8 @@
 import { print, addLog } from '../shared/sub.js';
 import { canvas } from './engine.js';
 //import * as world from './world.js';
-import { player } from './player.js';
-import * as engine from './engine.js';
+//import { player } from './player.js';
+//import * as engine from './engine.js';
 import * as game from './game.js';
 
 //キーボード==============================================================
@@ -83,11 +83,11 @@ document.addEventListener('mousedown', (e) =>
 	mouseInfo.clientX = e.clientX;
 	mouseInfo.clientY = e.clientY;
 
-	if (!engine.useTouch)
-	{
-		if (player)
-			player.mousedown(e);
-	}
+	//if (!engine.useTouch)
+	//{
+	//	if (player)
+	//			player.mousedown(e);
+	//}
 
 	game.mousedown(e);
 });
@@ -458,22 +458,8 @@ canvas.addEventListener('touchmove', (e) =>
 		//移動した最大距離を保持
 		touch1.maxMove = Math.max(touch1.maxMove, touch1.dist(touch));
 
-		//長押し中は他の判定を一切行わない（十字キー操作やタップ中断に流れ込まないようにする）
-		if (touch1.hold)
-		{
-			//指を離すまで何もしない（HoldEndはtouchendで呼ばれる）
-		}
-		//長押し判定
-		else if (touch1.maxMove <= PRESS_MOVE_THRESHOLD && touch1.duration(Date.now()) > PRESS_TIME_THRESHOLD)
-		{
-			touchDebugLog("指が長押しされました");
-			touch1.hold = true;
-			game.holdTouch(touch1);
-
-			//clearTouch();
-		}
 		//十字キー操作　開始の指が画面左半分の指だけを「十字キー操作」として扱う
-		else if (touch1.startLeft)
+		if (touch1.startLeft)
 		{
 			// 指を置いた場所からの移動量の-1~1を取得
 			const pow = touch1.power(touch, VIRTUAL_MOVE_RADIUS);
@@ -487,6 +473,21 @@ canvas.addEventListener('touchmove', (e) =>
 		{
 			touchDebugLog("指が動いたのでタップ中断");
 			touch1.clear();
+		}
+
+		//長押し中は他の判定を一切行わない（十字キー操作やタップ中断に流れ込まないようにする）
+		if (touch1.hold)
+		{
+			//指を離すまで何もしない（HoldEndはtouchendで呼ばれる）
+		}
+		//長押し判定
+		else if (touch1.maxMove <= PRESS_MOVE_THRESHOLD && touch1.duration(Date.now()) > PRESS_TIME_THRESHOLD)
+		{
+			touchDebugLog("指が長押しされました");
+			touch1.hold = true;
+			game.holdTouch(touch1);
+
+			//clearTouch();
 		}
 	}
 

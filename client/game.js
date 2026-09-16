@@ -114,37 +114,39 @@ chatFixedText.addEventListener('click', (e) =>
 export function oneTap(touch)
 {
 	if (player)
-		player.oneTap(touch.startX, touch.startY);
+		player.setMoveTargetFromScreen(touch.startX, touch.startY);
 }
 //ダブルタップ
 export function dblTap(touch)
 {
 	if (player)
-		player.dblTap(touch.startX, touch.startY);
+		player.setMoveTargetFromScreen(touch.startX, touch.startY);
 }
 //長押しタッチ
 export function holdTouch(touch)
 {
-	//if (player)
-	//	player.holdTouch(touch.startX, touch.startY);
+	//ホールド=shiftキーを押したことにする
+	input.keysPress.shift = true;
+	if (player)
+		player.moveTarget = null;
 
-	//input.keysPress.shift = true;
 	//addLog("info", "hold");
 }
 //長押しタッチ
 export function HoldEnd(touch)
 {
+	input.keysPress.shift = false;
 	//if (player)
 	//	player.holdTouch(touch.startX, touch.startY);
 
-	//input.keysPress.shift = true;
-	//addLog("info", "hold");
+
+	//addLog("info", "holdEnd");
 }
 //十字キー
 export function crossTouch(touch)
 {
 	if (player)
-		player.crossTouch(touch.powerX, touch.powerY);
+		player.moveTarget = null;
 }
 //2本指ピンチ
 export function pinchTouch(dist)
@@ -162,19 +164,46 @@ export function keydown(e)
 		return;
 
 	const key = e.key.toLowerCase();
-	if (player.keydown(e))//イベントが起きたらtrue
+
+	if (key === 'enter')
+		return this.SendChat(e);
+	//チャットバーにフォーカスがある状態
+	else if (document.activeElement === chatInput)
 	{
+		return true;
 	}
-	else if (key === "c")//チャット表示切替
+	//走り
+	else if (key === "r")
+	{
+		player.isRunning = !player.isRunning;
+		return true;
+	}
+	//座り
+	else if (key === "insert")
+	{
+		// マウス操作は無視
+		player.moveTarget = null;
+		player.isSitting = !player.isSitting;
+		return true;
+	}
+	//移動キー
+	else if (key === "w" || key === "a" || key === "s" || key === "d")
+	{
+		// キー操作を優先する（マウスクリックでの目的地移動は中断する）
+		player.moveTarget = null;
+		return true;
+	}
+	//チャット表示切替
+	else if (key === "c")
 	{
 		windows.chatWindow.show(-1);
 	}
-	else if (key === "f12")
+	/*else if (key === "f12")
 	{
 		windows.leftStatusWindow.show(-1);
 		e.stopPropagation();
 		e.preventDefault();//デベロップツールが出る
-	}
+	}*/
 	else
 	{
 
@@ -204,11 +233,29 @@ export function mousedown(e)
 	if (scroll.isDraggingThumb)
 		return;
 
-	/*if (!engine.useTouch)
+	// キャンバス上を左クリックしたら、その場所を目的地にして歩き出す
+	if (input.mouseInfo.left && e.target === engine.canvas)
 	{
-		if (player)
-			player.mousedown(e);
-	}*/
+		//addLog("info", "mousedown x:" + e.clientX + " y;" + e.clientY);
+
+		if (!player)
+			return;
+
+		//シフトキーのキャラ向き更新
+		if (e.shiftKey)
+		{
+			//シフト中は移動させず、向きだけ変えて目的地を破棄する
+			player.setMoveTargetFromScreen(e.clientX, e.clientY);
+			const move = player.getMovement();
+			player.moveTarget = null;
+
+			[player.direction, player.flip] = player.getDirection(move);
+			this.currentFrame = 0;	//コマがズレて一瞬消えるのを防ぐ
+			socket.sendState(player.position.x, player.position.y, player.state, player.direction, player.flip);
+		}
+		else
+			player.setMoveTargetFromScreen(e.clientX, e.clientY);
+	}
 }
 
 // マウスを動かしているとき

@@ -149,87 +149,6 @@ export class Player
 		return this;
 	}
 
-	//タップ
-	oneTap(x, y)
-	{
-		this.setMoveTargetFromScreen(x, y);
-	}
-	//ダブルタップ
-	dblTap(x, y)
-	{
-		this.setMoveTargetFromScreen(x, y);
-	}
-	//長押しタッチ
-	holdTouch(x, y)
-	{
-
-	}
-	//十字キー
-	crossTouch(powX, powY)
-	{
-		this.moveTarget = null;
-	}
-
-	//マウス移動
-	mousedown(e)
-	{
-		// キャンバス上を左クリックしたら、その場所を目的地にして歩き出す
-		if (input.mouseInfo.left && e.target === engine.canvas)
-		{
-			//addLog("info", "mousedown x:" + e.clientX + " y;" + e.clientY);
-
-			//シフトキーのキャラ向き更新
-			if (e.shiftKey)
-			{
-				//シフト中は移動させず、向きだけ変えて目的地を破棄する
-				this.setMoveTargetFromScreen(e.clientX, e.clientY);
-				const move = this.getMovement();
-				this.moveTarget = null;
-
-				[this.direction, this.flip] = this.getDirection(move);
-				this.currentFrame = 0;	//コマがズレて一瞬消えるのを防ぐ
-				socket.sendState(this.position.x, this.position.y, this.state, this.direction, this.flip);
-			}
-			else
-				this.setMoveTargetFromScreen(e.clientX, e.clientY);
-		}
-	}
-	//キー移動
-	keydown(e)
-	{
-		const key = e.key.toLowerCase();
-
-		if (key === 'enter')
-			return this.SendChat(e);
-		//Enter以外でチャットバーにフォーカスがある状態でのキー入力
-		else if (document.activeElement === chatInput)
-		{
-			return true;
-		}
-		//走り
-		else if (key === "r")
-		{
-			player.isRunning = !player.isRunning;
-			return true;
-		}
-		//座り
-		else if (key === "insert")
-		{
-			// マウス操作は無視
-			this.moveTarget = null;
-			player.isSitting = !player.isSitting;
-			return true;
-		}
-		//移動キー
-		else if (key === "w" || key === "a" || key === "s" || key === "d")
-		{
-			// キー操作を優先する（マウスクリックでの目的地移動は中断する）
-			this.moveTarget = null;
-			return true;
-		}
-		return false;
-	}
-
 	//足元座標
 	getFootPosition(screenX, screenY)
 	{
@@ -342,23 +261,27 @@ export class Player
 		let d = this.direction;
 		let f = this.flip;
 
-		// 移動ベクトルの向いている角度を求める（画面はyが下向きなので、0=右、90°=下、180°=左、-90°=上）
-		const angle = Math.atan2(move.y, move.x);
-
-		// 角度を45度(=PI/4)刻みに丸めて、8方向のうちどれに一番近いかを求める（0〜7の整数）
-		const octant = Math.round(angle / (Math.PI / 4)) & 7;
-
-		// 求めた8方向の番号を、実際のスプライトの向き(d)と反転(f)に変換する
-		switch (octant)
+		//移動が無いなら向き継続
+		if (move.x !== 0 || move.y !== 0)
 		{
-			case 0: d = 'side'; f = true; break;			// 右
-			case 1: d = 'forside'; f = true; break;			// 右下（左下を反転）
-			case 2: d = 'forward'; f = false; break;		// 下
-			case 3: d = 'forside'; f = false; break;		// 左下
-			case 4: d = 'side'; f = false; break;			// 左
-			case 5: d = 'backside'; f = false; break;		// 左上
-			case 6: d = 'backward'; f = false; break;		// 上
-			case 7: d = 'backside'; f = true; break;		// 右上（左上を反転）
+			// 移動ベクトルの向いている角度を求める（画面はyが下向きなので、0=右、90°=下、180°=左、-90°=上）
+			const angle = Math.atan2(move.y, move.x);
+
+			// 角度を45度(=PI/4)刻みに丸めて、8方向のうちどれに一番近いかを求める（0〜7の整数）
+			const octant = Math.round(angle / (Math.PI / 4)) & 7;
+
+			// 求めた8方向の番号を、実際のスプライトの向き(d)と反転(f)に変換する
+			switch (octant)
+			{
+				case 0: d = 'side'; f = true; break;			// 右
+				case 1: d = 'forside'; f = true; break;			// 右下（左下を反転）
+				case 2: d = 'forward'; f = false; break;		// 下
+				case 3: d = 'forside'; f = false; break;		// 左下
+				case 4: d = 'side'; f = false; break;			// 左
+				case 5: d = 'backside'; f = false; break;		// 左上
+				case 6: d = 'backward'; f = false; break;		// 上
+				case 7: d = 'backside'; f = true; break;		// 右上（左上を反転）
+			}
 		}
 
 		return [d, f];
@@ -407,18 +330,16 @@ export class Player
 		let d = this.direction;
 		let f = this.flip;
 
-
-		//座り状態なら、向きは変えずにステートだけ"sit"にする
+		//状態
 		if (this.isSitting)
 			s = "sit";
-		// 動いていない場合は、直前の向きをそのまま維持する
 		else if (move.x === 0 && move.y === 0)
 			s = "idle";
 		else
-		{
 			s = this.isRunning ? "run" : "walk";
-			[d, f] = this.getDirection(move);
-		}
+
+		//向き
+		[d, f] = this.getDirection(move);
 
 		if (s != this.state || d != this.direction || f != this.flip)
 			changed = true;
