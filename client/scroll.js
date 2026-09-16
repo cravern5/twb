@@ -126,9 +126,12 @@ chatScrollBar.addEventListener("touchstart", (e) =>
 // (documentでなくてもOK)つまみの上でマウスボタンを押したらドラッグ開始
 chatScrollBar.addEventListener("touchmove", (e) =>
 {
+	// ブラウザ標準のスクロール動作を止める ※これがないと「dragMoveで計算した位置」と「スマホ標準のスクロール」が同時に働く
+	e.preventDefault();
+
 	dragMove(e.changedTouches[0].clientY);
 
-	addLog("info", e.changedTouches[0].clientY);
+	//addLog("info", e.changedTouches[0].clientY);
 });
 
 // (documentでなくてもOK)つまみの上でマウスボタンを押したらドラッグ開始
