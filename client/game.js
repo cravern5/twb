@@ -166,7 +166,7 @@ export function keydown(e)
 	const key = e.key.toLowerCase();
 
 	if (key === 'enter')
-		return this.SendChat(e);
+		return player.SendChat(e);
 	//チャットバーにフォーカスがある状態
 	else if (document.activeElement === chatInput)
 	{
