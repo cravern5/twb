@@ -492,9 +492,9 @@ export class Player
 			);
 		}
 
-		this.drawHP("canvasLeftHP", this.HP, this.maxHP, '#E75D21');
-		this.drawHP("canvasLeftMP", this.MP, this.maxMP, '#8569E2');
-		this.drawHP("canvasLeftSP", this.SP, this.maxSP, '#47DFDE');
+		this.drawPointBar("canvasLeftHP", this.HP, this.maxHP, '#E75D21');
+		this.drawPointBar("canvasLeftMP", this.MP, this.maxMP, '#8569E2');
+		this.drawPointBar("canvasLeftSP", this.SP, this.maxSP, '#47DFDE');
 	}
 
 	//チャット送信
@@ -673,8 +673,8 @@ export class Player
 			ctx.restore();
 	}
 
-	//HPバー描画　per=hp / maxを入れる
-	drawHP(canvasID, point, maxPoint, color, backColor = '#000418')
+	//HP/MP/SPバー描画　per=hp / maxを入れる
+	drawPointBar(canvasID, point, maxPoint, color, backColor = '#000418')
 	{
 		const canvas = document.getElementById(canvasID);
 		const ctx = canvas.getContext("2d");
