@@ -107,45 +107,42 @@
 	height: 64px;
 }
 
-
-#leftHPBar
+.leftPointBar
 {
 	/*background-color: red;*/
-	background-image: url("../assets/ui/LeftStatus/hpBar.png");
+	background-image: url("../assets/ui/LeftStatus/pointBar.png");
 	background-repeat: no-repeat;
 
 	position: absolute;
-	left: 58px; /*ToolCircle(30px)+29px*/
-	top: 29px;
+	/*48が伸びた分*/
 	width: 101px;
 	height: 13px;
 }
-
+#leftHPBar
+{
+	left: 57px; 
+	top: 29px;
+}
 #leftMPBar
 {
-	/*background-color: red;*/
-	background-image: url("../assets/ui/LeftStatus/mpBar.png");
-	background-repeat: no-repeat;
-
-	position: absolute;
-	left: 58px; /*ToolCircle+29px*/
+	left: 67px;
 	top: 44px;
-	width: 111px;
-	height: 13px;
 }
 
 #leftSPBar
 {
-	/*background-color: red;*/
-	background-image: url("../assets/ui/LeftStatus/spBar.png");
-	background-repeat: no-repeat;
-
-	position: absolute;
-	left: 58px; /*ToolCircle(30px)+29px*/
+	left: 77px; 
 	top: 59px;
-	width: 121px;
-	height: 13px;
 }
+
+.leftPointBar canvas
+{
+	position: absolute;
+	left:48px;
+	top:1px;
+}
+
+
 
 
 

@@ -68,12 +68,19 @@ export class Player
 		this.moveTarget = null;						// マウスクリックで指定した「目的地」（ワールド座標）、null のときは目的地なし＝マウスでは移動していない状態
 
 		this.sendTimer = 0;							// ポジションを前回送信してからの経過時間、SEND_INTERVALを超えたら送信可能
-
 		this.lastReceiveTime = null;				// 前回STATEを受信した時刻（ミリ秒）。まだ1回も受信していなければnull
 		this.lastReceiveInterval = 0;				// 前回受信からの間隔（ミリ秒）＝これが不規則だと表示もカクつく
 		this.receiveCount = 0;						// 直近1秒間の受信回数のカウンター（毎秒0にリセットされる）
 		this.receivePerSecond = 0;					// 直前の1秒間で実際に受信できた回数（表示用に確定した値）
 		this.receiveCountTimer = 0;					// 1秒経過したかどうかを計るための経過時間カウンター
+
+		//ステータス
+		this.maxHP = 190;
+		this.HP = 80;
+		this.maxMP = 50;
+		this.MP = 40;
+		this.maxSP = 1000;
+		this.SP = 800;
 
 		//チャットバブル
 		this.bubbleLines = null;		// 頭上に表示中のチャット内容
@@ -485,7 +492,9 @@ export class Player
 			);
 		}
 
-		//this.drawHPText("190/190");
+		this.drawHP("canvasLeftHP", this.HP, this.maxHP, '#E75D21');
+		this.drawHP("canvasLeftMP", this.MP, this.maxMP, '#8569E2');
+		this.drawHP("canvasLeftSP", this.SP, this.maxSP, '#47DFDE');
 	}
 
 	//チャット送信
@@ -665,19 +674,27 @@ export class Player
 	}
 
 	//HPバー描画　per=hp / maxを入れる
-	drawHP(per, startx = 30, starty = 30)
+	drawHP(canvasID, point, maxPoint, color, backColor = '#000418')
 	{
-		per = per * 10;
-		for (let i = 0; i < 10 && i < per; i++)
+		const canvas = document.getElementById(canvasID);
+		const ctx = canvas.getContext("2d");
+		const per = point / maxPoint;
+		const p = per * 10;
+
+		const startx = 0;
+		const starty = 0;
+		const linelength = 10;
+
+		for (let i = 0; i < 10 && i < p; i++)
 		{
-			sub.drawPixelLine(ctx, startx + 0 + i * 4, starty, startx + 10 + i * 4, starty + 10, '#000418');
-			sub.drawPixelLine(ctx, startx + 1 + i * 4, starty, startx + 11 + i * 4, starty + 10, '#E75D21');
-			sub.drawPixelLine(ctx, startx + 2 + i * 4, starty, startx + 12 + i * 4, starty + 10, '#E75D21');
-			sub.drawPixelLine(ctx, startx + 3 + i * 4, starty, startx + 13 + i * 4, starty + 10, '#E75D21');
+			utils2.drawPixelLine(ctx, startx + 0 + i * 4, starty, startx + 10 + i * 4, starty + linelength, backColor);
+			utils2.drawPixelLine(ctx, startx + 1 + i * 4, starty, startx + 11 + i * 4, starty + linelength, color);
+			utils2.drawPixelLine(ctx, startx + 2 + i * 4, starty, startx + 12 + i * 4, starty + linelength, color);
+			utils2.drawPixelLine(ctx, startx + 3 + i * 4, starty, startx + 13 + i * 4, starty + linelength, color);
 		}
 	}
 
-	drawHPText(text)
+	/*drawHPText(text)
 	{
 		// canvas要素を取得
 		const hpCanvas = document.getElementById("statusHP");
@@ -696,7 +713,7 @@ export class Player
 
 		//アンチエイリアスを手動で除去する後処理
 		utils2.removeAntiAliasing({ ctx: hpCtx, width: hpCanvas.width, height: hpCanvas.height });
-	}
+	}*/
 
 }
 
