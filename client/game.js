@@ -213,7 +213,7 @@ export function mousedown(e)
 export function mousemove(e)
 {
 	//チャットスクロールバー
-	scroll.mousemove(e);
+	scroll.dragMove(e.clientY);
 
 	//if (mouseInfo.right)
 	//{
@@ -230,7 +230,7 @@ export function mousemove(e)
 export function mouseup(e)
 {
 	//チャットスクロールバー
-	scroll.mouseup(e);
+	scroll.dragEnd();
 }
 
 //マウスホイール

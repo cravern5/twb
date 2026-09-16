@@ -39,6 +39,7 @@ canvas {
 
 	display: block;
 	margin: 0px auto;
+	/*手前処理*/
 	z-index: 1;
 }
 
