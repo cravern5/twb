@@ -58,10 +58,8 @@
 	display: flex;
 	flex-direction: column;
 
-	/* クリックは受け付けず、下のCanvasに素通りさせる */
+	/* クリックは受け付けず、下のCanvasに素通りさせる、ブラウザ標準のスクロール・ズーム・長押しメニューなどのジェスチャーを無効化 */
 	pointer-events: none;
-	/* ブラウザ標準のスクロール・ズーム・長押しメニューなどのジェスチャーを無効化 */
-	/*touch-action: none;*/
 	/* iOS Safari用：長押しで出る画像保存メニューなどを無効化 */
 	/*-webkit-touch-callout: none;*/
 	/*-webkit-user-select: none;*/
@@ -109,6 +107,8 @@
 
 .leftPointBar
 {
+	pointer-events: none;
+
 	/*background-color: red;*/
 	background-image: url("../assets/ui/LeftStatus/pointBar.png");
 	background-repeat: no-repeat;
@@ -120,18 +120,18 @@
 }
 #leftHPBar
 {
-	left: 57px; 
+	left: 58px; 
 	top: 29px;
 }
 #leftMPBar
 {
-	left: 67px;
+	left: 68px;
 	top: 44px;
 }
 
 #leftSPBar
 {
-	left: 77px; 
+	left: 78px; 
 	top: 59px;
 }
 
@@ -142,7 +142,63 @@
 	top:1px;
 }
 
+.leftPointBarFont
+{
+	
+	color: rgb(255, 255, 255);
+	--base_color: #292CBD;
+	
+	display: inline-block;
+	transform: scaleY(1.7);
+	transform-origin: center;
 
+	position: absolute;
+	left:31px;
+	top: 6px;
+	
+	font-family: 'Ethnocentric';
+	font-size: 6px;
+	letter-spacing: 3px;
+
+	/*少し縦長*/
+	/*transform: scaleY(2.0);
+	top: 5px;
+	font-size: 6px;
+	*/
+
+	/*line-height: 10px;*/
+
+	/* 文字の後ろを塗りつぶす太さ（半径）と色 
+	 最初に輪郭を、それから塗りつぶしを、そしてマーカーを描く */
+	/*
+	paint-order: stroke fill;
+	-webkit-text-stroke: 3px var(--base_color);
+	*/
+	
+	/*影　右下/左下/右上/左上*/
+	/*--huti_size2: 1px;
+	text-shadow:
+
+		1px 0px 0 var(--base_color),
+		-1px 0px 0 var(--base_color),
+		0px -1px 0 var(--base_color),
+		0px 1px 0 var(--base_color)
+		;*/
+
+	/*横方向/縦方向/ぼかし/色 */
+	filter: 
+		drop-shadow( 1px 0px 0px var(--base_color))
+		drop-shadow( 0px 1px 0px var(--base_color))
+		drop-shadow( -1px 0px 0px var(--base_color))
+		drop-shadow( 0px -1px 0px var(--base_color))
+		;
+
+	/*マーカーみたいな?
+	background-color:var(--huti_color);
+	-webkit-box-decoration-break: clone;
+	box-decoration-break: clone;
+	*/
+}
 
 
 

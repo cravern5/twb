@@ -82,6 +82,10 @@ export class Player
 		this.maxSP = 1000;
 		this.SP = 800;
 
+		this.setPoint("HP", this.HP);
+		this.setPoint("MP", this.MP);
+		this.setPoint("SP", this.SP);
+
 		//チャットバブル
 		this.bubbleLines = null;		// 頭上に表示中のチャット内容
 		this.bubbleTimer = 0;			// ふきだしが消えるまでの残り時間（秒）
@@ -496,18 +500,20 @@ export class Player
 		this.drawPointBar("canvasLeftMP", this.MP, this.maxMP, '#8569E2');
 		this.drawPointBar("canvasLeftSP", this.SP, this.maxSP, '#47DFDE');
 
-		this.setHP(this.HP);
 	}
 
-	//
-	setHP(hp)
+	//値更新
+	setPoint(type, value)
 	{
-		const divHP = document.getElementById("leftHP");
-		const text = this.HP + "/" + this.maxHP;
+		type = type.toUpperCase();
 
-		this.HP = hp;
-		if (divHP.innerText !== text)
-			divHP.innerText = text;
+		const div = document.getElementById("leftValue" + type);
+		const text = this[type] + "/" + this["max" + type];
+
+		if (this[type] !== value)
+			this[type] = value;
+		if (div.innerText !== text)
+			div.innerText = text;
 	}
 
 	//チャット送信
