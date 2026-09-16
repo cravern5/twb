@@ -58,6 +58,8 @@
 	display: flex;
 	flex-direction: column;
 
+	/* ブラウザ標準のスクロール・ズーム・長押しメニューなどのジェスチャーを無効化 */
+	/*touch-action: none;*/
 	/* クリックは受け付けず、下のCanvasに素通りさせる、ブラウザ標準のスクロール・ズーム・長押しメニューなどのジェスチャーを無効化 */
 	pointer-events: none;
 	/* iOS Safari用：長押しで出る画像保存メニューなどを無効化 */
@@ -65,7 +67,6 @@
 	/*-webkit-user-select: none;*/
 	/* 長押しでのテキスト選択を防ぐ */
 	/*user-select: none;*/
-
 }
 
 
@@ -105,10 +106,9 @@
 	height: 64px;
 }
 
+/*ポイントバー背景*/
 .leftPointBar
 {
-	pointer-events: none;
-
 	/*background-color: red;*/
 	background-image: url("../assets/ui/LeftStatus/pointBar.png");
 	background-repeat: no-repeat;
@@ -117,7 +117,18 @@
 	/*48が伸びた分*/
 	width: 101px;
 	height: 13px;
+
+	/* ブラウザ標準のスクロール・ズーム・長押しメニューなどのジェスチャーを無効化 */
+	touch-action: none;
+	/* クリックは受け付けず、下のCanvasに素通りさせる、ブラウザ標準のスクロール・ズーム・長押しメニューなどのジェスチャーを無効化 */
+	pointer-events: none;
+	/* iOS Safari用：長押しで出る画像保存メニューなどを無効化 */
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	/* 長押しでのテキスト選択を防ぐ */
+	user-select: none;
 }
+/*各ポイントバーID*/
 #leftHPBar
 {
 	left: 58px; 
@@ -134,14 +145,14 @@
 	left: 78px; 
 	top: 59px;
 }
-
+/*ポイントバーキャンバス*/
 .leftPointBar canvas
 {
 	position: absolute;
 	left:48px;
 	top:1px;
 }
-
+/*ポイントバーフォント*/
 .leftPointBarFont
 {
 	
