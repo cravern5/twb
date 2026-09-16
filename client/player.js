@@ -495,6 +495,19 @@ export class Player
 		this.drawPointBar("canvasLeftHP", this.HP, this.maxHP, '#E75D21');
 		this.drawPointBar("canvasLeftMP", this.MP, this.maxMP, '#8569E2');
 		this.drawPointBar("canvasLeftSP", this.SP, this.maxSP, '#47DFDE');
+
+		this.setHP(this.HP);
+	}
+
+	//
+	setHP(hp)
+	{
+		const divHP = document.getElementById("leftHP");
+		const text = this.HP + "/" + this.maxHP;
+
+		this.HP = hp;
+		if (divHP.innerText !== text)
+			divHP.innerText = text;
 	}
 
 	//チャット送信
