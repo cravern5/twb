@@ -190,6 +190,18 @@ export class Player
 		// キャンバスの位置とズームを考慮した変換
 		this.moveTarget = engine.screenToWorld(clientX, clientY);
 	}
+	//シフトキーで向きだけ変えたい時　画面座標→ワールド座標に変換して移動先をセットする（マウスクリック・タップの共通処理）
+	setDirectionTargetFromScreen(clientX, clientY)
+	{
+		this.setMoveTargetFromScreen(clientX, clientY);
+		const move = this.getMovement();
+
+		this.moveTarget = null;
+
+		[this.direction, this.flip] = this.getDirection(move);
+		this.currentFrame = 0;	//コマがズレて一瞬消えるのを防ぐ
+		socket.sendState(this.position.x, this.position.y, this.state, this.direction, this.flip);
+	}
 
 	//現在の状態のアセットを取得
 	getStateAsset()

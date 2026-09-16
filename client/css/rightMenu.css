@@ -30,11 +30,6 @@
 	/* max-heightが変化するときに0.5秒かけてなめらかに動かす */
 	transition: max-height 0.25s ease;
 }
-@media (max-height: 450px) {
-	#rightMenuButtons {
-		max-height: calc(38px * 9);
-	}
-}
 
 /* JSでこのクラスを付けると閉じる(収納する) */
 #rightMenuButtons.closed {
@@ -53,8 +48,19 @@
 	height: 51px;
 }
 @media (max-height: 450px) {
+	#rightMenuButtons {
+		max-height: calc(38px * 9);
+	}
 	.rightMenuBtn {
 		height: 38px;
+	}
+}
+@media (max-height: 350px) {
+	#rightMenuButtons {
+		max-height: calc(34px * 9);
+	}
+	.rightMenuBtn {
+		height: 34px;
 	}
 }
 

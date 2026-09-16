@@ -246,16 +246,7 @@ export function mousedown(e)
 
 		//シフトキーのキャラ向き更新
 		if (e.shiftKey)
-		{
-			//シフト中は移動させず、向きだけ変えて目的地を破棄する
-			player.setMoveTargetFromScreen(e.clientX, e.clientY);
-			const move = player.getMovement();
-			player.moveTarget = null;
-
-			[player.direction, player.flip] = player.getDirection(move);
-			this.currentFrame = 0;	//コマがズレて一瞬消えるのを防ぐ
-			socket.sendState(player.position.x, player.position.y, player.state, player.direction, player.flip);
-		}
+			player.setDirectionTargetFromScreen(e.clientX, e.clientY);
 		else
 			player.setMoveTargetFromScreen(e.clientX, e.clientY);
 	}
@@ -370,14 +361,13 @@ function showModelDebugInfo()
 
 	debugInfo.textContent =
 		"[Debug Info]"
-		+ "\n width:" + canvas.width + " height:" + canvas.height
+		+ "\n canvas.width:" + canvas.width + " canvas.height:" + canvas.height
+		+ "\n camera.x:" + engine.camera.x.toFixed(1) + " camera.y:" + engine.camera.y.toFixed(1)
+		+ "\n camera.zoom:" + engine.camera.zoom.toFixed(3)
 		+ "\n FPS:" + fps
 		+ "\n Log:" + chatLog.children.length
 		+ "\n useTouch:" + engine.useTouch
 		+ "\n lastSelect:" + lastSelectID
-		+ "\n[World]"
-		+ "\n camera.x:" + engine.camera.x.toFixed(1) + " camera.y:" + engine.camera.y.toFixed(1)
-		+ "\n camera.zoom:" + engine.camera.zoom.toFixed(3)
 		+ "\n[Player]"
 		+ "\n ID:" + socket.myPlayerId
 		+ "\n position.x:" + player.position.x.toFixed(1) + " position.y:" + player.position.y.toFixed(1)
