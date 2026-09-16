@@ -12,12 +12,12 @@ const chatLogArea = document.getElementById("chatLogArea");//チャット全体
 const chatLog = document.getElementById("chatLog");//チャット全体
 
 
-const SCROLL_STEP = 14;// 1回のクリックで何pxスクロールするかの量
-const THUMB_HEIGHT = 19;// つまみの高さ（固定値。中身の量に関わらずこの高さのまま変えない）
+export const SCROLL_STEP = 14;// 1回のクリックで何pxスクロールするかの量
+export const THUMB_HEIGHT = 19;// つまみの高さ（固定値。中身の量に関わらずこの高さのまま変えない）
 
-let isDraggingThumb = false;	// つまみをドラッグしている最中かどうかを覚えておく変数
-let dragStartY = 0;				// ドラッグを開始した瞬間の、マウスのY座標を覚えておく変数
-let dragStartScrollTop = 0;		// ドラッグを開始した瞬間の、ログのscrollTopを覚えておく変数
+export let isDraggingThumb = false;	// つまみをドラッグしている最中かどうかを覚えておく変数
+export let dragStartY = 0;				// ドラッグを開始した瞬間の、マウスのY座標を覚えておく変数
+export let dragStartScrollTop = 0;		// ドラッグを開始した瞬間の、ログのscrollTopを覚えておく変数
 
 
 // 「つまみ」の大きさと位置を、今のログの状態に合わせて計算し直す処理
@@ -103,6 +103,40 @@ chatScrollBar.addEventListener("mousedown", (e) =>
 	dragStart(e, e.clientY);
 });
 
+// マウスを動かしているとき
+document.addEventListener("mousemove", (e) =>
+{
+	//チャットスクロールバー
+	dragMove(e.clientY);
+});
+
+// マウスを動かしているとき
+document.addEventListener("mouseup", (e) =>
+{
+	//チャットスクロールバー
+	dragEnd();
+});
+
+// つまみの上でマウスボタンを押したらドラッグ開始
+chatScrollBar.addEventListener("touchstart", (e) =>
+{
+	dragStart(e, e.touches[0].clientY);
+});
+
+// (documentでなくてもOK)つまみの上でマウスボタンを押したらドラッグ開始
+chatScrollBar.addEventListener("touchmove", (e) =>
+{
+	dragMove(e.changedTouches[0].clientY);
+
+	addLog("info", e.changedTouches[0].clientY);
+});
+
+// (documentでなくてもOK)つまみの上でマウスボタンを押したらドラッグ開始
+chatScrollBar.addEventListener("touchend", (e) =>
+{
+	dragEnd();
+});
+
 export function dragStart(e, y)
 {
 	isDraggingThumb = true;
@@ -118,9 +152,7 @@ export function dragMove(y)
 {
 	// ドラッグ中でなければ何もしない
 	if (!isDraggingThumb)
-	{
 		return;
-	}
 
 	// ドラッグ開始位置から、マウスがどれだけ動いたか
 	const deltaY = y - dragStartY;
@@ -146,28 +178,6 @@ export function dragEnd()
 {
 	isDraggingThumb = false;
 }
-
-
-
-// つまみの上でマウスボタンを押したらドラッグ開始
-chatScrollBar.addEventListener("touchstart", (e) =>
-{
-	dragStart(e, e.touches[0].clientY);
-});
-
-// つまみの上でマウスボタンを押したらドラッグ開始
-chatScrollBar.addEventListener("touchmove", (e) =>
-{
-	dragMove(e.changedTouches[0].clientY);
-});
-
-// つまみの上でマウスボタンを押したらドラッグ開始
-chatScrollBar.addEventListener("touchend", (e) =>
-{
-	dragEnd();
-});
-
-
 
 
 // ログの中身が増えたり減ったりしたときにも、つまみの大きさを更新する

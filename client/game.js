@@ -201,6 +201,8 @@ export function click(e)
 //マウスを押したとき
 export function mousedown(e)
 {
+	if (scroll.isDraggingThumb)
+		return;
 
 	/*if (!engine.useTouch)
 	{
@@ -212,8 +214,8 @@ export function mousedown(e)
 // マウスを動かしているとき
 export function mousemove(e)
 {
-	//チャットスクロールバー
-	scroll.dragMove(e.clientY);
+	if (scroll.isDraggingThumb)
+		return;
 
 	//if (mouseInfo.right)
 	//{
@@ -229,8 +231,9 @@ export function mousemove(e)
 // マウスを離したとき
 export function mouseup(e)
 {
-	//チャットスクロールバー
-	scroll.dragEnd();
+	if (scroll.isDraggingThumb)
+		return;
+
 }
 
 //マウスホイール
