@@ -169,6 +169,7 @@ class myTouch
 		//this.touch = null;
 		this.id = null;
 		this.time = null;
+		this.targetID = null;
 		this.startX = null;
 		this.startY = null;
 		this.startLeft = null;
@@ -183,6 +184,8 @@ class myTouch
 		//this.touch = touch;
 		this.id = touch.identifier;
 		this.time = Date.now();
+
+		this.targetID = touch.target.id;
 
 		//開始位置を記録
 		this.startX = touch.clientX;

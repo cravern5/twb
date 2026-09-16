@@ -22,6 +22,7 @@ export let lastTime = null;
 export let fps = 0;			// 直近1秒間に実際に描画できたフレーム数
 export let frameCount = 0;		// 1秒間のフレームカウンター
 export let fpsTimer = 0;		// 1秒経過したかを計るための経過時間
+export let lastSelectID = "";
 
 //初期化
 async function init()
@@ -115,12 +116,16 @@ export function oneTap(touch)
 {
 	if (player)
 		player.setMoveTargetFromScreen(touch.startX, touch.startY);
+
+	lastSelectID = touch.targetID;
 }
 //ダブルタップ
 export function dblTap(touch)
 {
 	if (player)
 		player.setMoveTargetFromScreen(touch.startX, touch.startY);
+
+	lastSelectID = touch.targetID;
 }
 //長押しタッチ
 export function holdTouch(touch)
@@ -130,7 +135,7 @@ export function holdTouch(touch)
 	if (player)
 		player.moveTarget = null;
 
-	//addLog("info", "hold");
+	lastSelectID = touch.targetID;
 }
 //長押しタッチ
 export function HoldEnd(touch)
@@ -236,8 +241,6 @@ export function mousedown(e)
 	// キャンバス上を左クリックしたら、その場所を目的地にして歩き出す
 	if (input.mouseInfo.left && e.target === engine.canvas)
 	{
-		//addLog("info", "mousedown x:" + e.clientX + " y;" + e.clientY);
-
 		if (!player)
 			return;
 
@@ -256,6 +259,8 @@ export function mousedown(e)
 		else
 			player.setMoveTargetFromScreen(e.clientX, e.clientY);
 	}
+
+	lastSelectID = e.target.id;
 }
 
 // マウスを動かしているとき
@@ -360,7 +365,7 @@ requestAnimationFrame(animate);
 //デバッグ表示
 function showModelDebugInfo()
 {
-	if (!player)//|| !player.object3D)
+	if (!player)
 		return;
 
 	debugInfo.textContent =
@@ -369,6 +374,7 @@ function showModelDebugInfo()
 		+ "\n FPS:" + fps
 		+ "\n Log:" + chatLog.children.length
 		+ "\n useTouch:" + engine.useTouch
+		+ "\n lastSelect:" + lastSelectID
 		+ "\n[World]"
 		+ "\n camera.x:" + engine.camera.x.toFixed(1) + " camera.y:" + engine.camera.y.toFixed(1)
 		+ "\n camera.zoom:" + engine.camera.zoom.toFixed(3)
