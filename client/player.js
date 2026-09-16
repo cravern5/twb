@@ -688,15 +688,15 @@ export class Player
 		if (!this.bubbleLines)
 			return;
 
+		const offsetY = -5;
 		//バブルを出す基準位置（キャラの頭の少し上）をワールド座標で決める
 		const worldX = this.position.x + SPRITE_WIDTH / 2;
-		const worldY = this.position.y - 5;
-
-		//・ズームする場合　　：カメラ変形が既にかかっているので、ワールド座標のまま描くだけでよい
-		//・ズームしない場合　：カメラ変形を一時的に解除して、実際のピクセル座標に変換してから描く
+		const worldY = this.position.y + offsetY;
 		let x = worldX;
 		let y = worldY;
 
+		//・ズームする場合　　：カメラ変形が既にかかっているので、ワールド座標のまま描くだけでよい
+		//・ズームしない場合　：カメラ変形を一時的に解除して、実際のピクセル座標に変換してから描く
 		if (!BUBBLE_SCALE_WITH_ZOOM)
 		{
 			ctx.save();							// 今の変形（カメラ変形）を退避しておく
