@@ -258,11 +258,18 @@ function update(delta)
 	// プレイヤー位置に合わせてカメラを更新
 	world.updateCamera(center.x, center.y);
 
+	// カメラ変形（ズーム・平行移動）を開始する
+	// これ以降、マップやプレイヤーの描画はズームを意識せずワールド座標のまま書ける
+	world.beginCameraTransform();
+
 	//マップ描画
 	world.update(delta);
 
 	//プレイヤー全更新
 	Player.updateAll(delta);
+
+	// カメラ変形を元に戻す（beginCameraTransformと必ずセットで呼ぶ）
+	world.endCameraTransform();
 
 	firstUpdate = true;
 }

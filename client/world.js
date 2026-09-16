@@ -34,19 +34,53 @@ export function updateCamera(targetX, targetY)
 	camera.y = Math.max(0, Math.min(MAP_HEIGHT - viewHeight, camera.y));
 }
 
+// カメラ変形（ズーム・平行移動）を開始する。呼び出し後は、マップやプレイヤーの描画で
+// カメラやズームを意識せず、そのままワールド座標を使って描画できるようになる
+export function beginCameraTransform()
+{
+	ctx.save();                          // 変形前の状態を退避しておく（あとで必ずrestoreで戻す）
+	ctx.scale(camera.zoom, camera.zoom); // これ以降の描画すべてに、ズーム倍率がかかるようにする
+	ctx.translate(-camera.x, -camera.y); // カメラの位置ぶん、描画位置をずらす
+}
+
+// カメラ変形を終了し、変形前の状態に戻す（beginCameraTransformと必ずセットで呼ぶこと）
+export function endCameraTransform()
+{
+	ctx.restore();
+}
+
 
 //画面更新
 export function update(delta)
 {
-	// zoomを考慮した切り出しサイズ（updateCameraと同じ計算）
-	const viewWidth = canvas.width / camera.zoom;
-	const viewHeight = canvas.height / camera.zoom;
+	// マップ描画　// beginCameraTransform()で既にズーム・カメラ移動の変形がかかっている
+	ctx.drawImage(img, 0, 0);
+}
 
-	// 中央固定の切り出しではなく、カメラ位置を基準にマップを切り出す
-	ctx.drawImage(
-		img,
-		camera.x, camera.y, viewWidth, viewHeight,       // カメラ位置からズームを反映したサイズで切り抜き
-		0, 0, canvas.width, canvas.height                // 切り出した範囲を画面全体に引き伸ばして描画（狭く切るほど拡大されて見える）
-	);
+// スクリーン座標（ページ基準のe.clientX/clientY）をワールド座標に変換する
+// マウスクリック位置から「地図上のどこがクリックされたか」を求めるときに使う
+export function screenToWorld(clientX, clientY)
+{
+	// キャンバスがページ内のどこに表示されているかを取得する
+	const rect = canvas.getBoundingClientRect();
 
+	// client座標から、キャンバス内のローカル座標（キャンバス左上を(0,0)とする座標）に直す
+	const localX = clientX - rect.left;
+	const localY = clientY - rect.top;
+
+	// ローカル座標をズーム倍率で割り戻し、カメラ位置を足してワールド座標にする
+	return {
+		x: localX / camera.zoom + camera.x,
+		y: localY / camera.zoom + camera.y
+	};
+}
+
+// ワールド座標を、実際のキャンバス上のピクセル座標に変換する（ズームを計算済みの値）
+// カメラ変形をかけずに描きたいUI要素（ズームしても大きさを変えたくないもの）で使う
+export function worldToScreen(worldX, worldY)
+{
+	return {
+		x: (worldX - camera.x) * camera.zoom,
+		y: (worldY - camera.y) * camera.zoom
+	};
 }

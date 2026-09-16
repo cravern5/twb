@@ -6,7 +6,7 @@ import * as input from './input.js';
 import * as windows from './windows.js';
 import * as engine from './engine.js';
 import { canvas, ctx } from './engine.js';
-import { MAP_WIDTH, MAP_HEIGHT, camera } from './world.js';
+import { MAP_WIDTH, MAP_HEIGHT } from './world.js';
 import * as world from './world.js';
 //import * as game from './game.js';
 
@@ -258,10 +258,13 @@ export class Player
 	setMoveTargetFromScreen(clientX, clientY)
 	{
 		// 画面座標 = (ワールド座標 - camera.x) * zoom の逆算
-		const worldX = clientX / world.camera.zoom + world.camera.x;
-		const worldY = clientY / world.camera.zoom + world.camera.y;
+		//const worldX = clientX / world.camera.zoom + world.camera.x;
+		//const worldY = clientY / world.camera.zoom + world.camera.y;
 
-		this.moveTarget = { x: worldX, y: worldY };
+		//this.moveTarget = { x: worldX, y: worldY };
+
+		// キャンバスの位置とズームを考慮した変換は、world.js側の関数にまとめてある
+		this.moveTarget = world.screenToWorld(clientX, clientY);
 	}
 
 	//現在の状態のアセットを取得
@@ -534,21 +537,15 @@ export class Player
 		//画像を滑らかに拡大するかどうか css image-rendering: pixelatedと併用可能
 		ctx.imageSmoothingEnabled = false;
 
-		//ワールド座標(position)からカメラ位置を引いて「画面上の描画位置」を求める、プレイヤーが動いてもカメラが追従して常に画面中央に見える
-		const screen = this.getWorldPosition();
+		// world.beginCameraTransform()で既にズーム・カメラ移動の変形がかかっているので、
+		// this.position（ワールド座標）をそのまま使って描画できる
+		const foot = this.getFootPosition(this.position.x, this.position.y);
 
-		// ズームすると見た目のサイズも変わるので、幅・高さにも同じ倍率を掛けておく
-		const drawWidth = asset.frameWidth * camera.zoom;
-		const drawHeight = asset.frameHeight * camera.zoom;
-
-		//足の位置
-		const foot = this.getFootPosition(screen.x, screen.y);
-
-		//影の描画
+		//影の描画（変形が既にかかっているので、サイズもワールド基準の値のままでよい）
 		utils2.drawCircle(
-			ctx, 'rgba(0, 0, 0, 0.6)', foot.x * camera.zoom, foot.y * camera.zoom,
-			SPRITE_WIDTH * 0.25 * camera.zoom,//幅　※ズームに合わせて影の大きさも変える
-			SPRITE_WIDTH * 0.1 * camera.zoom//高さ
+			ctx, 'rgba(0, 0, 0, 0.6)', foot.x, foot.y,
+			SPRITE_WIDTH * 0.25,	//幅
+			SPRITE_WIDTH * 0.1	//高さ
 		);
 
 		//キャラクター描画 スプライトシートから該当コマだけを切り出して描画する
@@ -560,7 +557,7 @@ export class Player
 			ctx.drawImage(
 				asset.img,
 				this.currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
-				-screen.x * camera.zoom - drawWidth, screen.y * camera.zoom, drawWidth, drawHeight
+				-this.position.x - asset.frameWidth, this.position.y, asset.frameWidth, asset.frameHeight
 			);
 			ctx.restore();
 		}
@@ -569,7 +566,7 @@ export class Player
 			ctx.drawImage(
 				asset.img,
 				this.currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
-				screen.x * camera.zoom, screen.y * camera.zoom, drawWidth, drawHeight
+				this.position.x, this.position.y, asset.frameWidth, asset.frameHeight
 			);
 		}
 
@@ -691,26 +688,30 @@ export class Player
 	}
 
 	//バブル描画（文字の調整は行わず、渡された結果を使って描くだけ）
+	//バブル描画（文字の調整は行わず、渡された結果を使って描くだけ）
 	drawBubble()
 	{
 		if (!this.bubbleLines)
 			return;
 
-		//ワールド座標(position)からカメラ位置を引いて「画面上の描画位置」を求める、プレイヤーが動いてもカメラが追従して常に画面中央に見える
-		const screen = this.getWorldPosition();
+		//バブルを出す基準位置（キャラの頭の少し上）をワールド座標で決める
+		const worldX = this.position.x + SPRITE_WIDTH / 2;
+		const worldY = this.position.y - 5;
 
-		//・ズームする場合　　：ワールド基準のそのままの座標を使う（このあとctx.scaleでまとめて拡大される）
-		//・ズームしない場合　：今まで通り、位置だけを先にズーム倍率で掛けておく
-		const x = BUBBLE_SCALE_WITH_ZOOM ? (screen.x + SPRITE_WIDTH / 2) : (screen.x + SPRITE_WIDTH / 2) * camera.zoom;
-		const y = BUBBLE_SCALE_WITH_ZOOM ? (screen.y - 5) : (screen.y - 5) * camera.zoom;
+		//・ズームする場合　　：カメラ変形が既にかかっているので、ワールド座標のまま描くだけでよい
+		//・ズームしない場合　：カメラ変形を一時的に解除して、実際のピクセル座標に変換してから描く
+		let x = worldX;
+		let y = worldY;
 
-		//（座標系ごと拡大するので、位置だけでなくフォントサイズ・余白なども自動で一緒にズームされる）
-		if (BUBBLE_SCALE_WITH_ZOOM)
-			ctx.save();
+		if (!BUBBLE_SCALE_WITH_ZOOM)
+		{
+			ctx.save();							// 今の変形（カメラ変形）を退避しておく
+			ctx.setTransform(1, 0, 0, 1, 0, 0);	// 変形を一旦まっさらな状態に戻す
 
-		// これ以降の描画をズーム倍率ぶん拡大縮小する
-		if (BUBBLE_SCALE_WITH_ZOOM)
-			ctx.scale(camera.zoom, camera.zoom);
+			const screen = world.worldToScreen(worldX, worldY);
+			x = screen.x;
+			y = screen.y;
+		}
 
 		//adjustBubbleTextで既に設定してある
 		//ctx.font = bubbleFont;
@@ -743,8 +744,8 @@ export class Player
 			ctx.fillText(this.bubbleLines[i], x, lineY);
 		}
 
-		// 保存しておいた「変形前の状態」に戻す（これを忘れると次の描画も拡大されたままになる）
-		if (BUBBLE_SCALE_WITH_ZOOM)
+		// 変形を解除していた場合は、退避しておいたカメラ変形の状態に戻す
+		if (!BUBBLE_SCALE_WITH_ZOOM)
 			ctx.restore();
 	}
 
