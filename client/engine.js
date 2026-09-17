@@ -102,6 +102,11 @@ export function beginCameraTransform(targetX, targetY)
 	camera.x = Math.max(0, Math.min(camera.width - viewWidth, camera.x));
 	camera.y = Math.max(0, Math.min(camera.height - viewHeight, camera.y));
 
+	// カメラ位置を整数(ピクセル単位)に丸める、カメラが小数点のまま動くと、止まっているキャラでも
+	// 描画位置の端数が毎フレーム変わってしまい、小刻みに揺れて見えてしまう。 カメラをピクセル単位にピタッと固定することで、このガタつきを防ぐ。
+	camera.x = Math.round(camera.x);
+	camera.y = Math.round(camera.y);
+
 	ctx.save();                          // 変形前の状態を退避しておく（あとで必ずrestoreで戻す）
 	ctx.scale(camera.zoom, camera.zoom); // これ以降の描画すべてに、ズーム倍率がかかるようにする
 	ctx.translate(-camera.x, -camera.y); // カメラの位置ぶん、描画位置をずらす

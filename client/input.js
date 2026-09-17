@@ -296,7 +296,7 @@ export let pinchLastDist = null;// 直前に計測した2本指の距離（次�
 //デバッグ用
 function touchDebugLog(message, e = null)
 {
-	//return;
+	return;
 
 	if (!e)
 	{

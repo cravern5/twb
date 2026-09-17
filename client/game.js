@@ -260,6 +260,21 @@ export function mousemove(e)
 	if (scroll.isDraggingThumb)
 		return;
 
+	// キャンバス上を左クリックしたら、その場所を目的地にして歩き出す
+	if (input.mouseInfo.left && e.target === engine.canvas)
+	{
+		if (!player)
+			return;
+
+		//シフトキーのキャラ向き更新
+		if (e.shiftKey)
+			player.setDirectionTargetFromScreen(e.clientX, e.clientY);
+		else
+			player.setMoveTargetFromScreen(e.clientX, e.clientY);
+	}
+
+	lastSelectID = e.target.id;
+
 	//if (mouseInfo.right)
 	//{
 	//カメラ
