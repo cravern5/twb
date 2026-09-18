@@ -160,27 +160,8 @@ export class Player
 		return this;
 	}
 
-	//足元座標
-	getFootPosition(render = false)
-	{
-		const offsetY = 14.5;
-		let x = this.position.x;
-		let y = this.position.y;
-
-		if (render)
-		{
-			x = engine.snapToPixel(x);
-			y = engine.snapToPixel(y);
-		}
-
-		x = x + (SPRITE_WIDTH / 2);
-		y = y + (SPRITE_HEIGHT - offsetY);
-
-		return { x: x, y: y };
-	}
-
-	//中央の座標取得
-	getCenterPosition(render = false)
+	//座標取得
+	getPosition({ render = false, center = false, foot = false })
 	{
 		let x = this.position.x;
 		let y = this.position.y;
@@ -194,18 +175,20 @@ export class Player
 			y = engine.snapToPixel(y);
 		}
 
-		x = x + SPRITE_WIDTH / 2;
-		y = y + SPRITE_HEIGHT / 2;
+		if (center)
+		{
+			x = x + (SPRITE_WIDTH / 2);
+			y = y + (SPRITE_HEIGHT / 2)
+		}
+
+		if (foot)
+		{
+			const offsetY = 14.5;
+			x = x + (SPRITE_WIDTH / 2);
+			y = y + (SPRITE_HEIGHT - offsetY);
+		}
+
 		return { x: x, y: y };
-	}
-
-	//ワールド座標(position)からカメラ位置を引いて「画面上の描画位置」を求める、プレイヤーが動いてもカメラが追従して常に画面中央に見える
-	getWorldPosition()
-	{
-		const screenX = (this.position.x - camera.x);
-		const screenY = (this.position.y - camera.y);
-
-		return { x: screenX, y: screenY };
 	}
 
 	//画面座標→ワールド座標に変換して移動先をセットする（マウスクリック・タップの共通処理）
@@ -280,7 +263,7 @@ export class Player
 		else if (this.moveTarget)
 		{
 			// スプライトの中央ではなく「足元（下端の中央）」を基準にする、クリックした場所に、見た目の足がぴったり来るようにするため
-			const foot = this.getFootPosition();
+			const foot = this.getPosition({ foot: true });
 
 			const dx = this.moveTarget.x - foot.x;
 			const dy = this.moveTarget.y - foot.y;
@@ -501,9 +484,10 @@ export class Player
 
 		// cameraの位置(camera.x/y)を整数に丸めているので、こっちも丸める、「整数 - 小数」の端数がフレームごとに変わってしまい、逆に震えて見える。
 		//const drawX = this.position.x;
-		//const drawY = this.position.y;
-		const center = this.getCenterPosition(true);
-		const foot = this.getFootPosition(true);
+		//const drawY = this.position.y;	
+		const pos = this.getPosition({ render: true });
+		const foot = this.getPosition({ render: true, foot: true });
+
 
 		//addLog("info", "x:" + this.position.x + " y:" + this.position.y + " center.x:" + center.x + " center.y:" + center.y);
 
@@ -523,7 +507,7 @@ export class Player
 			ctx.drawImage(
 				asset.img,
 				this.currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
-				-center.x - asset.frameWidth, center.y, asset.frameWidth, asset.frameHeight
+				-pos.x - asset.frameWidth, pos.y, asset.frameWidth, asset.frameHeight
 			);
 			ctx.restore();
 		}
@@ -532,7 +516,7 @@ export class Player
 			ctx.drawImage(
 				asset.img,
 				this.currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
-				center.x, center.y, asset.frameWidth, asset.frameHeight
+				pos.x, pos.y, asset.frameWidth, asset.frameHeight
 			);
 		}
 
@@ -925,8 +909,8 @@ export function playerYSort()
 	//→ Y座標が大きい（画面の下＝手前）キャラを後から重ねて描くことで、自然な前後関係（Y-sort）になる
 	const sortedPlayers = [...players].sort((a, b) =>
 	{
-		const footA = a.getFootPosition();
-		const footB = b.getFootPosition();
+		const footA = a.getPosition({ foot: true });
+		const footB = b.getPosition({ foot: true });
 		return footA.y - footB.y;
 	});
 	return sortedPlayers;
