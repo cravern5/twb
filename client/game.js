@@ -308,23 +308,23 @@ function update(delta)
 	if (!player || !world)
 		return;
 
-
 	// フレームの最初にキャンバス全体をクリア
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-	// カメラ計算のため、プレイヤーの中心座標を渡す
+	// プレイヤーの位置・状態を「先に」動かして確定させる　この後でカメラを合わせないと、カメラだけ1フレーム前の位置を追いかけることになり、丸め処理と合わさって震えて見える）
+	Player.updateAll(delta);
+
+	// カメラ計算のため、プレイヤーの中心座標を渡す（更新済みの最新位置を使う）
 	const center = player.getPosition({ render: true, center: true });
 
-	// プレイヤー位置に合わせてカメラを更新
-	// カメラ変形（ズーム・平行移動）を開始する
-	// これ以降、マップやプレイヤーの描画はズームを意識せずワールド座標のまま書ける
+	// カメラ変形（ズーム・平行移動）を開始する、これ以降、マップやプレイヤーの描画はズームを意識せずワールド座標のまま書ける
 	engine.beginCameraTransform(center.x, center.y);
 
 	//マップ描画
 	world.update(delta);
 
-	//プレイヤー全更新
-	Player.updateAll(delta);
+	//プレイヤー描画（カメラ変形が有効なうちに描画する）
+	Player.drawAll();
 
 	// カメラ変形を元に戻す（beginCameraTransformと必ずセットで呼ぶ）
 	engine.endCameraTransform();

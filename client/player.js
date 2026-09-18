@@ -916,20 +916,17 @@ export function playerYSort()
 	return sortedPlayers;
 }
 
-//プレイヤー全更新
+//プレイヤー全員の位置・状態だけを更新する（描画はしない）
 export function updateAll(delta)
 {
-	//自分自身の再計算
-	//if (player)
-	//		player.recalc({ delta });
+	players.forEach((p) => { p.update(delta); });
+}
 
+//プレイヤーを描画する
+export function drawAll()
+{
 	//足元のY座標が小さい（奥）順に並べ替える
 	const sortedPlayers = playerYSort();
-
-	//プレイヤーの位置・状態だけ先に更新する　※全てのフレームを更新
-	players.forEach((p) => { p.update(delta); });
-
-	//ソート済みの順番で描画する
 	sortedPlayers.forEach((p) => { p.drawCharacter(); });
 	sortedPlayers.forEach((p) => { p.drawBubble(); });
 }
