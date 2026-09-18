@@ -1,0 +1,55 @@
+
+/*クイックスロット全体*/
+#leftQuickSlot {
+
+	/*background-color:red;*/
+
+	/* ドットを崩さずに拡大表示する指定 ctx.imageSmoothingEnabled=falseと併用可能*/
+	/* Chrome, Edge, Safari */
+	image-rendering: pixelated;
+	/* Firefox */
+	image-rendering: crisp-edges;
+
+	display: flex;
+	/*縦方向*/
+	flex-direction: column;
+	position: absolute;
+	left: 0px;
+	bottom: 0px;
+	width: 135px;
+	height: auto;
+	padding: 0;
+	margin: 0;
+	/*手前*/
+	z-index: 999;
+}
+
+/* #chatArea の直下にあるすべての要素に margin: 1px を適用 */
+#leftQuickSlotTab {
+
+	/*background-color:rgb(0, 60, 255);*/
+	background-image: url("../assets/ui/QuickSlot/tab.png");
+	background-repeat: no-repeat;
+	background-position: left top;
+
+	position: relative;
+	right:0px;
+	margin-left: auto;
+	width:81px;
+	height: 16px;
+
+}
+/* #chatArea の直下にあるすべての要素に margin: 1px を適用 */
+
+#leftQuickSlotShortcut
+{
+	background-color:rgba(0, 0, 0, 0.5);
+	/* 画像の横幅を2倍(200%)にすることで、画像全体を 左半分・右半分の2コマとして扱えるようにする */
+	/*background-size: 200% 100%;*/
+	/* 画像が繰り返し表示されないようにする */
+	background-image: url("../assets/ui/QuickSlot/quickSlot.png");
+	background-repeat: no-repeat;
+	
+	width: 135px;
+	height: 88px;
+}
