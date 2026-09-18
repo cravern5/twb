@@ -18,6 +18,8 @@
 	height: auto;
 	padding: 0;
 	margin: 0;
+
+	/*手前*/
 	z-index: 999;
 }
 
