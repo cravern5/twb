@@ -161,17 +161,41 @@ export class Player
 	}
 
 	//足元座標
-	getFootPosition(screenX, screenY)
+	getFootPosition(render = false)
 	{
-		return { x: screenX + (SPRITE_WIDTH / 2), y: screenY + (SPRITE_HEIGHT - 14.5) };
-		//return { x: screenX + SPRITE_WIDTH / 2 + 0, y: screenY + SPRITE_HEIGHT - 14.5 };
+		const offsetY = 14.5;
+		let x = this.position.x;
+		let y = this.position.y;
+
+		if (render)
+		{
+			x = engine.snapToPixel(x);
+			y = engine.snapToPixel(y);
+		}
+
+		x = x + (SPRITE_WIDTH / 2);
+		y = y + (SPRITE_HEIGHT - offsetY);
+
+		return { x: x, y: y };
 	}
 
 	//中央の座標取得
-	getCenterPosition()
+	getCenterPosition(render = false)
 	{
-		const x = this.position.x + SPRITE_WIDTH / 2;
-		const y = this.position.y + SPRITE_HEIGHT / 2;
+		let x = this.position.x;
+		let y = this.position.y;
+
+		// drawCharacter()の描画で使っている座標と同じ基準(丸めた座標)を使う。
+		// ここだけ丸めずに生のthis.positionを使ってしまうと、
+		// 描画側とカメラ側で基準がズレて、また細かく震えて見えてしまう
+		if (render)
+		{
+			x = engine.snapToPixel(x);
+			y = engine.snapToPixel(y);
+		}
+
+		x = x + SPRITE_WIDTH / 2;
+		y = y + SPRITE_HEIGHT / 2;
 		return { x: x, y: y };
 	}
 
@@ -256,7 +280,7 @@ export class Player
 		else if (this.moveTarget)
 		{
 			// スプライトの中央ではなく「足元（下端の中央）」を基準にする、クリックした場所に、見た目の足がぴったり来るようにするため
-			const foot = this.getFootPosition(this.position.x, this.position.y);
+			const foot = this.getFootPosition();
 
 			const dx = this.moveTarget.x - foot.x;
 			const dy = this.moveTarget.y - foot.y;
@@ -475,9 +499,13 @@ export class Player
 		//画像を滑らかに拡大するかどうか css image-rendering: pixelatedと併用可能
 		ctx.imageSmoothingEnabled = false;
 
-		// engine.beginCameraTransform()で既にズーム・カメラ移動の変形がかかっているので、
-		// this.position（ワールド座標）をそのまま使って描画できる
-		const foot = this.getFootPosition(this.position.x, this.position.y);
+		// cameraの位置(camera.x/y)を整数に丸めているので、こっちも丸める、「整数 - 小数」の端数がフレームごとに変わってしまい、逆に震えて見える。
+		//const drawX = this.position.x;
+		//const drawY = this.position.y;
+		const center = this.getCenterPosition(true);
+		const foot = this.getFootPosition(true);
+
+		//addLog("info", "x:" + this.position.x + " y:" + this.position.y + " center.x:" + center.x + " center.y:" + center.y);
 
 		//影の描画（変形が既にかかっているので、サイズもワールド基準の値のままでよい）
 		utils2.drawCircle(
@@ -495,7 +523,7 @@ export class Player
 			ctx.drawImage(
 				asset.img,
 				this.currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
-				-this.position.x - asset.frameWidth, this.position.y, asset.frameWidth, asset.frameHeight
+				-center.x - asset.frameWidth, center.y, asset.frameWidth, asset.frameHeight
 			);
 			ctx.restore();
 		}
@@ -504,7 +532,7 @@ export class Player
 			ctx.drawImage(
 				asset.img,
 				this.currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
-				this.position.x, this.position.y, asset.frameWidth, asset.frameHeight
+				center.x, center.y, asset.frameWidth, asset.frameHeight
 			);
 		}
 
@@ -897,8 +925,8 @@ export function playerYSort()
 	//→ Y座標が大きい（画面の下＝手前）キャラを後から重ねて描くことで、自然な前後関係（Y-sort）になる
 	const sortedPlayers = [...players].sort((a, b) =>
 	{
-		const footA = a.getFootPosition(a.position.x, a.position.y);
-		const footB = b.getFootPosition(b.position.x, b.position.y);
+		const footA = a.getFootPosition();
+		const footB = b.getFootPosition();
 		return footA.y - footB.y;
 	});
 	return sortedPlayers;

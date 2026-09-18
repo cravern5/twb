@@ -84,6 +84,13 @@ export function setCameraBounds(width, height)
 	camera.height = height;
 }
 
+// 画面のガタつき・震えを防ぐための、ピクセル単位への丸め処理
+// カメラの丸めも、キャラクターなど描画位置の丸めも、必ずこの関数を経由させる。
+export function snapToPixel(value)
+{
+	return Math.round(value);
+}
+
 
 // 中心座標をもとに、カメラの位置を計算
 // 中心座標をもとにカメラ位置を計算し、カメラ変形（ズーム・平行移動）を開始する
@@ -104,8 +111,8 @@ export function beginCameraTransform(targetX, targetY)
 
 	// カメラ位置を整数(ピクセル単位)に丸める、カメラが小数点のまま動くと、止まっているキャラでも
 	// 描画位置の端数が毎フレーム変わってしまい、小刻みに揺れて見えてしまう。 カメラをピクセル単位にピタッと固定することで、このガタつきを防ぐ。
-	camera.x = Math.round(camera.x);
-	camera.y = Math.round(camera.y);
+	camera.x = snapToPixel(camera.x);
+	camera.y = snapToPixel(camera.y);
 
 	ctx.save();                          // 変形前の状態を退避しておく（あとで必ずrestoreで戻す）
 	ctx.scale(camera.zoom, camera.zoom); // これ以降の描画すべてに、ズーム倍率がかかるようにする

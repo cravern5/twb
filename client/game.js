@@ -313,7 +313,7 @@ function update(delta)
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 	// カメラ計算のため、プレイヤーの中心座標を渡す
-	const center = player.getCenterPosition();
+	const center = player.getCenterPosition(true);
 
 	// プレイヤー位置に合わせてカメラを更新
 	// カメラ変形（ズーム・平行移動）を開始する
