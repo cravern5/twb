@@ -35,6 +35,9 @@ export const leftAfkBtn = document.getElementById("leftAfkBtn");
 //右メニュー
 export const rightMenuButtons = document.getElementById("rightMenuButtons");
 
+//左クイックスロット
+export const leftQuickSlotTab = document.getElementById("leftQuickSlotTab");
+
 //ウィンドウズクラス
 class WindowController
 {

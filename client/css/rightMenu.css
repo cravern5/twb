@@ -1,4 +1,3 @@
-/* #chatArea の直下にあるすべての要素に margin: 1px を適用 */
 #rightMenu {
 
 	/* ドットを崩さずに拡大表示する指定 ctx.imageSmoothingEnabled=falseと併用可能*/

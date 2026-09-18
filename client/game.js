@@ -50,6 +50,16 @@ async function init()
 
 ///////ボタンイベント//////////
 
+
+//クイックスロット切り替え
+leftQuickSlotTab.addEventListener('click', (e) =>
+{
+	if (e.offsetX <= leftQuickSlotTab.clientWidth / 2)
+		leftQuickSlotTab.classList.remove("quickSlotTab2");
+	else
+		leftQuickSlotTab.classList.add("quickSlotTab2");
+});
+
 //run/walk
 leftFootBtn.addEventListener('click', (e) =>
 {
@@ -71,7 +81,6 @@ leftEnvironmentTab.addEventListener('click', (e) =>
 	//for (const win of windows.windows) { win.insideScreen(); }
 	windows.windows.forEach(win => { win.insideScreen(); });
 });
-
 
 //チャット範囲選択
 chatOpen.addEventListener('click', (e) =>

@@ -24,22 +24,27 @@
 	z-index: 999;
 }
 
-/* #chatArea の直下にあるすべての要素に margin: 1px を適用 */
 #leftQuickSlotTab {
 
 	/*background-color:rgb(0, 60, 255);*/
+	/*background-size: 200% 100%;*/
 	background-image: url("../assets/ui/QuickSlot/tab.png");
 	background-repeat: no-repeat;
 	background-position: left top;
 
 	position: relative;
-	right:0px;
+	bottom:-3px;
+	right:4px;
 	margin-left: auto;
 	width:81px;
 	height: 16px;
 
 }
-/* #chatArea の直下にあるすべての要素に margin: 1px を適用 */
+
+#leftQuickSlotTab.quickSlotTab2
+{
+	background-position: left bottom;
+}
 
 #leftQuickSlotShortcut
 {
