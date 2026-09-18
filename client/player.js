@@ -708,7 +708,8 @@ export class Player
 	drawPointBar(canvasID, point, maxPoint, color, backColor = '#000418')
 	{
 		const canvas = document.getElementById(canvasID);
-		const ctx = canvas.getContext("2d");
+		//getImageDataを使うと警告が出るのでオプション設定
+		const ctx = canvas.getContext('2d', { willReadFrequently: true });
 		const per = point / maxPoint;
 		const p = per * 10;
 
