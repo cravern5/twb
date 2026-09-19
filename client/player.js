@@ -25,7 +25,7 @@ export const MOVE_SPEED_X_RATIO = 1.66;				//横方向の体感速度を補正�
 export const MOVE_TARGET_THRESHOLD = 4;				// 目的地にどれだけ近づいたら「到着」とみなすか（px）
 export const FRAME_DURATION = 0.07;					// アニメーションの更新間隔（秒単位：例 0.1秒ごとに1コマ進める）
 export const SEND_INTERVAL = 1 / 20;				// 座標送信は1秒間に最大20回まで（20Hz 0.05秒に1回)に制限する、　自キャラ(60fps 16.67ミリ秒)
-export const INTERP_SPEED = 12;						// 他プレイヤー座標を目標地点へ近づける速さ（大きいほどすぐ追いつく）
+export const INTERP_SPEED = 32;						// 他プレイヤー座標を目標地点へ近づける速さ（大きいほどすぐ追いつく）
 
 //チャット
 //const chatArea = document.getElementById("chatArea");
@@ -764,13 +764,6 @@ export class Player
 		//アンチエイリアスを手動で除去する後処理
 		utils2.removeAntiAliasing({ ctx: hpCtx, width: hpCanvas.width, height: hpCanvas.height });
 	}*/
-
-	savePosition()
-	{
-		localStorage.setItem('positionX', player.position.x);
-		localStorage.setItem('positionY', player.position.y);
-	}
-
 
 }
 

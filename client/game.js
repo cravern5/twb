@@ -54,7 +54,8 @@ async function init()
 //ページが閉じられた時
 window.addEventListener('pagehide', () =>
 {
-	player.savePosition();
+	localStorage.setItem('positionX', player.position.x);
+	localStorage.setItem('positionY', player.position.y);
 });
 
 ///////ボタンイベント//////////
