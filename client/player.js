@@ -19,7 +19,7 @@ export const ASSETSDIR = '/assets/player';	//キャラ画のディレクトリ
 export const CHARACTERS = ['maximin', 'tichiel'];
 export const DIRECTIONS = ['forward', 'forside', 'side', 'backside', 'backward'];
 export const STATES = ["idle", "run", "sit", "walk"]//, "attack"];
-export const MOVE_SPEED_RUN = 150; 					// 1秒あたりの移動ピクセル数
+export const MOVE_SPEED_RUN = 130; 					// 1秒あたりの移動ピクセル数
 export const MOVE_SPEED_WALK = 90;					// 1秒あたりの移動ピクセル数
 export const MOVE_SPEED_X_RATIO = 1.66;				//横方向の体感速度を補正するための倍率、横長なほど横移動が遅く感じる
 export const MOVE_TARGET_THRESHOLD = 4;				// 目的地にどれだけ近づいたら「到着」とみなすか（px）
@@ -189,6 +189,15 @@ export class Player
 		}
 
 		return { x: x, y: y };
+	}
+
+	//位置指定
+	setPosition(x, y)
+	{
+		this.position.x = x;
+		this.position.y = y;
+		this.remotePosition.x = x;
+		this.remotePosition.y = y;
 	}
 
 	//画面座標→ワールド座標に変換して移動先をセットする（マウスクリック・タップの共通処理）
@@ -790,12 +799,7 @@ export async function addPlayer(id, characterName, playerName, x, y)
 
 	// init前に呼ぶ、画像読み込みを待つ前にここでセットしておく。画像読み込み待ち中に届いたSTATEパケットでせっかく、remotePositionが正しく更新されても、あとから古い位置で上書きしてしまう
 	if (x !== undefined && y !== undefined)
-	{
-		player.position.x = x;
-		player.position.y = y;
-		player.remotePosition.x = x;
-		player.remotePosition.y = y;
-	}
+		player.setPosition(x, y);
 
 	//画像の読み込みが終わるまで待つ（描画に使うだけなので、後からで問題ない）
 	await player.init();
