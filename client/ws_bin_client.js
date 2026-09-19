@@ -132,13 +132,15 @@ export function init()
 			const view = new DataView(event.data);
 			const joinedId = view.getUint16(1, true);
 			const characterIndex = view.getUint16(3, true);
+			const x = view.getFloat32(5, true);
+			const y = view.getFloat32(9, true);
 
-			// 6byte目から固定長ぶんを取り出し、0埋め部分を除いて名前に戻す
-			const nameBytes = new Uint8Array(event.data, 5, NAME_BYTE_LENGTH);
+			// 14byte目から固定長ぶんを取り出し、0埋め部分を除いて名前に戻す
+			const nameBytes = new Uint8Array(event.data, 13, NAME_BYTE_LENGTH);
 			const playerName = decodeFixedName(nameBytes);
 
 			if (callbacks.onjoin)
-				callbacks.onjoin(joinedId, characterIndex, playerName);
+				callbacks.onjoin(joinedId, characterIndex, playerName, x, y);
 			else
 				addLog("WARNING", "onjoinコールバック指定無し");
 		}
@@ -170,18 +172,23 @@ function sendBinary(buffer)
 }
 
 // WELCOMEでJOINを返送する　キャラ選択情報をサーバーへ送り返す関数
-export function sendJoin(characterIndex, playerName)
+export function sendJoin(characterIndex, playerName, x = null, y = null)
 {
 	// タイプ(1byte) + プレイヤーID(2byte) + キャラID(2byte) + 名前(固定NAME_BYTE_LENGTHバイト)
-	const packet = new Uint8Array(5 + NAME_BYTE_LENGTH);
+	const packet = new Uint8Array(13 + NAME_BYTE_LENGTH);
 	const view = new DataView(packet.buffer);
 
 	view.setUint8(0, PACKET_TYPE.JOIN);
 	view.setUint16(1, myPlayerId, true);
 	view.setUint16(3, characterIndex, true);
 
-	// 名前を固定長のバイト列（0埋め込み）に変換して4byte目以降へコピー
-	packet.set(encodeFixedName(playerName, NAME_BYTE_LENGTH), 5);
+	// ?? はnull/undefinedのときだけ右側を使う演算子。座標が無ければNaNを送る
+	view.setFloat32(5, x ?? NaN, true);
+	view.setFloat32(9, y ?? NaN, true);
+
+
+	// 名前を固定長のバイト列（0埋め込み）に変換して14byte目以降へコピー
+	packet.set(encodeFixedName(playerName, NAME_BYTE_LENGTH), 13);
 
 	sendBinary(packet);
 }

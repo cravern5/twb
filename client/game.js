@@ -47,9 +47,17 @@ async function init()
 	engine.endProgress();
 }
 
+///////全般イベント//////////
+
+// タブを閉じる・別ページへ移動するときに発火する
+
+//ページが閉じられた時
+window.addEventListener('pagehide', () =>
+{
+	player.savePosition();
+});
 
 ///////ボタンイベント//////////
-
 
 //クイックスロット切り替え
 leftQuickSlotTab.addEventListener('click', (e) =>

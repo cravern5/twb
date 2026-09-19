@@ -483,13 +483,10 @@ export class Player
 		ctx.imageSmoothingEnabled = false;
 
 		// cameraの位置(camera.x/y)を整数に丸めているので、こっちも丸める、「整数 - 小数」の端数がフレームごとに変わってしまい、逆に震えて見える。
-		//const drawX = this.position.x;
-		//const drawY = this.position.y;	
 		const pos = this.getPosition({ render: true });
 		const foot = this.getPosition({ render: true, foot: true });
 
-
-		//addLog("info", "x:" + this.position.x + " y:" + this.position.y + " center.x:" + center.x + " center.y:" + center.y);
+		//addLog("info", "x:" + pos.x + " y:" + pos.y);
 
 		//影の描画（変形が既にかかっているので、サイズもワールド基準の値のままでよい）
 		utils2.drawCircle(
@@ -742,10 +739,10 @@ export class Player
 	{
 		// canvas要素を取得
 		const hpCanvas = document.getElementById("statusHP");
-
+	
 		// hpCanvas自身の描画用コンテキストを取得する
 		const hpCtx = hpCanvas.getContext("2d");
-
+	
 		//文字描画
 		utils2.drawText({
 			canvas: hpCanvas, ctx: hpCtx,
@@ -754,10 +751,17 @@ export class Player
 			outline: { color: '#000000', x: 1, y: 1 },
 			letterSpacing: 1
 		});
-
+	
 		//アンチエイリアスを手動で除去する後処理
 		utils2.removeAntiAliasing({ ctx: hpCtx, width: hpCanvas.width, height: hpCanvas.height });
 	}*/
+
+	savePosition()
+	{
+		localStorage.setItem('positionX', player.position.x);
+		localStorage.setItem('positionY', player.position.y);
+	}
+
 
 }
 
@@ -776,13 +780,22 @@ export function getPlayerById(id)
 	return players.find((p) => p.id === id);
 }
 //プレイヤーの追加
-export async function addPlayer(id, characterName, playerName)
+export async function addPlayer(id, characterName, playerName, x, y)
 {
-	const player = new Player(id, characterName, playerName)
+	const player = new Player(id, characterName, playerName, x, y);
 
 	//※本来はinit前に書いたほうが良い
 	//画像読み込み前にSTATEパケットが届くと、「存在しないプレイヤー」扱いされる
 	players.push(player);
+
+	// init前に呼ぶ、画像読み込みを待つ前にここでセットしておく。画像読み込み待ち中に届いたSTATEパケットでせっかく、remotePositionが正しく更新されても、あとから古い位置で上書きしてしまう
+	if (x !== undefined && y !== undefined)
+	{
+		players.position.x = x;
+		players.position.y = y;
+		players.remotePosition.x = x;
+		players.remotePosition.y = y;
+	}
 
 	//画像の読み込みが終わるまで待つ（描画に使うだけなので、後からで問題ない）
 	await player.init();
@@ -804,6 +817,10 @@ export async function onWelcome(id)
 	//データ読み込み
 	let characterName = localStorage.getItem('characterName');
 	let playerName = localStorage.getItem('playerName');
+	const savedX = localStorage.getItem('positionX');
+	const savedY = localStorage.getItem('positionY');
+	const positionX = (savedX !== null) ? Number(savedX) : 2585;
+	const positionY = (savedY !== null) ? Number(savedY) : 1956;
 
 	//デフォルト指定(直接game.htmlにアクセスされるのを許容)
 	if (!characterName)
@@ -813,24 +830,27 @@ export async function onWelcome(id)
 
 	let characterIndex = CHARACTERS.indexOf(characterName);
 
+
 	//JOINでキャラ情報を送る
-	socket.sendJoin(characterIndex, playerName);
+	socket.sendJoin(characterIndex, playerName, positionX, positionY);
 
 	//JOINを受信して初めてキャラ追加する
 	//player = await addPlayer(id, playerName, character);
 }
 // 他プレイヤーが新しく入ってきたときの処理
-export async function onJoin(joinedId, characterIndex, playerName)
+export async function onJoin(joinedId, characterIndex, playerName, x, y)
 {
 	let joiner = null;
 	// 念のため、既に同じIDが存在していないか確認してから追加する
 	if (!getPlayerById(joinedId))
 	{
-		joiner = await addPlayer(joinedId, CHARACTERS[characterIndex], playerName);
+		joiner = await addPlayer(joinedId, CHARACTERS[characterIndex], playerName, x, y);
 
 		//自分自身
 		if (joinedId == socket.myPlayerId)
+		{
 			player = joiner;
+		}
 	}
 }
 // 他プレイヤーが抜けたときの処理

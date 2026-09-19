@@ -141,23 +141,31 @@ export function init(server)
 				// クライアントからキャラ情報取得
 				else if (dataType === PACKET_TYPE.JOIN)
 				{
-					// タイプ(1byte) + プレイヤーID(2bytes) + キャラID(2byte) + 名前(固定NAME_BYTE_LENGTHバイト)
-					if (data.length < 5 + NAME_BYTE_LENGTH) return;
+					// タイプ(1byte) + プレイヤーID(2byte) + キャラID(2byte)
+					// + x座標(4byte) + y座標(4byte) + 名前(固定NAME_BYTE_LENGTHバイト)
+					if (data.length < 13 + NAME_BYTE_LENGTH) return;
 
 					//data.byteOffset(読み書きの開始位置)、data.byteLength(対象のデータ長)
 					const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
 					//const dummyid = view.getUint16(1, true); // プレイヤーIDを記録
 					ws.characterIndex = view.getUint16(3, true); // キャラIDを記録
 
-					// 4byte目から固定長分を取り出し、プレイヤー名として記録する
-					const nameBytes = data.subarray(5, 5 + NAME_BYTE_LENGTH);
+					// クライアントが送ってきた「前回の位置」を取得する
+					const requestedX = view.getFloat32(5, true);
+					const requestedY = view.getFloat32(9, true);
+
+					ws.x = Number.isNaN(requestedX) ? 0 : requestedX;
+					ws.y = Number.isNaN(requestedY) ? 0 : requestedY;
+
+					// 14byte目から固定長分を取り出し、プレイヤー名として記録する
+					const nameBytes = data.subarray(13, 13 + NAME_BYTE_LENGTH);
 					ws.playerName = decodeFixedName(nameBytes);
 
 					// JOINを正常に受け取れたので、タイムアウト強制切断の予約はもう不要→解除する
 					clearTimeout(ws.joinTimeoutId);
 
-					// 新規参加者自身のJOINパケットに名前も乗せる
-					const myJoinPacket = createJoinPacket(ws.playerId, ws.characterIndex, ws.playerName);
+					// 新規参加者自身のJOINパケットに、決定した位置も乗せる
+					const myJoinPacket = createJoinPacket(ws.playerId, ws.characterIndex, ws.playerName, ws.x, ws.y);
 
 					//自分自身に対してJOINパケットを送る
 					ws.send(myJoinPacket, { binary: true });
@@ -167,14 +175,14 @@ export function init(server)
 					{
 						if (client === ws || client.readyState !== 1) return;
 
-						// 新規参加者へ、既存プレイヤーの情報(ID+キャラID)を通知
+						// 新規参加者へ、既存プレイヤーの情報(ID+キャラID+位置)を通知
 						if (client.characterIndex !== undefined)
 						{
-							const existingJoinPacket = createJoinPacket(client.playerId, client.characterIndex, client.playerName);
+							const existingJoinPacket = createJoinPacket(client.playerId, client.characterIndex, client.playerName, client.x, client.y);
 							ws.send(existingJoinPacket, { binary: true });
 						}
 
-						// 既存プレイヤーの最新STATEがあれば送信
+						// 既存プレイヤーの最新STATEがあれば送信（動いていれば、こちらでさらに位置が上書きされる）
 						if (client.lastStateBuffer)
 							ws.send(client.lastStateBuffer, { binary: true });
 
@@ -261,19 +269,21 @@ function createWelcomePacket(playerId)
 	return welcomePacket;
 }
 
-//JOIN 入ってきた人のID・キャラID・名前を送信 (タイプ1byte + ID 2byte + キャラID 2byte + 名前(固定NAME_BYTE_LENGTHバイト))
-function createJoinPacket(playerId, characterIndex, playerName)
+//JOIN 入ってきた人 (タイプ1byte + ID 2byte + キャラID 2byte + x 4byte + y 4byte + 名前(固定NAME_BYTE_LENGTHバイト))
+function createJoinPacket(playerId, characterIndex, playerName, x, y)
 {
-	const joinPacket = new Uint8Array(5 + NAME_BYTE_LENGTH);
+	const joinPacket = new Uint8Array(13 + NAME_BYTE_LENGTH);
 	try
 	{
 		const view = new DataView(joinPacket.buffer);
 		view.setUint8(0, PACKET_TYPE.JOIN);
 		view.setUint16(1, playerId, true);
 		view.setUint16(3, characterIndex, true);
+		view.setFloat32(5, x, true);
+		view.setFloat32(9, y, true);
 
-		// 6byte目以降に名前を固定長のバイト列として書き込む
-		joinPacket.set(encodeFixedName(playerName, NAME_BYTE_LENGTH), 5);
+		// 14byte目(offset:13)以降に名前を固定長のバイト列として書き込む
+		joinPacket.set(encodeFixedName(playerName, NAME_BYTE_LENGTH), 13);
 	}
 	catch (e)
 	{
