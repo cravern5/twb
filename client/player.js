@@ -791,10 +791,10 @@ export async function addPlayer(id, characterName, playerName, x, y)
 	// init前に呼ぶ、画像読み込みを待つ前にここでセットしておく。画像読み込み待ち中に届いたSTATEパケットでせっかく、remotePositionが正しく更新されても、あとから古い位置で上書きしてしまう
 	if (x !== undefined && y !== undefined)
 	{
-		players.position.x = x;
-		players.position.y = y;
-		players.remotePosition.x = x;
-		players.remotePosition.y = y;
+		player.position.x = x;
+		player.position.y = y;
+		player.remotePosition.x = x;
+		player.remotePosition.y = y;
 	}
 
 	//画像の読み込みが終わるまで待つ（描画に使うだけなので、後からで問題ない）
