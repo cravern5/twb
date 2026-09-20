@@ -8,7 +8,7 @@ import * as engine from './engine.js';
 import { canvas, ctx } from './engine.js';
 import { MAP_WIDTH, MAP_HEIGHT } from './world.js';
 import * as world from './world.js';
-import { SpriteAnimator } from './animator.js';
+import { SpriteAnimator, ANIME_FRAMES } from './animator.js';
 //import * as game from './game.js';
 
 //プレイヤー
@@ -29,12 +29,6 @@ export const CHARACTERS = ['maximin', 'tichiel'];
 export const STATES = ["idle", "run", "sit", "walk"]//, "attack"];
 export const DIRECTIONS = ['forward', 'forside', 'side', 'backside', 'backward'];
 export const FRAME_DURATION = 0.07;					// アニメーションの更新間隔（秒単位：例 0.1秒ごとに1コマ進める）
-
-//アニメ更新間隔
-export const FRAME_DURATIONS = {
-	"idle_forside": [3, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2],
-	"idle_backside": [3, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2],
-};
 
 //チャット
 //const chatArea = document.getElementById("chatArea");
@@ -68,7 +62,7 @@ export class Player
 		this.isSitting = false;						//立ち/座り
 		this.isRunning = true; 						//走り/歩き
 		this.state = "idle";						//状態
-		this.direction = "forward";					//キャラの向き
+		this.direction = "forside";					//キャラの向き
 		this.flip = false;							//false=左
 		this.position = { x: 2585, y: 1956 };		//プレイヤー位置
 		this.remotePosition = { ...this.position };	//他プレイヤー用：サーバーから届いた「本当の位置」（画面上のposを毎フレーム少しずつここへ近づける）
@@ -139,7 +133,7 @@ export class Player
 				const path = ASSETSDIR + "/" + chara + "/" + stt + "/" + dir + ".png";
 				const key = chara + "_" + stt + "_" + dir;
 				const durationKey = stt + "_" + dir;
-				const durations = FRAME_DURATIONS[durationKey] ?? null;
+				const durations = ANIME_FRAMES[durationKey] ?? null;
 
 				if (chara === "maximin" && stt === "idle" && dir === "forward")
 				{
