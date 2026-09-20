@@ -41,6 +41,9 @@ canvas {
 	margin: 0px auto;
 	/*手前処理*/
 	z-index: 1;
+
+	/*tabindex時のアウトラインを出さないように*/
+	outline:none;
 }
 
 /*sub.jsのaddLog用だけど、chat.cssがあるので未使用

@@ -14,9 +14,9 @@ export function init()
 	//ctx.imageSmoothingEnabled = false;
 
 	// canvasがフォーカスを受け取れるようにする
-	canvas.setAttribute('tabindex', '0');
+	//canvas.setAttribute('tabindex', '0');
 	// 外枠の黒い線を消す（フォーカス時に青い枠線などが出ないようにする）
-	canvas.style.outline = 'none';
+	//canvas.style.outline = 'none';
 
 	autoPageReloader();
 
