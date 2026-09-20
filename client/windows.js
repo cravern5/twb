@@ -455,10 +455,10 @@ export function init()
 
 	leftOpen.addEventListener("click", () =>
 	{
-		if (leftStatus.style.display === 'none')
-			leftStatus.style.display = '';
+		if (leftStatusGroup.style.display === 'none')
+			leftStatusGroup.style.display = '';
 		else
-			leftStatus.style.display = 'none';
+			leftStatusGroup.style.display = 'none';
 	});
 
 
