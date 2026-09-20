@@ -6,8 +6,7 @@ import * as engine from './engine.js';
 import { SpriteAnimator } from './animator.js';
 
 //位置合わせ用
-const PLAYER_SPRITE_WIDTH = 70;    // player.js の SPRITE_WIDTH と同じ値
-const PLAYER_SPRITE_HEIGHT = 95;   // player.js の SPRITE_HEIGHT と同じ値
+import { SPRITE_WIDTH as PLAYER_SPRITE_WIDTH, SPRITE_HEIGHT as PLAYER_SPRITE_HEIGHT } from './player.js';
 
 // マップ設定
 export const MAP_WIDTH = 6800;
