@@ -34,6 +34,7 @@ export const leftAfkBtn = document.getElementById("leftAfkBtn");
 
 //右メニュー
 export const rightMenuButtons = document.getElementById("rightMenuButtons");
+export const rightMenuOpenBtn = document.getElementById("rightMenuOpen");
 
 //左クイックスロット
 export const leftQuickSlotTab = document.getElementById("leftQuickSlotTab");
@@ -428,55 +429,6 @@ class WindowController
 	}
 }
 
-//ウィンドウクラス追加 呼び出し
-export function init()
-{
-	//ウィンドウコンテナ作成
-	chatWindow = new WindowController({ container: '#chatArea', drager: '#chatLog', minWidth: 300, minHeight: 90, childLock: true, defaultDisplay: 'flex' });
-	debugWindow = new WindowController({ container: '#debugInfo', defaultDisplay: "block" });
-	leftStatusWindow = new WindowController({ container: '#leftStatus', defaultDisplay: "flex" });
-
-	windows.push(chatWindow);
-
-
-	//左ステータス
-
-	// 開閉ボタンの要素と、開閉対象の箱の要素を取得
-	for (let el of leftStatusBtns)
-	{
-		// 開閉ボタンがクリックされたら
-		el.addEventListener("click", () =>
-		{
-			el.classList.toggle("downed");
-		});
-	}
-	//ステータスタブが初期値
-	leftStatusTab.classList.toggle("downed");
-
-	leftOpen.addEventListener("click", () =>
-	{
-		if (leftStatusGroup.style.display === 'none')
-			leftStatusGroup.style.display = '';
-		else
-			leftStatusGroup.style.display = 'none';
-	});
-
-
-	//右メニュー
-
-	// 開閉ボタンの要素と、開閉対象の箱の要素を取得
-	const rightMenuOpenBtn = document.getElementById("rightMenuOpen");
-	// 開閉ボタンがクリックされたら
-	rightMenuOpenBtn.addEventListener("click", () =>
-	{
-		rightMenuButtons.classList.toggle("closed");
-	});
-
-
-	//canvasサイズ初期化
-	repaint();
-}
-
 
 //リサイズイベントを待つ
 // 画面のリサイズイベント完了を待つ非同期ヘルパー関数
@@ -536,6 +488,49 @@ export function repaint()
 	canvas.height = window.innerHeight;
 }
 
+
+//ウィンドウクラス追加 呼び出し
+export function init()
+{
+	//ウィンドウコンテナ作成
+	chatWindow = new WindowController({ container: '#chatArea', drager: '#chatLog', minWidth: 300, minHeight: 90, childLock: true, defaultDisplay: 'flex' });
+	debugWindow = new WindowController({ container: '#debugInfo', defaultDisplay: "block" });
+	leftStatusWindow = new WindowController({ container: '#leftStatusGroup', defaultDisplay: "block" });
+
+	windows.push(chatWindow);
+
+	//canvasサイズ初期化
+	repaint();
+}
+
+// (down)トグルボタン
+export function downedToggleClick(e)
+{
+	e.target.classList.toggle("downed");
+}
+
+
+//左ステータス
+leftAfkBtn.addEventListener("click", downedToggleClick);
+leftFootBtn.addEventListener("click", downedToggleClick);
+leftStatusTab.addEventListener("click", downedToggleClick);
+leftEnvironmentTab.addEventListener("click", downedToggleClick);
+leftNoExpandTab.addEventListener("click", downedToggleClick);
+
+//左上オープンボタン
+leftOpen.addEventListener("click", () =>
+{
+	leftStatusWindow.show(-1);
+});
+
+
+//右メニュー
+
+// 開閉ボタンがクリックされたら
+rightMenuOpenBtn.addEventListener("click", () =>
+{
+	rightMenuButtons.classList.toggle("closed");
+});
 
 
 
