@@ -94,6 +94,32 @@ export function print2(text)
 	console.log(text);
 }
 
+// 引数がオブジェクトかどうかを判定する関数
+export function isObject(value)
+{
+	// typeof で "object" 型かどうかを確認する
+	// typeof null も "object" になってしまうため、null を除外する
+	// また、配列も typeof では "object" になるので Array.isArray で除外する
+	return (typeof value === "object" && value !== null && !Array.isArray(value));
+}
+
+// 引数が配列かどうかを判定する関数
+export function isArray(value)
+{
+	// Array.isArray は配列かどうかを正確に判定できる標準メソッド
+	// typeof value === "object" だけでは配列と判定できないため、専用メソッドを使う
+	return Array.isArray(value);
+}
+
+// 引数が関数かどうかを判定する関数
+export function isFunction(value)
+{
+	// typeof で "function" 型かどうかを確認する
+	// 通常の関数・アロー関数・クラスなども typeof は "function" になる
+	return typeof value === "function";
+}
+
+
 //色付きdiv作成
 export function createTypeFont(type, message)
 {
@@ -142,8 +168,13 @@ export function typeConsole(type)
 	return consoleFunc;
 }
 
+//ログエリアに書き込む
 export function addLog(type, message, logArea = chatLog)
 {
+	//オブジェクトなら文字にする
+	if (isObject(message))
+		message = JSON.stringify(message);
+
 	//タイプコンソール取得
 	let consoleFunc = typeConsole(type);
 
