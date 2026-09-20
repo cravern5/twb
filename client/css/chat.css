@@ -87,15 +87,10 @@
 #chatLogArea {
 	/* 黒の50%半透明 */
 	background-color: rgba(0, 0, 0, 0.534);
-	/*background-color: brown;*/
-	/*background-image: url("./assets/ui/ChatBar/log.png");
-	background-repeat: no-repeat;*/
-
 	/*「画面（親要素）の空きスペースに合わせて親要素内で伸縮し、コンテンツに応じた初期サイズを持つ」 設定です。
 				 1 （flex-grow / 伸長係数）: 親要素に余白がある場合、他の要素と分かち合って拡大します。 
 				 1 （flex-shrink / 収縮係数）: 親要素からはみ出る場合、他の要素に合わせて縮小します。 
 				 auto （flex-basis / 基本サイズ）: 要素の初期サイズを width や height（未指定の場合はコンテンツの大きさ）に基づいて決定します。*/
-
 	/*固定の height ではなく、余ったスペースを全部使う設定に変える（min-heightで今までと同じ最低45pxは確保） */
 	flex: 1 1 auto;
 	min-height: 45px;
@@ -189,6 +184,14 @@
 /*スクロールつまみ*/
 #chatScrollBar {
 
+	background-image: url("../assets/ui/ChatBar/scrollBar.png");
+	background-repeat: no-repeat;
+
+	/* containだと縦横比が保たれて画像が伸びないので、要素の高さいっぱいまで画像自体を引き伸ばすように変更する */
+	background-size: contain;
+	/*background-size: 100% 100%;*/
+	background-position: center;
+
 	/*background-color: #FF0000;*/
 	position: absolute;
 	/*画像サイズ+1pxで指定するとちょうどきれい*/
@@ -197,19 +200,12 @@
 	height: 19px;
 
 	/* トラックの中央より+2px右 */
-	left: calc(51.9% + 0px);
-	transform: translateX(-50%);
+	left: calc(34% + 0px);
+	/*left: calc(51.9% + 0px);*/
+	/*transform: translateX(-50%);*/
 	top: 0;
 
 	cursor: pointer;
-
-	background-image: url("../assets/ui/ChatBar/scrollBar.png");
-	background-repeat: no-repeat;
-
-	/* containだと縦横比が保たれて画像が伸びないので、要素の高さいっぱいまで画像自体を引き伸ばすように変更する */
-	background-size: contain;
-	/*background-size: 100% 100%;*/
-	background-position: center;
 }
 
 /*チャット3段目===========================*/
