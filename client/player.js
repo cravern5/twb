@@ -6,7 +6,7 @@ import * as input from './input.js';
 import * as windows from './windows.js';
 import * as engine from './engine.js';
 import { canvas, ctx } from './engine.js';
-import { MAP_WIDTH, MAP_HEIGHT } from './world.js';
+//import { MAP_WIDTH, MAP_HEIGHT } from './world.js';
 import * as world from './world.js';
 import { SpriteAnimator, ANIME_FRAMES } from './animator.js';
 //import * as game from './game.js';
@@ -361,8 +361,8 @@ export class Player
 			}
 
 			// 画面(canvas)の外ではなく、マップ全体(MAP_WIDTH/MAP_HEIGHT)の外に出ないよう制限する
-			this.position.x = Math.max(0, Math.min(MAP_WIDTH - SPRITE_WIDTH, this.position.x));
-			this.position.y = Math.max(0, Math.min(MAP_HEIGHT - SPRITE_HEIGHT, this.position.y));
+			this.position.x = Math.max(0, Math.min(engine.camera.width - SPRITE_WIDTH, this.position.x));
+			this.position.y = Math.max(0, Math.min(engine.camera.height - SPRITE_HEIGHT, this.position.y));
 
 			return true;
 		}

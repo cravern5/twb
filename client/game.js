@@ -31,6 +31,8 @@ async function init()
 	//chatArea.style.display = 'none';
 	//rightMenuButtons.classList.toggle("closed");
 
+	engine.setProgressCount(5);
+
 	engine.updateProgress("<エンジン初期化>");
 	engine.init();
 	engine.updateProgress("<ウィンドウコントローラー初期化>");
