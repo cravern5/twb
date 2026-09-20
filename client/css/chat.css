@@ -4,9 +4,6 @@
 
 	/*文字数分の横幅*/
 	width: fit-content;
-	/* または display: inline-block; */
-
-	/* 読みやすいゲーム風のゴシック体を指定（環境になければ次の候補にフォールバックする） */
 	font-family: "MS PGothic", "Meiryo", sans-serif;
 	/*font-family:'kodenma';*/
 	/* 1行ずつの間隔を少し空けて見やすくする */
@@ -45,6 +42,8 @@
 	/* 子要素（topBar/chatLog/chatUnder）を縦に並べ、chatLogだけが高さの伸び縮みを受け持てるようにする */
 	display: flex;
 	flex-direction: column;
+
+	--chatmargin:1px;
 }
 
 @media (max-width: 600px) {
@@ -236,8 +235,8 @@
 
 /* #chatUnder の直下にあるすべての要素に margin: 1px を適用 */
 #chatUnder > * {
-	margin-left: 1px;
-	margin-right: 1px;
+	margin-left: var(--chatmargin);
+	margin-right: var(--chatmargin);
 }
 
 /* 耳打ちユーザー*/
@@ -365,9 +364,8 @@
 	padding: 0;
 	left: 4px;
 
-	/*#chatUnder > * {*/
-	margin-left: 1px;
-	margin-right: 1px;
+	margin-left: var(--chatmargin);
+	margin-right: var(--chatmargin);
 
 	/*(<chatUnder>33px-<btn>19px)/2=7*/
 	bottom: 7px;
@@ -381,7 +379,6 @@
 	/*数値が大きいほど手前に表示されます*/
 	z-index: 3;
 }
-
 .chatRangeBtn {
 	width: 18px;
 	height: 19px;
@@ -408,83 +405,4 @@
 }
 #chatRangeOpen {
 	background-image: url("../assets/ui/ChatBar/open.png");
-}
-
-
-
-/* ==========================================================================
-   チャットバブル(未使用)
-   ========================================================================== */
-.aaachat-bubble {
-	position: absolute;
-	/* 💡 JavaScriptで計算した中心が、吹き出しの「下の尖った部分」になるように調整 */
-	transform: translate(-50%, -100%);
-
-	/* 見た目の装飾 */
-	background-color: rgba(255, 255, 255, 0.9);
-	/* ほんのり透ける白 */
-	color: #333333;
-	/* 文字は濃いグレーで読みやすく */
-	padding: 8px 14px;
-	/* 内側の余白 */
-	border-radius: 12px;
-	/* 角丸 */
-	font-size: 14px;
-	font-family: sans-serif;
-	font-weight: bold;
-	white-space: nowrap;
-	/* 文字が勝手に改行されないようにする */
-
-	/* 縁取り 
-	box-shadow: 0 4px 6px rgba(233, 212, 26, 0.856), 0 0 0 2px #d4084c;*/
-
-	/* Three.jsのマウス操作を邪魔しない */
-	pointer-events: none;
-
-	/* 表示されるときのアニメーション（フワッと出る） */
-	animation: popIn 0.15s ease-out forwards;
-}
-
-/* 吹き出しの下の三角（矢印） */
-.aaaachat-bubble::after {
-	content: '';
-	position: absolute;
-	bottom: -8px;
-	/* 枠線の太さに合わせて微調整 */
-	left: 50%;
-	transform: translateX(-50%);
-
-	/* 三角形を作るテクニック */
-	border-left: 8px solid transparent;
-	border-right: 8px solid transparent;
-	border-top: 8px solid #333333;
-	/* 外枠と同じ色にする */
-}
-
-/* 吹き出しの下の三角の内側（白） */
-.aaachat-bubble::before {
-	content: '';
-	position: absolute;
-	bottom: -6px;
-	left: 50%;
-	transform: translateX(-50%);
-	/*数値が大きいほど手前に表示されます*/
-	z-index: 1;
-
-	border-left: 7px solid transparent;
-	border-right: 7px solid transparent;
-	border-top: 7px solid rgba(255, 255, 255, 0.9);
-	/* 背景と同じ色 */
-}
-
-/* ポップアップアニメーション */
-@keyframes popIn {
-	0% {
-		transform: translate(-50%, -80%) scale(0.8);
-		opacity: 0;
-	}
-	100% {
-		transform: translate(-50%, -100%) scale(1);
-		opacity: 1;
-	}
 }
