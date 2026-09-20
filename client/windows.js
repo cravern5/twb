@@ -506,7 +506,7 @@ export function init()
 // (down)トグルボタン
 export function downedToggleClick(e)
 {
-	e.target.classList.toggle("downed");
+	e.currentTarget.classList.toggle("downed");
 }
 
 
