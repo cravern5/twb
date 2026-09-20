@@ -8,24 +8,33 @@ import * as engine from './engine.js';
 import { canvas, ctx } from './engine.js';
 import { MAP_WIDTH, MAP_HEIGHT } from './world.js';
 import * as world from './world.js';
+import { SpriteAnimator } from './animator.js';
 //import * as game from './game.js';
 
-//プレイヤー======================================
+//プレイヤー
 export let player = null;
 
-export const SPRITE_WIDTH = 70;		//キャラ画像1コマの幅
-export const SPRITE_HEIGHT = 95;	//キャラ画像1コマの高さ
-export const ASSETSDIR = '/assets/player';	//キャラ画のディレクトリ
-export const CHARACTERS = ['maximin', 'tichiel'];
-export const DIRECTIONS = ['forward', 'forside', 'side', 'backside', 'backward'];
-export const STATES = ["idle", "run", "sit", "walk"]//, "attack"];
 export const MOVE_SPEED_RUN = 130; 					// 1秒あたりの移動ピクセル数
 export const MOVE_SPEED_WALK = 90;					// 1秒あたりの移動ピクセル数
 export const MOVE_SPEED_X_RATIO = 1.66;				//横方向の体感速度を補正するための倍率、横長なほど横移動が遅く感じる
 export const MOVE_TARGET_THRESHOLD = 4;				// 目的地にどれだけ近づいたら「到着」とみなすか（px）
-export const FRAME_DURATION = 0.07;					// アニメーションの更新間隔（秒単位：例 0.1秒ごとに1コマ進める）
 export const SEND_INTERVAL = 1 / 20;				// 座標送信は1秒間に最大20回まで（20Hz 0.05秒に1回)に制限する、　自キャラ(60fps 16.67ミリ秒)
 export const INTERP_SPEED = 32;						// 他プレイヤー座標を目標地点へ近づける速さ（大きいほどすぐ追いつく）
+
+//アニメーション
+export const SPRITE_WIDTH = 70;		//キャラ画像1コマの幅
+export const SPRITE_HEIGHT = 95;	//キャラ画像1コマの高さ
+export const ASSETSDIR = '/assets/player';	//キャラ画のディレクトリ
+export const CHARACTERS = ['maximin', 'tichiel'];
+export const STATES = ["idle", "run", "sit", "walk"]//, "attack"];
+export const DIRECTIONS = ['forward', 'forside', 'side', 'backside', 'backward'];
+export const FRAME_DURATION = 0.07;					// アニメーションの更新間隔（秒単位：例 0.1秒ごとに1コマ進める）
+
+//アニメ更新間隔
+export const FRAME_DURATIONS = {
+	"idle_forside": [3, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2],
+	"idle_backside": [3, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2],
+};
 
 //チャット
 //const chatArea = document.getElementById("chatArea");
@@ -63,8 +72,6 @@ export class Player
 		this.flip = false;							//false=左
 		this.position = { x: 2585, y: 1956 };		//プレイヤー位置
 		this.remotePosition = { ...this.position };	//他プレイヤー用：サーバーから届いた「本当の位置」（画面上のposを毎フレーム少しずつここへ近づける）
-		this.currentFrame = 0; 						// 何コマ目を表示しているか(0番目からスタート)
-		this.frameTimer = 0;						// コマ切り替え用の経過時間カウンター
 		this.moveTarget = null;						// マウスクリックで指定した「目的地」（ワールド座標）、null のときは目的地なし＝マウスでは移動していない状態
 
 		this.sendTimer = 0;							// ポジションを前回送信してからの経過時間、SEND_INTERVALを超えたら送信可能
@@ -131,6 +138,9 @@ export class Player
 			{
 				const path = ASSETSDIR + "/" + chara + "/" + stt + "/" + dir + ".png";
 				const key = chara + "_" + stt + "_" + dir;
+				const durationKey = stt + "_" + dir;
+				const durations = FRAME_DURATIONS[durationKey] ?? null;
+
 				if (chara === "maximin" && stt === "idle" && dir === "forward")
 				{
 					let a = 1;
@@ -138,14 +148,9 @@ export class Player
 				}
 				try
 				{
-					//画像が無い場合ここでエラーでキーを作らないようにする
-					const img = await utils2.loadImage(path);
-
-					this.assets[key] = [];
-					this.assets[key].img = img;
-					this.assets[key].frameWidth = SPRITE_WIDTH;
-					this.assets[key].frameHeight = SPRITE_HEIGHT;
-					this.assets[key].frameCount = this.assets[key].img.width / this.assets[key].frameWidth;
+					//画像読み込み＋アニメーション管理を、SpriteAnimatorにまとめて任せる（画像が無い場合ここでエラーになりキーは作られない）
+					//durationを省略しているので、全コマ共通でFRAME_DURATION秒ずつ表示される
+					this.assets[key] = await SpriteAnimator.load(path, SPRITE_WIDTH, SPRITE_HEIGHT, durations, FRAME_DURATION);
 				}
 				catch (e)
 				{
@@ -215,7 +220,7 @@ export class Player
 		this.moveTarget = null;
 
 		[this.direction, this.flip] = this.getDirection(move);
-		this.currentFrame = 0;	//コマがズレて一瞬消えるのを防ぐ
+		this.resetAnimationFrame();	//コマがズレて一瞬消えるのを防ぐ
 		socket.sendState(this.position.x, this.position.y, this.state, this.direction, this.flip);
 	}
 
@@ -231,6 +236,15 @@ export class Player
 		}
 
 		return asset;
+	}
+
+	//現在のステート（状態・向き）に対応するアニメーションのコマを先頭(0コマ目)に戻す
+	//状態や向きが変わった直後に呼び出すことで、コマがズレて一瞬おかしな見た目になるのを防ぐ
+	resetAnimationFrame()
+	{
+		const asset = this.getStateAsset();
+		if (asset)
+			asset.reset();
 	}
 
 	//キーの移動量取得
@@ -421,7 +435,7 @@ export class Player
 
 			//止まる/歩く/走る切替などしたらフレームは最初に
 			if (state_changed)
-				this.currentFrame = 0;
+				this.resetAnimationFrame();
 
 			// 前回送信からの経過時間を積算しておく
 			this.sendTimer += delta;
@@ -459,18 +473,8 @@ export class Player
 		if (!asset)
 			return;
 
-		//実際に経過した時間(delta)を加算する
-		this.frameTimer += delta;
-
-		// 設定した時間（0.1秒）を超えたらコマを進める
-		if (this.frameTimer >= FRAME_DURATION)
-		{
-			// 余剰時間を保持してタイミングを滑らかに維持する
-			this.frameTimer %= FRAME_DURATION;
-
-			// 最後のコマまで来たら最初のコマに戻る
-			this.currentFrame = (this.currentFrame + 1) % asset.frameCount;
-		}
+		//コマ送り（経過時間の加算～次のコマへ進める判定）はSpriteAnimator自身に任せる
+		asset.update(delta);
 
 		//ふきだしを表示中なら、残り時間を減らしていく
 		if (this.bubbleTimer > 0)
@@ -504,27 +508,8 @@ export class Player
 			SPRITE_WIDTH * 0.1	//高さ
 		);
 
-		//キャラクター描画 スプライトシートから該当コマだけを切り出して描画する
-		if (this.flip)
-		{
-			//描画状態（座標系の回転・拡大縮小・移動、透過度、塗りつぶし色など）をスタックに保存・復元するための命令
-			ctx.save();
-			ctx.scale(-1, 1);
-			ctx.drawImage(
-				asset.img,
-				this.currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
-				-pos.x - asset.frameWidth, pos.y, asset.frameWidth, asset.frameHeight
-			);
-			ctx.restore();
-		}
-		else
-		{
-			ctx.drawImage(
-				asset.img,
-				this.currentFrame * asset.frameWidth, 0, asset.frameWidth, asset.frameHeight,
-				pos.x, pos.y, asset.frameWidth, asset.frameHeight
-			);
-		}
+		//キャラクター描画 スプライトシートから該当コマだけを切り出して描画する（現在のコマ管理・切り出しはSpriteAnimator任せ）
+		asset.draw(ctx, pos.x, pos.y, this.flip);
 
 		this.drawPointBar("canvasLeftHP", this.HP, this.maxHP, '#E75D21');
 		this.drawPointBar("canvasLeftMP", this.MP, this.maxMP, '#8569E2');
@@ -910,13 +895,16 @@ export function onState(id, x, y, stateIndex, directionIndex, flip)
 	player.remotePosition.x = x;
 	player.remotePosition.y = y;
 
-	//状態か向きが変わった瞬間だけ、アニメーションのコマ数を最初に戻す
-	if (player.state !== state || player.direction !== direction || player.flip != flip)
-		player.currentFrame = 0;//状態変化したらフレームは最初に
+	//状態か向きが変わったかどうかを先に判定しておく（この時点ではまだplayer.stateは古い値のまま）
+	const stateChanged = (player.state !== state || player.direction !== direction || player.flip != flip);
 
 	player.state = state;
 	player.direction = direction;
 	player.flip = flip;
+
+	//状態が変わった瞬間だけ、新しい状態のアニメーションのコマを最初に戻す
+	if (stateChanged)
+		player.resetAnimationFrame();
 }
 
 //プレイヤー一覧をYSortしたものを出力
