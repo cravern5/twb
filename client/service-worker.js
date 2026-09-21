@@ -57,36 +57,52 @@ self.addEventListener('install', (event) =>
 	);
 });
 
-// 2. フェッチイベント (リクエスト送信時に実行) - キャッシュファースト
+
+// ページがファイルを読み込もうとするたびに呼ばれる処理
 self.addEventListener('fetch', (event) =>
 {
 	event.respondWith(
-		caches.match(event.request)
-			.then((response) =>
+		// ①まずネットワーク(サーバー)から最新のファイルを取りに行く
+		fetch(event.request)
+			.then((networkResponse) =>
 			{
-				// キャッシュにあればそれを返し、なければネットワークから取得
-				return response || fetch(event.request);
+				// 取得できたら、次回オフライン時のためにキャッシュを最新の内容で上書きしておく
+				return caches.open(CACHE_NAME).then((cache) =>
+				{
+					cache.put(event.request, networkResponse.clone());
+					return networkResponse;
+				});
+			})
+			.catch(() =>
+			{
+				// ②サーバーに繋がらなかった(オフライン)時だけキャッシュを見に行く
+				return caches.match(event.request).then((cachedResponse) =>
+				{
+					// キャッシュにも無ければ、せめてトップページだけは表示できるようにする保険
+					return cachedResponse || caches.match('./index.html');
+				});
 			})
 	);
 });
 
-// 3. アクティベートイベント (Service Workerが有効になった時に実行)
+// service worker が有効化された時の処理
 self.addEventListener('activate', (event) =>
 {
 	const cacheWhitelist = [CACHE_NAME];
 	event.waitUntil(
-		caches.keys().then((cacheNames) =>
-		{
-			return Promise.all(
-				cacheNames.map((cacheName) =>
-				{
-					// CACHE_NAME (v1) 以外の古いキャッシュ(v0など)を削除する
-					if (cacheWhitelist.indexOf(cacheName) === -1)
+		caches.keys()
+			.then((cacheNames) =>
+			{
+				return Promise.all(
+					cacheNames.map((cacheName) =>
 					{
-						return caches.delete(cacheName);
-					}
-				})
-			);
-		})
+						// CACHE_NAME(最新版)以外の古いキャッシュを削除する
+						if (cacheWhitelist.indexOf(cacheName) === -1)
+							return caches.delete(cacheName);
+					})
+				);
+			})
+			// 有効化が終わった時点で、今開いているページもすぐ新しいService Workerの管理下に置く
+			.then(() => self.clients.claim())
 	);
 });
