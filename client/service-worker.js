@@ -1,3 +1,8 @@
+/*キャッシュメモ
+web.js側のCache-Controlまわりは「通常のHTTP通信での、ブラウザ標準のキャッシュ挙動」の話
+service-worker.js側のcachesは「オフラインでも動かすための、独自に用意したキャッシュの仕組み」
+*/
+
 const CACHE_NAME = 'tales-beaver-v1';
 // キャッシュするファイルのリスト　service-worker.jsファイルからの相対パスで指定
 const urlsToCache = [
