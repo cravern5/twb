@@ -497,7 +497,8 @@ export class Player
 
 		//影の描画（変形が既にかかっているので、サイズもワールド基準の値のままでよい）
 		utils2.drawCircle(
-			ctx, 'rgba(0, 0, 0, 0.6)', foot.x, foot.y,
+			ctx, 'rgba(0, 0, 0, 0.6)',
+			foot.x, foot.y,
 			SPRITE_WIDTH * 0.25,	//幅
 			SPRITE_WIDTH * 0.1	//高さ
 		);
