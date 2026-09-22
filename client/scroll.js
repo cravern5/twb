@@ -120,6 +120,9 @@ document.addEventListener("mouseup", (e) =>
 // つまみの上でマウスボタンを押したらドラッグ開始
 chatScrollBar.addEventListener("touchstart", (e) =>
 {
+	// ドラッグ中に文字などが選択されてしまうのを防ぐ
+	e.preventDefault();
+
 	dragStart(e, e.touches[0].clientY);
 });
 
@@ -145,9 +148,6 @@ export function dragStart(e, y)
 	isDraggingThumb = true;
 	dragStartY = y;
 	dragStartScrollTop = chatLog.scrollTop;
-
-	// ドラッグ中に文字などが選択されてしまうのを防ぐ
-	e.preventDefault();
 }
 
 // マウスが動いたときの処理（スクロールバードラッグ処理）
