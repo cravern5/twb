@@ -26,8 +26,8 @@ export const maps =
 		//オブジェクト一覧
 		objects:
 		{
-			warp0: { name: "warp", width: 246, height: 236, duration: 0.085, charaX: 3280, charaY: 341, x: null, y: null, animator: null },
-			warp1: { name: "warp", width: 246, height: 236, duration: 0.085, charaX: 2787, charaY: 3920, x: null, y: null, animator: null }
+			warp0: { name: "warp", width: 195, height: 225, duration: 0.085, charaX: 3280, charaY: 341, x: null, y: null, animator: null },
+			warp1: { name: "warp", width: 195, height: 225, duration: 0.085, charaX: 2787, charaY: 3920, x: null, y: null, animator: null }
 		}
 	}
 }
