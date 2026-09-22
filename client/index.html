@@ -472,27 +472,27 @@
 	</footer>
 
 <script>
-    // ゲームスタートフォームの要素を取得しておく
-    const characterForm = document.getElementById('character-form');
+	// ゲームスタートフォームの要素を取得しておく
+	const characterForm = document.getElementById('character-form');
 
-    // フォームが送信されたときに実行される処理
-    characterForm.addEventListener('submit', function (event) 
+	// フォームが送信されたときに実行される処理
+	characterForm.addEventListener('submit', function (event) 
 	{
-        // 本来のフォーム送信(ページの再読み込み)を止める
-        event.preventDefault();
+		// 本来のフォーム送信(ページの再読み込み)を止める
+		event.preventDefault();
 
-        // 入力欄・選択欄から値を取り出す
-        let playerName = document.getElementById('playerName').value;
-        let characterName = document.getElementById('characterName').value;
+		// 入力欄・選択欄から値を取り出す
+		let playerName = document.getElementById('playerName').value;
+		let characterName = document.getElementById('characterName').value;
 
-        // localStorageに保存する　
+		// localStorageに保存する　
 		// 共有範囲　スキーム（プロトコル）: http / https ホスト（ドメイン）: example.com ポート番号: :80 / :443 など
-        localStorage.setItem('playerName', playerName);
-        localStorage.setItem('characterName', characterName);
+		localStorage.setItem('playerName', playerName);
+		localStorage.setItem('characterName', characterName);
 
-        // 保存が終わったらgame.htmlへ移動する
-        window.location.href = './game.html';
-    });
+		// 保存が終わったらgame.htmlへ移動する
+		window.location.href = './game.html';
+	});
 
 	// ページ読み込み時
 	window.addEventListener('load', () =>
@@ -508,18 +508,19 @@
 
 
 	// service-worker
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        // 'service-worker.js' を登録 (index.htmlからの相対パス)
-        navigator.serviceWorker.register('service-worker.js')
-          .then((registration) => {
-            console.log('Service Worker registered successfully:', registration.scope);
-          })
-          .catch((error) => {
-            console.log('Service Worker registration failed:', error);
-          });
-      });
-    }
+	/*if ('serviceWorker' in navigator) 
+	{
+	  window.addEventListener('load', () => {
+		// 'service-worker.js' を登録 (index.htmlからの相対パス)
+		navigator.serviceWorker.register('service-worker.js')
+		  .then((registration) => {
+			console.log('Service Worker registered successfully:', registration.scope);
+		  })
+		  .catch((error) => {
+			console.log('Service Worker registration failed:', error);
+		  });
+	  });
+	}*/
 
 
 </script>
