@@ -15,6 +15,9 @@ export function clearKeys()
 {
 	for (const key in keys)
 		delete keys[key];
+
+	for (const key in keysPress)
+		delete keysPress[key];
 }
 
 //キーが押されたとき

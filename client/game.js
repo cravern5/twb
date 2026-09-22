@@ -195,6 +195,9 @@ export function keydown(e)
 	//チャットバーにフォーカスがある状態
 	else if (document.activeElement === chatInput)
 	{
+		input.clearKeys();
+		e.stopPropagation();//イベントの伝搬を防ぐ
+		//e.preventDefault();//イベントの本来の動作を止める、キー入力はされる必要がある
 		return true;
 	}
 	//走り
