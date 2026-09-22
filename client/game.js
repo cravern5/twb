@@ -24,6 +24,10 @@ export let frameCount = 0;		// 1秒間のフレームカウンター
 export let fpsTimer = 0;		// 1秒経過したかを計るための経過時間
 export let lastSelectID = "";
 
+// 別タブに移動していた間はrequestAnimationFrameが呼ばれないため、戻ってきた瞬間はcurrentTime - lastTimeが数秒分の差になってしまうことがある。
+// その差をそのまま使うと、移動やアニメーションが一気に進んで「早送り」のように見えてしまう。そこで1フレームあたりの経過時間に上限（例：0.1秒＝10FPS相当）を設け、それ以上は切り捨てる。
+export const MAX_DELTA = 0.1;
+
 //初期化
 async function init()
 {
@@ -361,7 +365,10 @@ function animate(currentTime)
 	{
 		if (!lastTime)
 			lastTime = currentTime;
-		const deltaTime = (currentTime - lastTime) / 1000;
+
+		let deltaTime = (currentTime - lastTime) / 1000;
+		if (deltaTime > MAX_DELTA)
+			deltaTime = MAX_DELTA;
 
 		//フレームレート　1秒ごとに「何回animateが呼ばれたか」を数える
 		frameCount++;
