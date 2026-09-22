@@ -32,18 +32,9 @@ export const maps =
 	}
 }
 
-
 //現在地情報
 export let location = "kaul";
 export let map = null;
-
-//export const MAP_WIDTH = 6800;
-//export const MAP_HEIGHT = 4500;
-//export let path = '/assets/map/kaul.png';
-//export let img = null;
-
-
-//オブジェクト一覧(x,yは位置合わせ時の位置)
 
 //初期化
 export async function init()
