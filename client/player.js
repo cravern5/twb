@@ -7,7 +7,7 @@ import * as windows from './windows.js';
 import * as engine from './engine.js';
 import { canvas, ctx } from './engine.js';
 //import { MAP_WIDTH, MAP_HEIGHT } from './world.js';
-import * as world from './world.js';
+//import * as world from './world.js';
 import { SpriteAnimator, ANIME_FRAMES } from './animator.js';
 //import * as game from './game.js';
 
@@ -25,7 +25,7 @@ export const INTERP_SPEED = 32;						// 他プレイヤー座標を目標地点�
 export const SPRITE_WIDTH = 70;		//キャラ画像1コマの幅
 export const SPRITE_HEIGHT = 95;	//キャラ画像1コマの高さ
 export const ASSETSDIR = '/assets/player';	//キャラ画のディレクトリ
-export const CHARACTERS = ['maximin', 'tichiel'];
+export const CHARACTERS = ['maximin', 'tichiel', 'jellypi'];
 export const STATES = ["idle", "run", "sit", "walk"]//, "attack"];
 export const DIRECTIONS = ['forward', 'forside', 'side', 'backside', 'backward'];
 export const FRAME_DURATION = 0.07;					// アニメーションの更新間隔（秒単位：例 0.1秒ごとに1コマ進める）
@@ -139,7 +139,7 @@ export class Player
 				const durationKey = stt + "_" + dir;
 				const durations = ANIME_FRAMES[durationKey] ?? null;
 
-				if (chara === "maximin" && stt === "idle" && dir === "forward")
+				if (chara === "maximin" && stt === "idle" && dir === "side")
 				{
 					let a = 1;
 					a = 2;
