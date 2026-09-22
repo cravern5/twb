@@ -225,7 +225,7 @@ export class Player
 	//現在の状態のアセットを取得
 	getStateAsset()
 	{
-		const stateKey = `${this.character}_${this.state}_${this.direction}`;
+		const stateKey = this.character ?? "" + "_" + this.state ?? "" + "_" + this.direction ?? "";
 		const asset = this.assets[stateKey];
 		if (!asset)
 		{
