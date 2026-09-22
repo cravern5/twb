@@ -225,11 +225,11 @@ export class Player
 	//現在の状態のアセットを取得
 	getStateAsset()
 	{
-		const stateKey = this.character + "_" + this.state + "_" + this.direction;
+		const stateKey = `${this.character}_${this.state}_${this.direction}`;
 		const asset = this.assets[stateKey];
 		if (!asset)
 		{
-			print("error", "指定されたステートイメージはありません(" + this.stateKey + ")")
+			print("error", "指定されたステートイメージはありません(" + stateKey + ")")
 			return null;
 		}
 
