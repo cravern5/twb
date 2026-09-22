@@ -207,15 +207,13 @@ export function keydown(e)
 	//走り
 	else if (key === "r")
 	{
-		player.isRunning = !player.isRunning;
+		leftFootBtn.click();
 		return true;
 	}
 	//座り
 	else if (key === "insert")
 	{
-		// マウス操作は無視
-		player.moveTarget = null;
-		player.isSitting = !player.isSitting;
+		leftAfkBtn.click();
 		return true;
 	}
 	//移動キー
