@@ -125,6 +125,7 @@ export class Player
 	//初期化
 	async init()
 	{
+		this.initialized = false;
 
 		//画像読み込み ループで一気に Image オブジェクトを作成
 		//for (const chara of CHARACTERS)//キャラ

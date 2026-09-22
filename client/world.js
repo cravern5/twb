@@ -11,6 +11,11 @@ export const FRAME_DURATION = 0.07;					// アニメーションの更新間隔�
 export const MAPDIR = "/assets/map";
 export const OBJECTDIR = "/assets/object";
 
+//現在地情報
+export let location = "kaul";
+export let map = null;
+export let initialized = false;
+
 // マップ一覧
 export const maps =
 {
@@ -32,10 +37,6 @@ export const maps =
 	}
 }
 
-//現在地情報
-export let location = "kaul";
-export let map = null;
-
 //初期化
 export async function init()
 {
@@ -44,6 +45,8 @@ export async function init()
 
 export async function changeLocation(newLocation)
 {
+	initialized = false;
+
 	location = newLocation;
 
 	// マップ読み込み
@@ -72,12 +75,14 @@ export async function changeLocation(newLocation)
 			addLog("ERROR", "ファイル読み込みエラー：" + path + " " + e.message);
 		}
 	}
+
+	initialized = true;
 }
 
 //画面更新
 export function update(delta)
 {
-	if (!map)
+	if (!map || !initialized)
 		return;
 
 	// マップ描画　// engine.beginCameraTransform()で既にズーム・カメラ移動の変形がかかっている

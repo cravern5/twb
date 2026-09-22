@@ -81,8 +81,13 @@ export function log_rgb(r, g, b, text)
 //色log
 export function print(color, text)
 {
-	if (text === undefined)
-		text = color;
+	//オブジェクトなら文字にする
+	if (isObject(text))
+		text = JSON.stringify(text);
+
+	//if (text === null)
+	//	text = color;
+
 	let result = tc(color, text);
 	if (!result.endsWith("\x1b[0m")) result += "\x1b[0m";
 	console.log(result);
@@ -233,8 +238,19 @@ export function changeExt(filePath, newExt)
 	// .の有無を吸収してフォーマット（例: "png" -> ".png"）
 	const ext = newExt.startsWith('.') ? newExt : `.${newExt}`;
 
-	// 末尾の拡張子部分（.xxx）を新しい拡張子に置換
-	return filePath.replace(/\.[^/.]+$/, ext);
+	// ファイル名部分（パスの最後の要素）を取得
+	const lastSlashIdx = Math.max(filePath.lastIndexOf('/'), filePath.lastIndexOf('\\'));
+	const lastDotIdx = filePath.lastIndexOf('.');
+
+	// ディレクトリ記号より後ろにドットがあるか確認（隠しファイル対策で index > lastSlashIdx + 1）
+	if (lastDotIdx > lastSlashIdx && lastDotIdx > 0)
+	{
+		// 既存の拡張子を置換
+		return filePath.slice(0, lastDotIdx) + ext;
+	}
+
+	// 拡張子がない場合は末尾に追加
+	return filePath + ext;
 }
 
 //ファイル名だけ取得

@@ -48,7 +48,7 @@ async function init()
 
 	engine.updateProgress("<プレイヤー初期化>");
 	player = await sub.wait({ obj: Player, propName: "player" });
-	print("info", player.myPlayerId);
+	//print("info", player.myPlayerId);
 
 	engine.endProgress();
 }
@@ -120,7 +120,11 @@ chatMail.addEventListener('click', (e) =>
 //BGM再生
 chatEmote.addEventListener('click', (e) =>
 {
-	let fileBGM = sub.getFileName(world.path);
+	if (!world?.initialized)
+		return;
+
+	let fileBGM = sub.getFileName(world.location);
+	fileBGM = fileBGM + ".mp4";
 	fileBGM = sub.changeExt(fileBGM, "mp3");
 	fileBGM = sound.pathBGM + "/" + fileBGM;
 	sound.setBGM(fileBGM).play();
@@ -180,8 +184,6 @@ export function crossTouch(touch)
 //2本指ピンチ
 export function pinchTouch(dist)
 {
-	if (!world)
-		return;
 	engine.camera.zoom *= dist;
 	engine.camera.zoom = Math.min(Math.max(engine.camera.zoom, 0.5), 3); // 拡大率の上限・下限を制限（お好みで調整）
 }
@@ -189,7 +191,7 @@ export function pinchTouch(dist)
 //キーが押されたとき
 export function keydown(e)
 {
-	if (!player)
+	if (!player?.initialized)
 		return;
 
 	const key = e.key.toLowerCase();
@@ -260,15 +262,18 @@ export function click(e)
 //マウスを押したとき
 export function mousedown(e)
 {
+	//押された場所を記憶
+	lastSelectID = e.target.id;
+
 	if (scroll.isDraggingThumb)
+		return;
+
+	if (!player?.initialized)
 		return;
 
 	// キャンバス上を左クリックしたら、その場所を目的地にして歩き出す
 	if (input.mouseInfo.left && e.target === engine.canvas)
 	{
-		if (!player)
-			return;
-
 		//シフトキーのキャラ向き更新
 		if (e.shiftKey)
 			player.setDirectionTargetFromScreen(e.clientX, e.clientY);
@@ -276,21 +281,23 @@ export function mousedown(e)
 			player.setMoveTargetFromScreen(e.clientX, e.clientY);
 	}
 
-	lastSelectID = e.target.id;
+
 }
 
 // マウスを動かしているとき
 export function mousemove(e)
 {
+	lastSelectID = e.target.id;
+
 	if (scroll.isDraggingThumb)
+		return;
+
+	if (!player?.initialized)
 		return;
 
 	// キャンバス上を左クリックしたら、その場所を目的地にして歩き出す
 	if (input.mouseInfo.left && e.target === engine.canvas)
 	{
-		if (!player)
-			return;
-
 		//シフトキーのキャラ向き更新
 		if (e.shiftKey)
 			player.setDirectionTargetFromScreen(e.clientX, e.clientY);
@@ -298,7 +305,7 @@ export function mousemove(e)
 			player.setMoveTargetFromScreen(e.clientX, e.clientY);
 	}
 
-	lastSelectID = e.target.id;
+
 
 	//if (mouseInfo.right)
 	//{
@@ -330,7 +337,7 @@ export function mousewheel(e)
 //画面更新
 function update(delta)
 {
-	if (!player || !world)
+	if (!player?.initialized || !world?.initialized)
 		return;
 
 	// フレームの最初にキャンバス全体をクリア
@@ -399,7 +406,7 @@ requestAnimationFrame(animate);
 //デバッグ表示
 function showModelDebugInfo()
 {
-	if (!player)
+	if (!player?.initialized || !world?.initialized)
 		return;
 
 	debugInfo.textContent =
