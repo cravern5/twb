@@ -91,6 +91,10 @@ export function update(delta)
 		//コマ送り（経過時間の加算～次のコマへ進める判定）はSpriteAnimator自身に任せる
 		obj.animator.update(delta);
 
+		// カメラに映っていない（画面外の）オブジェクトは描画をスキップする
+		if (!engine.isVisible(obj.x, obj.y, obj.width, obj.height))
+			continue;
+
 		//現在のコマを、指定した位置(x,y)に描画する
 		obj.animator.draw(ctx, obj.x, obj.y);
 	}

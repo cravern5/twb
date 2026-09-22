@@ -481,41 +481,6 @@ export class Player
 			this.bubbleLines = null;
 	}
 
-	drawCharacter()
-	{
-		if (!this.initialized)
-			return;
-
-		const asset = this.getStateAsset();
-		if (!asset)
-			return;
-
-		//画像を滑らかに拡大するかどうか css image-rendering: pixelatedと併用可能
-		ctx.imageSmoothingEnabled = false;
-
-		// cameraの位置(camera.x/y)を整数に丸めているので、こっちも丸める、「整数 - 小数」の端数がフレームごとに変わってしまい、逆に震えて見える。
-		const pos = this.getPosition({ render: true });
-		const foot = this.getPosition({ render: true, foot: true });
-
-		//addLog("info", "x:" + pos.x + " y:" + pos.y);
-
-		//影の描画（変形が既にかかっているので、サイズもワールド基準の値のままでよい）
-		utils2.drawCircle(
-			ctx, 'rgba(0, 0, 0, 0.6)',
-			foot.x, foot.y,
-			SPRITE_WIDTH * 0.25,	//幅
-			SPRITE_WIDTH * 0.1	//高さ
-		);
-
-		//キャラクター描画 スプライトシートから該当コマだけを切り出して描画する（現在のコマ管理・切り出しはSpriteAnimator任せ）
-		asset.draw(ctx, pos.x, pos.y, this.flip);
-
-		this.drawPointBar("canvasLeftHP", this.HP, this.maxHP, '#E75D21');
-		this.drawPointBar("canvasLeftMP", this.MP, this.maxMP, '#8569E2');
-		this.drawPointBar("canvasLeftSP", this.SP, this.maxSP, '#47DFDE');
-
-	}
-
 	//値更新
 	setPoint(type, value)
 	{
@@ -644,11 +609,55 @@ export class Player
 
 	}
 
-	//バブル描画（文字の調整は行わず、渡された結果を使って描くだけ）
-	//バブル描画（文字の調整は行わず、渡された結果を使って描くだけ）
+	drawCharacter()
+	{
+		if (!this.initialized)
+			return;
+
+		const asset = this.getStateAsset();
+		if (!asset)
+			return;
+
+		// このキャラがカメラに映っていない（画面外にいる）なら、影やスプライトの描画処理を丸ごと省略する
+		// this.positionはキャラの左上のワールド座標、SPRITE_WIDTH/HEIGHTは1コマぶんの大きさ
+		if (!engine.isVisible(this.position.x, this.position.y, SPRITE_WIDTH, SPRITE_HEIGHT))
+			return;
+
+		//画像を滑らかに拡大するかどうか css image-rendering: pixelatedと併用可能
+		ctx.imageSmoothingEnabled = false;
+
+		// cameraの位置(camera.x/y)を整数に丸めているので、こっちも丸める、「整数 - 小数」の端数がフレームごとに変わってしまい、逆に震えて見える。
+		const pos = this.getPosition({ render: true });
+		const foot = this.getPosition({ render: true, foot: true });
+
+		//addLog("info", "x:" + pos.x + " y:" + pos.y);
+
+		//影の描画（変形が既にかかっているので、サイズもワールド基準の値のままでよい）
+		utils2.drawCircle(
+			ctx, 'rgba(0, 0, 0, 0.6)',
+			foot.x, foot.y,
+			SPRITE_WIDTH * 0.25,	//幅
+			SPRITE_WIDTH * 0.1	//高さ
+		);
+
+		//キャラクター描画 スプライトシートから該当コマだけを切り出して描画する（現在のコマ管理・切り出しはSpriteAnimator任せ）
+		asset.draw(ctx, pos.x, pos.y, this.flip);
+
+		this.drawPointBar("canvasLeftHP", this.HP, this.maxHP, '#E75D21');
+		this.drawPointBar("canvasLeftMP", this.MP, this.maxMP, '#8569E2');
+		this.drawPointBar("canvasLeftSP", this.SP, this.maxSP, '#47DFDE');
+
+	}
+
+	//バブル描画
 	drawBubble()
 	{
 		if (!this.bubbleLines)
+			return;
+
+		// 吹き出しはキャラのすぐ上に出るだけなので、キャラ本体と同じ位置・サイズで簡易的に画面外判定を行う
+		// （measureTextで正確な吹き出し幅を出す前の段階なので、ここでは厳密な吹き出しサイズは使わない）
+		if (!engine.isVisible(this.position.x, this.position.y, SPRITE_WIDTH, SPRITE_HEIGHT))
 			return;
 
 		const offsetY = -5;
