@@ -165,6 +165,7 @@ function plainWrite(req, res, code, message, contents = null, contentType = { 'C
 function pageWatcher()
 {
 	let debounceTimer = null;
+	let changedFiles = new Set(); // 変更されたファイル名をまとめて記録する箱（Setなので同じ名前は1つにまとまる）
 	if (isDev && fs.existsSync(watchDir))
 	{
 		try
@@ -176,10 +177,16 @@ function pageWatcher()
 				if (!filename || path.basename(filename).startsWith('.') || filename.includes("bak"))
 					return;
 
+				// 今回変更されたファイル名を記録しておく
+				changedFiles.add(filename);
+
 				clearTimeout(debounceTimer);
 				debounceTimer = setTimeout(() =>
 				{
-					console.log(`[Reload] File changed: ${filename}`);
+					// まとまった変更内容を1回だけログ表示
+					console.log(`[Reload] File changed: ${[...changedFiles].join(', ')}`);
+					changedFiles.clear(); // 次回の検知に備えて空にしておく
+
 					// 接続が切れているクライアントを除外しながら通知を送信
 					for (let i = clients.length - 1; i >= 0; i--)
 					{
@@ -191,15 +198,10 @@ function pageWatcher()
 							clients.splice(i, 1);
 						}
 					}
-				}, 100);
+				}, 300); // 変更点: 100ms→300msに延長。保存時に発生する複数イベントをまとめて1回にするため
 			});
-
-			// ウォッチャー自体のエラーでサーバーが落ちないようにキャッチ
-			watcher.on('error', (error) =>
-			{
-				console.error('[Reload Watcher Error]:', error);
-			});
-		} catch (e)
+		}
+		catch (e)
 		{
 			console.error('[Reload Setup Error]:', e);
 		}
