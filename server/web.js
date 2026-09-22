@@ -173,7 +173,7 @@ function pageWatcher()
 			const watcher = fs.watch(watchDir, { recursive: true }, (eventType, filename) =>
 			{
 				// 変更ファイル名がない、またはドットで始まる一時ファイル（.g. .swp, .tmp等）は無視
-				if (!filename || path.basename(filename).startsWith('.'))
+				if (!filename || path.basename(filename).startsWith('.') || filename.includes("bak"))
 					return;
 
 				clearTimeout(debounceTimer);
