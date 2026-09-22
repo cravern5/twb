@@ -56,6 +56,10 @@ export class Player
 		this.id = id;
 		this.playerName = playerName;
 
+		//ワールド情報
+		//this.location = "kaul";
+
+
 		//キャラクター
 		this.character = characterName;
 		this.assets = {};
