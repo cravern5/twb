@@ -145,8 +145,7 @@ export function isVisible(x, y, width, height)
 	return !isOutside;
 }
 
-// スクリーン座標（ページ基準のe.clientX/clientY）をワールド座標に変換する
-// マウスクリック位置から「地図上のどこがクリックされたか」を求めるときに使う
+// スクリーン座標（ページ基準のe.clientX/clientY）をワールド座標に変換する、マウスクリック位置から「地図上のどこがクリックされたか」を求めるときに使う
 export function screenToWorld(clientX, clientY)
 {
 	// キャンバスがページ内のどこに表示されているかを取得する
@@ -163,8 +162,7 @@ export function screenToWorld(clientX, clientY)
 	};
 }
 
-// ワールド座標を、実際のキャンバス上のピクセル座標に変換する（ズームを計算済みの値）
-// カメラ変形をかけずに描きたいUI要素（ズームしても大きさを変えたくないもの）で使う
+// ワールド座標を、実際のキャンバス上のピクセル座標に変換する（ズームを計算済みの値）、カメラ変形をかけずに描きたいUI要素（ズームしても大きさを変えたくないもの）で使う
 export function worldToScreen(worldX, worldY)
 {
 	return {
