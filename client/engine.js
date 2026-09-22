@@ -126,6 +126,25 @@ export function endCameraTransform()
 	ctx.restore();
 }
 
+// 指定した矩形（ワールド座標のx, y, 幅, 高さ）が、現在カメラに映っている範囲と重なっているかを判定する
+export function isVisible(x, y, width, height)
+{
+	// zoomを考慮した「実際に画面に映っている範囲」の幅と高さ（beginCameraTransformと同じ計算）
+	const viewWidth = canvas.width / camera.zoom;
+	const viewHeight = canvas.height / camera.zoom;
+
+	// 「対象の矩形」と「カメラの表示範囲」が重なっているかを判定する
+	// 4方向のどれか一つでも完全に外れていれば、画面には映っていない（＝重なっていない）
+	const isOutside =
+		x + width < camera.x ||        // 対象がカメラより左に完全に外れている
+		x > camera.x + viewWidth ||    // 対象がカメラより右に完全に外れている
+		y + height < camera.y ||       // 対象がカメラより上に完全に外れている
+		y > camera.y + viewHeight;     // 対象がカメラより下に完全に外れている
+
+	// 外れていなければ「カメラに映っている」ということなのでtrueを返す
+	return !isOutside;
+}
+
 // スクリーン座標（ページ基準のe.clientX/clientY）をワールド座標に変換する
 // マウスクリック位置から「地図上のどこがクリックされたか」を求めるときに使う
 export function screenToWorld(clientX, clientY)
