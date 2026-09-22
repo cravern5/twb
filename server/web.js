@@ -34,6 +34,7 @@ const PUBLIC_DIR = path.join(__dirname, '../' + publicPrefix);
 const SHARED_DIR = path.join(__dirname, '../' + sharedPrefix);
 //クライアント側呼び出し方 '/shared/config.js'
 
+const WATCH_INTERVAL = 300;
 // 開発環境（development）のときのみライブリロード（ファイル監視・SSE）を有効化、本番サーバー(Render/Koyebなど)ではNODE_ENV=productionを設定しておくこと
 const isDev = process.env.NODE_ENV !== 'production';
 // クライアント(SSE)の接続管理用リスト
@@ -184,7 +185,7 @@ function pageWatcher()
 				debounceTimer = setTimeout(() =>
 				{
 					// まとまった変更内容を1回だけログ表示
-					console.log(`[Reload] File changed: ${[...changedFiles].join(', ')}`);
+					print("magenta", `[Reload] File changed: ${[...changedFiles].join(', ')}`);
 					changedFiles.clear(); // 次回の検知に備えて空にしておく
 
 					// 接続が切れているクライアントを除外しながら通知を送信
@@ -198,12 +199,12 @@ function pageWatcher()
 							clients.splice(i, 1);
 						}
 					}
-				}, 300); // 変更点: 100ms→300msに延長。保存時に発生する複数イベントをまとめて1回にするため
+				}, WATCH_INTERVAL); // 変更点: 100ms→300msに延長。保存時に発生する複数イベントをまとめて1回にするため
 			});
 		}
 		catch (e)
 		{
-			console.error('[Reload Setup Error]:', e);
+			print("error", '[Reload Setup Error]:' + e.message);
 		}
 	}
 }
