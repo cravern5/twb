@@ -12,9 +12,11 @@ export const MAPDIR = "/assets/map";
 export const OBJECTDIR = "/assets/object";
 
 //現在地情報
+export let initialized = false;
 export let location = "kaul";
 export let map = null;
-export let initialized = false;
+export let objects_back = null;
+export let objects_front = null;
 
 // マップ一覧
 export const maps =
@@ -31,8 +33,9 @@ export const maps =
 		//オブジェクト一覧
 		objects:
 		{
-			warp0: { name: "warp", width: 195, height: 225, duration: 0.085, charaX: 3280, charaY: 341, x: null, y: null, animator: null },
-			warp1: { name: "warp", width: 195, height: 225, duration: 0.085, charaX: 2787, charaY: 3920, x: null, y: null, animator: null }
+			portal: { name: "portal", width: 320, height: 320, duration: 0.085, charaX: 2583, charaY: 1913, x: null, y: null, animator: null, position: "front" },
+			warp0: { name: "warp", width: 195, height: 225, duration: 0.085, charaX: 3280, charaY: 341, x: null, y: null, animator: null, position: "back" },
+			warp1: { name: "warp", width: 195, height: 225, duration: 0.085, charaX: 2787, charaY: 3920, x: null, y: null, animator: null, position: "back" }
 		}
 	}
 }
@@ -69,12 +72,18 @@ export async function changeLocation(newLocation)
 			obj.animator = animator;
 			obj.x = obj.charaX + (PLAYER_SPRITE_WIDTH / 2) - (obj.width / 2);
 			obj.y = obj.charaY + (PLAYER_SPRITE_HEIGHT / 2) - (obj.height / 2);
+
+			//obj.x = obj.charaX - (obj.width / 2);
+			//obj.y = obj.charaY - (obj.height / 2);
 		}
 		catch (e)
 		{
 			addLog("ERROR", "ファイル読み込みエラー：" + path + " " + e.message);
 		}
 	}
+
+	objects_back = Object.values(map.objects).filter((obj) => { return obj.position === "back"; });
+	objects_front = Object.values(map.objects).filter((obj) => { return obj.position === "front"; });
 
 	initialized = true;
 }
@@ -85,9 +94,6 @@ export function update(delta)
 	if (!map || !initialized)
 		return;
 
-	// マップ描画　// engine.beginCameraTransform()で既にズーム・カメラ移動の変形がかかっている
-	ctx.drawImage(map.img, 0, 0);
-
 	//オブジェクト描画
 	for (const [key, obj] of Object.entries(map.objects))
 	{
@@ -95,6 +101,25 @@ export function update(delta)
 
 		//コマ送り（経過時間の加算～次のコマへ進める判定）はSpriteAnimator自身に任せる
 		obj.animator.update(delta);
+	}
+}
+
+//描画
+export function draw(background)
+{
+	if (!map || !initialized)
+		return;
+
+	// マップ描画　// engine.beginCameraTransform()で既にズーム・カメラ移動の変形がかかっている
+	if (background)
+		ctx.drawImage(map.img, 0, 0);
+
+	const objects = background ? objects_back : objects_front;
+
+	//オブジェクト描画
+	for (const obj of objects)
+	{
+		//addLog("info", "x:" + warp.x + " y:" + warp.y);
 
 		// カメラに映っていない（画面外の）オブジェクトは描画をスキップする
 		if (!engine.isVisible(obj.x, obj.y, obj.width, obj.height))
