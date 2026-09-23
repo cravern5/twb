@@ -46,8 +46,11 @@ export class SpriteAnimator
 		this.frameWidth = frameWidth;
 		this.frameHeight = frameHeight;
 
-		// 画像の横幅を1コマの幅で割って、コマ数を求める
-		this.frameCount = Math.floor(img.width / frameWidth);
+		//1行に何コマ並んでいるか（画像の横幅から逆算する）
+		this.cols = Math.floor(img.width / frameWidth);
+
+		// 画像の横幅×縦幅から、全部で何コマあるかを求める（横一列だけでなく、複数行にも対応）
+		this.frameCount = this.cols * Math.floor(img.height / frameHeight);
 
 		// 「何コマ目を、何秒表示するか」を { frame, duration } の配列（再生順そのもの）にまとめておく
 		this.sequence = this.buildSequence(durations, defaultDuration);
@@ -123,8 +126,13 @@ export class SpriteAnimator
 		// 現在のステップから、スプライトシートの何コマ目を描くかを取り出す
 		const frame = this.sequence[this.sequenceIndex].frame;
 
-		// スプライトシートの中で、そのコマが何px目から始まるか
-		const sx = frame * this.frameWidth;
+		// コマ番号を「何列目か（col）」「何行目か（row）」に変換する
+		const col = frame % this.cols;
+		const row = Math.floor(frame / this.cols);
+
+		// 列・行から、実際に切り出す画像内の座標(sx, sy)を求める
+		const sx = col * this.frameWidth;
+		const sy = row * this.frameHeight;
 
 		if (flip)
 		{
@@ -133,7 +141,7 @@ export class SpriteAnimator
 			ctx.scale(-1, 1);
 			ctx.drawImage(
 				this.img,
-				sx, 0, this.frameWidth, this.frameHeight,
+				sx, sy, this.frameWidth, this.frameHeight,
 				-dx - this.frameWidth, dy, this.frameWidth, this.frameHeight
 			);
 			ctx.restore();
@@ -142,7 +150,7 @@ export class SpriteAnimator
 		{
 			ctx.drawImage(
 				this.img,
-				sx, 0, this.frameWidth, this.frameHeight,
+				sx, sy, this.frameWidth, this.frameHeight,
 				dx, dy, this.frameWidth, this.frameHeight
 			);
 		}
