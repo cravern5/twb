@@ -149,7 +149,7 @@ export class Player
 				{
 					//画像読み込み＋アニメーション管理を、SpriteAnimatorにまとめて任せる（画像が無い場合ここでエラーになりキーは作られない）
 					//durationを省略しているので、全コマ共通でFRAME_DURATION秒ずつ表示される
-					this.assets[key] = await SpriteAnimator.load(path, SPRITE_WIDTH, SPRITE_HEIGHT, durations, FRAME_DURATION);
+					this.assets[key] = await SpriteAnimator.load(path, SPRITE_WIDTH, SPRITE_HEIGHT, null, durations, FRAME_DURATION);
 				}
 				catch (e)
 				{

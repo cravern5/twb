@@ -40,7 +40,7 @@ export class SpriteAnimator
 	// durations   : 各コマの表示時間（秒）を並べた配列。例：[0.1, 0.1, 0.3, 0.1]
 	//               省略した場合は、defaultDurationを全コマ分並べたものを使う
 	// defaultDuration : durations省略時に使う、1コマあたりの共通表示時間（秒）
-	constructor(img, frameWidth, frameHeight, durations = null, defaultDuration = 0.1)
+	constructor(img, frameWidth, frameHeight, frameCount = null, durations = null, defaultDuration = 0.1)
 	{
 		this.img = img;
 		this.frameWidth = frameWidth;
@@ -49,8 +49,9 @@ export class SpriteAnimator
 		//1行に何コマ並んでいるか（画像の横幅から逆算する）
 		this.cols = Math.floor(img.width / frameWidth);
 
-		// 画像の横幅×縦幅から、全部で何コマあるかを求める（横一列だけでなく、複数行にも対応）
-		this.frameCount = this.cols * Math.floor(img.height / frameHeight);
+		// frameCountが指定されていればそれを使う（＝空白コマを除いた本当のコマ数）
+		// 指定が無ければ、今まで通り画像サイズいっぱいのマス目数として計算する
+		this.frameCount = frameCount ?? (this.cols * Math.floor(img.height / frameHeight));
 
 		// 「何コマ目を、何秒表示するか」を { frame, duration } の配列（再生順そのもの）にまとめておく
 		this.sequence = this.buildSequence(durations, defaultDuration);
