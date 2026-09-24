@@ -62,7 +62,7 @@ export class Player
 
 		//キャラクター
 		this.character = characterName;
-		this.assets = {};
+		this.animes = {};
 		this.isSitting = false;						//立ち/座り
 		this.isRunning = true; 						//走り/歩き
 		this.state = "idle";						//状態
@@ -149,7 +149,7 @@ export class Player
 				{
 					//画像読み込み＋アニメーション管理を、SpriteAnimatorにまとめて任せる（画像が無い場合ここでエラーになりキーは作られない）
 					//durationを省略しているので、全コマ共通でFRAME_DURATION秒ずつ表示される
-					this.assets[key] = await SpriteAnimator.load(path, SPRITE_WIDTH, SPRITE_HEIGHT, null, durations, FRAME_DURATION);
+					this.animes[key] = await SpriteAnimator.load(path, SPRITE_WIDTH, SPRITE_HEIGHT, null, durations, FRAME_DURATION);
 				}
 				catch (e)
 				{
@@ -224,29 +224,29 @@ export class Player
 	}
 
 	//現在の状態のアセットを取得
-	getStateAsset()
+	getStateAnime()
 	{
 		if (!this.initialized)
 			return null;
 
 		const stateKey = (this.character ?? "") + "_" + (this.state ?? "") + "_" + (this.direction ?? "");
-		const asset = this.assets[stateKey];
-		if (!asset)
+		const anime = this.animes[stateKey];
+		if (!anime)
 		{
-			print("error", "指定されたステートイメージはありません(" + stateKey + ")")
+			print("error", "指定されたアニメーションはありません(" + stateKey + ")")
 			return null;
 		}
 
-		return asset;
+		return anime;
 	}
 
 	//現在のステート（状態・向き）に対応するアニメーションのコマを先頭(0コマ目)に戻す
 	//状態や向きが変わった直後に呼び出すことで、コマがズレて一瞬おかしな見た目になるのを防ぐ
 	resetAnimationFrame()
 	{
-		const asset = this.getStateAsset();
-		if (asset)
-			asset.reset();
+		const anime = this.getStateAnime();
+		if (anime)
+			anime.reset();
 	}
 
 	//キーの移動量取得
@@ -471,12 +471,12 @@ export class Player
 		}
 
 		//ステートアセット
-		const asset = this.getStateAsset();
-		if (!asset)
+		const anime = this.getStateAnime();
+		if (!anime)
 			return;
 
 		//コマ送り（経過時間の加算～次のコマへ進める判定）はSpriteAnimator自身に任せる
-		asset.update(delta);
+		anime.update(delta);
 
 		//ふきだしを表示中なら、残り時間を減らしていく
 		if (this.bubbleTimer > 0)
@@ -618,8 +618,8 @@ export class Player
 		if (!this.initialized)
 			return;
 
-		const asset = this.getStateAsset();
-		if (!asset)
+		const anime = this.getStateAnime();
+		if (!anime)
 			return;
 
 		// このキャラがカメラに映っていない（画面外にいる）なら、影やスプライトの描画処理を丸ごと省略する
@@ -645,7 +645,7 @@ export class Player
 		);
 
 		//キャラクター描画 スプライトシートから該当コマだけを切り出して描画する（現在のコマ管理・切り出しはSpriteAnimator任せ）
-		asset.draw(ctx, pos.x, pos.y, this.flip);
+		anime.draw(ctx, pos.x, pos.y, this.flip);
 
 		this.drawPointBar("canvasLeftHP", this.HP, this.maxHP, '#E75D21');
 		this.drawPointBar("canvasLeftMP", this.MP, this.maxMP, '#8569E2');
