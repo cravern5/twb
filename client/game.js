@@ -64,7 +64,14 @@ window.addEventListener('pagehide', () =>
 	localStorage.setItem('positionY', player.position.y);
 });
 
+
 ///////ボタンイベント//////////
+
+//チャットDMボタン
+chatDM.addEventListener('click', (e) =>
+{
+
+});
 
 //クイックスロット切り替え
 leftQuickSlotTab.addEventListener('click', (e) =>
@@ -87,7 +94,6 @@ leftAfkBtn.addEventListener('click', (e) =>
 	player.moveTarget = null;
 	if (player) player.isSitting = !player.isSitting;
 });
-
 
 //はみ出し抑制
 leftEnvironmentTab.addEventListener('click', (e) =>
@@ -333,6 +339,7 @@ export function mousewheel(e)
 
 
 ///////ゲーム//////////
+
 
 //画面更新
 function update(delta)
