@@ -34,37 +34,45 @@ export const ANIME_FRAMES = {
 // Player側は「今どのコマか」を意識しなくてよくなる。
 export class SpriteAnimator
 {
-	// img         : 読み込み済みのImageオブジェクト（横に並んだスプライトシート）
 	// frameWidth  : 1コマの幅（px）
 	// frameHeight : 1コマの高さ（px）
 	// durations   : 各コマの表示時間（秒）を並べた配列。例：[0.1, 0.1, 0.3, 0.1]
 	//               省略した場合は、defaultDurationを全コマ分並べたものを使う
 	// defaultDuration : durations省略時に使う、1コマあたりの共通表示時間（秒）
-	constructor(img, frameWidth, frameHeight, frameCount = null, durations = null, defaultDuration = 0.1)
+	constructor({ frameWidth, frameHeight, durations = null, defaultDuration = 0.1 })
 	{
-		this.img = img;
+		this.initialized = false;
+		this.path = null;
+		this.img = null;
 		this.frameWidth = frameWidth;
 		this.frameHeight = frameHeight;
-
-		//1行に何コマ並んでいるか（画像の横幅から逆算する）
-		this.cols = Math.floor(img.width / frameWidth);
-
-		// frameCountが指定されていればそれを使う（＝空白コマを除いた本当のコマ数）
-		// 指定が無ければ、今まで通り画像サイズいっぱいのマス目数として計算する
-		this.frameCount = frameCount ?? (this.cols * Math.floor(img.height / frameHeight));
-
-		// 「何コマ目を、何秒表示するか」を { frame, duration } の配列（再生順そのもの）にまとめておく
-		this.sequence = this.buildSequence(durations, defaultDuration);
-
+		this.durations = durations;
+		this.defaultDuration = defaultDuration;
 		this.sequenceIndex = 0;	// 現在、sequenceの何番目（何ステップ目）を再生中か
 		this.frameTimer = 0;		// 現在のステップを表示し始めてからの経過時間
 	}
 
-	// 画像ファイルを読み込んでSpriteAnimatorを作る（読み込みが終わるまで待つ必要があるのでstaticな非同期メソッドにしてある）
-	static async load(path, frameWidth, frameHeight, durations = null, defaultDuration = 0.1)
+	// 画像ファイルを読み込み
+	async load({ path, frameCount = null, bitmap = false })
 	{
-		const img = await utils2.loadImage(path);
-		return new SpriteAnimator(img, frameWidth, frameHeight, durations, defaultDuration);
+		this.initialized = false;
+		this.path = path;
+
+		//画像読み込み
+		this.img = await utils2.loadImage(path, bitmap);
+
+		//1行に何コマ並んでいるか（画像の横幅から逆算する）
+		this.cols = Math.floor(this.img.width / this.frameWidth);
+
+		// frameCountが指定されていればそれを使う（＝空白コマを除いた本当のコマ数）
+		// 指定が無ければ、今まで通り画像サイズいっぱいのマス目数として計算する
+		this.frameCount = frameCount ?? (this.cols * Math.floor(this.img.height / this.frameHeight));
+
+		// 「何コマ目を、何秒表示するか」を { frame, duration } の配列（再生順そのもの）にまとめておく
+		this.sequence = this.buildSequence(this.durations, this.defaultDuration);
+
+		this.initialized = true;
+		return this;
 	}
 
 	// durationsの指定方法（省略 / 秒数だけの配列 / ペアの配列）から、実際の再生順(sequence)を組み立てる

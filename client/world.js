@@ -55,7 +55,7 @@ export async function changeLocation(newLocation)
 
 	// マップ読み込み
 	map = maps[location];
-	map.img = await utils2.loadImage(MAPDIR + "/" + location + ".png");
+	map.img = await utils2.loadImage(MAPDIR + "/" + location + ".png", true);
 
 	//カメラの設定
 	engine.setCameraBounds(map.img.width, map.img.height);
@@ -68,7 +68,8 @@ export async function changeLocation(newLocation)
 		try
 		{
 			//画像読み込み＋アニメーション管理を、SpriteAnimatorにまとめて任せる（画像が無い場合ここでエラーになりキーは作られない）
-			const animator = await SpriteAnimator.load(path, obj.width, obj.height, obj.frameCount, obj.duration, null);
+			const animator = await new SpriteAnimator({ frameWidth: obj.width, frameHeight: obj.height, durations: obj.duration, defaultDuration: FRAME_DURATION })
+				.load({ path, frameCount: obj.frameCount, bitmap: true });
 
 			obj.animator = animator;
 			obj.x = obj.charaX + (PLAYER_SPRITE_WIDTH / 2) - (obj.width / 2);

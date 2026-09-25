@@ -29,7 +29,7 @@ drawImage用のimageSmoothingEnabledのような、文字専用のオン/オフ�
 
 //画像イメージ同期処理
 
-export function loadImage(src, bitmap = true)
+export function loadImage(src, bitmap = false)
 {
 	return new Promise((resolve, reject) =>
 	{

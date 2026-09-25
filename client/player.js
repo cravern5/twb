@@ -140,7 +140,7 @@ export class Player
 				const durationKey = stt + "_" + dir;
 				const durations = ANIME_FRAMES[durationKey] ?? null;
 
-				if (chara === "maximin" && stt === "idle" && dir === "side")
+				if (chara === "maximin" && stt === "idle" && dir === "forside")
 				{
 					let a = 1;
 					a = 2;
@@ -149,7 +149,8 @@ export class Player
 				{
 					//画像読み込み＋アニメーション管理を、SpriteAnimatorにまとめて任せる（画像が無い場合ここでエラーになりキーは作られない）
 					//durationを省略しているので、全コマ共通でFRAME_DURATION秒ずつ表示される
-					this.animes[key] = await SpriteAnimator.load(path, SPRITE_WIDTH, SPRITE_HEIGHT, null, durations, FRAME_DURATION);
+					this.animes[key] = await new SpriteAnimator({ frameWidth: SPRITE_WIDTH, frameHeight: SPRITE_HEIGHT, durations, defaultDuration: FRAME_DURATION })
+						.load({ path, bitmap: true });
 				}
 				catch (e)
 				{
