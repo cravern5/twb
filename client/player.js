@@ -8,7 +8,7 @@ import * as engine from './engine.js';
 import { canvas, ctx } from './engine.js';
 //import { MAP_WIDTH, MAP_HEIGHT } from './world.js';
 //import * as world from './world.js';
-import { SpriteAnimator, ANIME_FRAMES } from './animator.js';
+import { SpriteAnimator } from './animator.js';
 //import * as game from './game.js';
 
 //プレイヤー
@@ -29,6 +29,34 @@ export const CHARACTERS = ['maximin', 'tichiel', 'jellypi'];
 export const STATES = ["idle", "run", "sit", "walk"]//, "attack"];
 export const DIRECTIONS = ['forward', 'forside', 'side', 'backside', 'backward'];
 export const FRAME_DURATION = 0.07;					// アニメーションの更新間隔（秒単位：例 0.1秒ごとに1コマ進める）
+
+//アニメ更新間隔
+export const ANIME_FRAMES = {
+	"idle_forside": [[0, 3], [1, 0.2], [2, 0.2], [3, 0.3], [4, 0.15]
+		, [5, 0.15], [6, 0.15]
+		, [5, 0.15], [4, 0.15]
+		, [5, 0.15], [6, 0.15]
+		, [5, 0.15], [4, 0.15]
+		, [5, 0.15], [6, 0.15]
+		, [5, 0.15], [4, 0.15]
+		, [5, 0.15], [6, 0.15]
+		, [5, 0.15], [4, 0.15]
+		, [3, 0.3], [2, 0.2], [1, 0.2]
+	],
+	//forsideと違って3-4が同じで6が無し
+	"idle_backside": [[0, 3], [1, 0.2], [2, 0.2], [3, 0.3], [3, 0.15]
+		, [4, 0.15], [5, 0.15]
+		, [4, 0.15], [3, 0.15]
+		, [4, 0.15], [5, 0.15]
+		, [4, 0.15], [3, 0.15]
+		, [4, 0.15], [5, 0.15]
+		, [4, 0.15], [3, 0.15]
+		, [4, 0.15], [5, 0.15]
+		, [4, 0.15], [3, 0.15]
+		, [3, 0.3], [2, 0.2], [1, 0.2]
+	],
+};
+
 
 //チャット
 //const chatArea = document.getElementById("chatArea");
