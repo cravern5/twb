@@ -302,26 +302,14 @@ export function mousemove(e)
 		return;
 
 	// キャンバス上を左クリックしたら、その場所を目的地にして歩き出す
-	if (input.mouseInfo.left && e.target === engine.canvas)
+	/*if (input.mouseInfo.left && e.target === engine.canvas)
 	{
 		//シフトキーのキャラ向き更新
 		if (e.shiftKey)
 			player.setDirectionTargetFromScreen(e.clientX, e.clientY);
 		else
 			player.setMoveTargetFromScreen(e.clientX, e.clientY);
-	}
-
-
-
-	//if (mouseInfo.right)
-	//{
-	//カメラ
-	//	engine.camera_MouseMove(e);
-
-	//}
-
-	//addLog("INFO", "window.mousemove" + mouseInfo.right);
-	//windows.mousemove(e);
+	}*/
 }
 
 // マウスを離したとき
