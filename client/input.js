@@ -61,6 +61,7 @@ export const mouseInfo =
 	clientY: null,
 	movementX: null,
 	movementY: null,
+	downTarget: null,//mousedownした時のtarget
 };
 
 // chatRange非表示
@@ -85,6 +86,7 @@ document.addEventListener('mousedown', (e) =>
 
 	mouseInfo.clientX = e.clientX;
 	mouseInfo.clientY = e.clientY;
+	mouseInfo.downTarget = e.target;
 
 	//if (!engine.useTouch)
 	//{

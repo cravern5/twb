@@ -271,10 +271,7 @@ export function mousedown(e)
 	//押された場所を記憶
 	lastSelectID = e.target.id;
 
-	if (scroll.isDraggingThumb)
-		return;
-
-	if (!player?.initialized)
+	if (scroll.isDraggingThumb || !player?.initialized)
 		return;
 
 	// キャンバス上を左クリックしたら、その場所を目的地にして歩き出す
@@ -286,8 +283,6 @@ export function mousedown(e)
 		else
 			player.setMoveTargetFromScreen(e.clientX, e.clientY);
 	}
-
-
 }
 
 // マウスを動かしているとき
@@ -295,21 +290,19 @@ export function mousemove(e)
 {
 	lastSelectID = e.target.id;
 
-	if (scroll.isDraggingThumb)
+	if (scroll.isDraggingThumb || !player?.initialized)
 		return;
 
-	if (!player?.initialized)
-		return;
-
+	//mousedownが有効になったときだけ動かさないと色々挙動問題起きます
 	// キャンバス上を左クリックしたら、その場所を目的地にして歩き出す
-	/*if (input.mouseInfo.left && e.target === engine.canvas)
+	if (input.mouseInfo.left && input.mouseInfo.downTarget === engine.canvas)
 	{
 		//シフトキーのキャラ向き更新
 		if (e.shiftKey)
 			player.setDirectionTargetFromScreen(e.clientX, e.clientY);
 		else
 			player.setMoveTargetFromScreen(e.clientX, e.clientY);
-	}*/
+	}
 }
 
 // マウスを離したとき
