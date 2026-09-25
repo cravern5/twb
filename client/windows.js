@@ -6,6 +6,7 @@ export let activeWindow = null;
 export let debugWindow;
 export let chatWindow;
 export let leftStatusWindow;
+export let leftQuickSlotWindow;
 export let windows = [];
 
 export const debugInfo = document.getElementById('debugInfo');
@@ -38,6 +39,22 @@ export const rightMenuOpenBtn = document.getElementById("rightMenuOpen");
 
 //左クイックスロット
 export const leftQuickSlotTab = document.getElementById("leftQuickSlotTab");
+
+//ウィンドウクラス追加 呼び出し
+export function init()
+{
+	//ウィンドウコンテナ作成
+	chatWindow = new WindowController({ container: '#chatArea', drager: '#chatLog', minWidth: 300, minHeight: 90, childLock: true, defaultDisplay: 'flex' });
+	debugWindow = new WindowController({ container: '#debugInfo', defaultDisplay: "block" });
+	leftStatusWindow = new WindowController({ container: '#leftStatusGroup', defaultDisplay: "block" });
+	leftQuickSlotWindow = new WindowController({ container: '#leftQuickSlot', drager: '#leftQuickSlotShortcut', defaultDisplay: "block" });
+
+	windows.push(chatWindow);
+
+	//canvasサイズ初期化
+	repaint();
+}
+
 
 //ウィンドウズクラス
 class WindowController
@@ -488,20 +505,6 @@ export function repaint()
 	canvas.height = window.innerHeight;
 }
 
-
-//ウィンドウクラス追加 呼び出し
-export function init()
-{
-	//ウィンドウコンテナ作成
-	chatWindow = new WindowController({ container: '#chatArea', drager: '#chatLog', minWidth: 300, minHeight: 90, childLock: true, defaultDisplay: 'flex' });
-	debugWindow = new WindowController({ container: '#debugInfo', defaultDisplay: "block" });
-	leftStatusWindow = new WindowController({ container: '#leftStatusGroup', defaultDisplay: "block" });
-
-	windows.push(chatWindow);
-
-	//canvasサイズ初期化
-	repaint();
-}
 
 // (down)トグルボタン
 export function downedToggleClick(e)
