@@ -47,7 +47,7 @@ export function init()
 	chatWindow = new WindowController({ container: '#chatArea', drager: '#chatLog', minWidth: 300, minHeight: 90, childLock: true, defaultDisplay: 'flex' });
 	debugWindow = new WindowController({ container: '#debugInfo', defaultDisplay: "block" });
 	leftStatusWindow = new WindowController({ container: '#leftStatusGroup', defaultDisplay: "block" });
-	leftQuickSlotWindow = new WindowController({ container: '#leftQuickSlot', drager: '#leftQuickSlotShortcut', defaultDisplay: "block" });
+	leftQuickSlotWindow = new WindowController({ container: '#leftQuickSlot', drager: '#leftQuickSlotShortcut', defaultDisplay: "block", containerResize: false });
 
 	windows.push(chatWindow);
 
@@ -66,7 +66,10 @@ class WindowController
 	//minWidth　最小横幅
 	//minHeight　最小高さ
 	constructor({ container, drager = null, closer = null,
-		resizer = null, resizeDir = 'n', minWidth = 280, minHeight = 180, childLock = false, defaultDisplay = null })
+		resizer = null, resizeDir = 'n',
+		minWidth = 280, minHeight = 180,
+		childLock = false, defaultDisplay = null,
+		containerResize = true })
 	{
 		this.container = typeof container === 'string' ? document.querySelector(container) : container;
 		this.drager = typeof drager === 'string' ? document.querySelector(drager) : drager;
@@ -105,17 +108,20 @@ class WindowController
 		this.minHeight = minHeight;
 
 		//四隅上下左右リサイズハンドルの追加
-		//['nw', 'ne', 'sw', 'se', 'n', 's', 'w', 'e'].forEach(dir =>
-		for (let dir of ['nw', 'ne', 'sw', 'se', 'n', 's', 'w', 'e'])
+		if (containerResize)
 		{
-			const handle = document.createElement('div');
-			handle.className = `resize-handle ${dir}`;
+			//['nw', 'ne', 'sw', 'se', 'n', 's', 'w', 'e'].forEach(dir =>
+			for (let dir of ['nw', 'ne', 'sw', 'se', 'n', 's', 'w', 'e'])
+			{
+				const handle = document.createElement('div');
+				handle.className = `resize-handle ${dir}`;
 
-			this._makeResizable(handle, dir);
+				this._makeResizable(handle, dir);
 
-			this.container.appendChild(handle);
+				this.container.appendChild(handle);
 
-		}//);
+			}//);
+		}
 
 		//ウィンドウリサイズ
 		if (this.resizer)
