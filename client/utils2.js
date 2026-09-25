@@ -29,19 +29,38 @@ drawImage用のimageSmoothingEnabledのような、文字専用のオン/オフ�
 
 //画像イメージ同期処理
 
-export function loadImage(src)
+export function loadImage(src, bitmap = true)
 {
 	return new Promise((resolve, reject) =>
 	{
 		const img = new Image();
-		img.onload = () =>
+		img.onload = async () =>
 		{
-			resolve(img);
+			if (bitmap)
+			{
+				try
+				{
+					// 不要になったらcloseする必要がある
+					const bmp = await createImageBitmap(img);
+					resolve(bmp);
+				}
+				catch (err)
+				{
+					// createImageBitmapが失敗した場合もちゃんとreject側に伝える
+					reject(new Error(`ビットマップの生成に失敗しました: ${src}`));
+				}
+			}
+			else
+				resolve(img);
+
 		}
 		img.onerror = (err) =>
 		{
 			reject(new Error(`画像の読み込みに失敗しました: ${src}`));
 		}
+
+		//別ドメインの画像(CDNなど)を読み込む可能性があるなら
+		img.crossOrigin = "anonymous";
 		img.src = src;
 	});
 };
@@ -305,4 +324,64 @@ export function removeAntiAliasing({ ctx, width, height })
 
 	//加工したピクセル情報をcanvasに書き戻して画面に反映させる
 	ctx.putImageData(imageData, 0, 0);
+}
+
+
+// ポータルの粒子リングを表す配列(1つのリング = 発生時刻を持つ)
+const rings = [];
+let lastRingTime = 0;
+
+export function drawPortal(ctx, cx, cy, time)
+{
+	// --- 中心の発光する円を描く ---
+	// sin波でサイズをわずかに脈動させ、生きている感じを出す
+	const pulse = Math.sin(time * 0.003) * 3; // -3〜3pxの範囲で変化
+	const coreRadius = 20 + pulse;
+
+	// 放射状グラデーションを作る(中心が明るく、外側が透明)
+	const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreRadius * 2);
+	glow.addColorStop(0, "rgba(255,255,255,1)");   // 中心：白
+	glow.addColorStop(0.5, "rgba(255,250,180,0.6)"); // 中間：淡い黄色
+	glow.addColorStop(1, "rgba(255,250,180,0)");   // 外側：透明
+	ctx.fillStyle = glow;
+	ctx.beginPath();
+	ctx.arc(cx, cy, coreRadius * 2, 0, Math.PI * 2);
+	ctx.fill();
+
+	// --- 一定間隔で新しい粒子リングを発生させる ---
+	if (time - lastRingTime > 1500)
+	{ // 1.5秒ごとに1つ発生
+		rings.push({ startTime: time });
+		lastRingTime = time;
+	}
+
+	// --- 発生済みの各リングを描画・更新する ---
+	for (let i = rings.length - 1; i >= 0; i--)
+	{
+		const ring = rings[i];
+		const age = time - ring.startTime;   // リングが生まれてからの経過時間
+		const duration = 2000;               // リングが消えるまでの寿命(ms)
+		const progress = age / duration;     // 0(誕生)〜1(消滅)の進行度
+
+		if (progress >= 1)
+		{
+			rings.splice(i, 1); // 寿命が尽きたリングは配列から削除
+			continue;
+		}
+
+		const radius = 25 + progress * 40;   // 徐々に外側へ広がる
+		const alpha = 1 - progress;          // 広がるほど透明になる
+		const dotCount = 24;                 // リング上に並べる点の数
+
+		ctx.fillStyle = `rgba(255,255,220,${alpha})`;
+		for (let d = 0; d < dotCount; d++)
+		{
+			const angle = (d / dotCount) * Math.PI * 2;
+			const dx = cx + Math.cos(angle) * radius;
+			const dy = cy + Math.sin(angle) * radius;
+			ctx.beginPath();
+			ctx.arc(dx, dy, 1.5, 0, Math.PI * 2); // 小さな点を1つ描く
+			ctx.fill();
+		}
+	}
 }

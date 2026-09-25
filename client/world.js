@@ -33,6 +33,7 @@ export const maps =
 		//オブジェクト一覧
 		objects:
 		{
+			//portal: { name: "portal", width: 320, height: 320, frameCount: 38, duration: 0.085, charaX: 2583, charaY: 1913, x: null, y: null, animator: null, position: "front" },
 			portal: { name: "portal", width: 220, height: 250, frameCount: 38, duration: 0.085, charaX: 2583, charaY: 1913, x: null, y: null, animator: null, position: "front" },
 			warp0: { name: "warp", width: 195, height: 225, duration: 0.085, charaX: 3280, charaY: 341, x: null, y: null, animator: null, position: "back" },
 			warp1: { name: "warp", width: 195, height: 225, duration: 0.085, charaX: 2787, charaY: 3920, x: null, y: null, animator: null, position: "back" }
