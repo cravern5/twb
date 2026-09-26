@@ -1,14 +1,12 @@
 //import path from 'path'; //ブラウザ環境では使えない
 //import fs from 'fs';//ブラウザ環境では使えない
 //import { fileURLToPath } from 'url'; //ブラウザ環境では使えない パスとURLを相互変換するための標準機能、isMainModule用
-import { NAME_BYTE_LENGTH } from './config.js';
 
 //デバッグかどうか
-//(サーバー環境のみ) 開発環境（development）のときのみライブリロード（ファイル監視・SSE）を有効化、本番サーバー(Render/Koyebなど)ではNODE_ENV=productionを設定しておくこと
 export const isDev =
 	// ブラウザ環境で、localhostアクセスなら開発環境とみなす
 	(typeof location !== "undefined" && (location.hostname === 'localhost' || location.hostname === '127.0.0.1')) ||
-	// サーバー環境で、NODE_ENVがproduction以外なら開発環境とみなす
+	// サーバー環境で、NODE_ENVがproduction以外なら開発環境とみなす、本番サーバー(Render/Koyebなど)ではNODE_ENV=productionを設定しておくこと
 	(typeof process !== "undefined" && process.env.NODE_ENV !== 'production');
 
 //直接実行されたかどうか(サーバー環境のみ)
