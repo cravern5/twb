@@ -7,7 +7,6 @@ let chatLog = null;
 if (typeof document !== 'undefined')
 	chatLog = document.getElementById('chatLog');
 
-
 // 文字色・背景色などのエスケープコード一覧
 // ※Pythonの \033 とJavaScriptの \x1b は同じ「ESCシーケンス」を表す書き方です
 const COLORS = {
@@ -50,54 +49,6 @@ const COLORS = {
 	bg_yellow: "\x1b[43m\x1b[30m",
 };
 
-// RGB値（0-255ずつ）を直接指定して約1677万色を出力（truecolor対応端末のみ）
-export function trgb(r, g, b, text)
-{
-
-	// 各成分を0-255にクリップ
-	r = Math.max(0, Math.min(255, r));
-	g = Math.max(0, Math.min(255, g));
-	b = Math.max(0, Math.min(255, b));
-	const code = `\x1b[38;2;${r};${g};${b}m`;
-	return `${code}${text}\x1b[0m`;
-	//return code + text;
-}
-
-export function tc(color, text)
-{
-	// COLORSに無いキーが指定されたらwhiteにフォールバックする
-	const code = COLORS[color] || COLORS["white"] || "";
-	return `${code}${text}\x1b[0m`;
-	//return code + text;
-}
-
-export function log_rgb(r, g, b, text)
-{
-	let result = trgb(r, g, b, text);
-	if (!result.endsWith("\x1b[0m")) result += "\x1b[0m";
-	console.log(result);
-}
-
-//色log
-export function print(color, text)
-{
-	//オブジェクトなら文字にする
-	if (isObject(text))
-		text = JSON.stringify(text);
-
-	//if (text === null)
-	//	text = color;
-
-	let result = tc(color, text);
-	if (!result.endsWith("\x1b[0m")) result += "\x1b[0m";
-	console.log(result);
-}
-
-export function print2(text)
-{
-	if (!text.endsWith("\x1b[0m")) text += "\x1b[0m";
-	console.log(text);
-}
 
 // 引数がオブジェクトかどうかを判定する関数
 export function isObject(value)
@@ -122,6 +73,85 @@ export function isFunction(value)
 	// typeof で "function" 型かどうかを確認する
 	// 通常の関数・アロー関数・クラスなども typeof は "function" になる
 	return typeof value === "function";
+}
+
+//引数全て文字列で返す
+export function toText(...values)
+{
+	// 変換結果を格納する配列
+	let results = [];
+
+	for (const value of values)
+	{
+		if (value === null || value === undefined)
+		{
+			results.push(String(value));
+		}
+		else if (value instanceof Error)// Error は message や stack が JSON.stringify で消えてしまうため専用処理にする
+		{
+			//results.push(value.name + ":" + value.message + "\n" + value.stack);
+			//どうしてもローカルファイルを示すことは難しそうである
+			results.push(value.stack);
+			//results.push(value);
+		}
+		else if (Array.isArray(value))
+		{
+			// 配列の場合は中身を展開(スプレッド)して再帰的に toText を呼び出す ※ Array.isArray はオブジェクト判定より先に行う必要がある
+			//results.push(toText(...value));
+			// 配列の中身は改行させず、"[1,2,3]" のように1行にまとめる、各要素は再帰的に toText で文字列化し、", " で連結する
+			results.push("[" + value.map((v) => toText(v)).join(", ") + "]");
+		}
+		else if (typeof value === "object")
+		{
+			// オブジェクトの場合は JSON 文字列に変換する
+			results.push(b);
+		}
+		else
+		{
+			// それ以外(数値・文字列・真偽値など)はそのまま文字列化する
+			results.push(String(value));
+		}
+	}
+
+	// 各要素を改行でつないで1つの文字列として返す
+	return results.join("\n");
+}
+
+// RGB値（0-255ずつ）を直接指定して約1677万色を出力（truecolor対応端末のみ）
+export function TRGB(r, g, b)
+{
+	// 各成分を0-255にクリップ
+	r = Math.max(0, Math.min(255, r));
+	g = Math.max(0, Math.min(255, g));
+	b = Math.max(0, Math.min(255, b));
+
+	return `\x1b[38;2;${r};${g};${b}m`;
+}
+//文字の色コードに終わりを付ける
+export function TEC(text)
+{
+	if (!text.endsWith("\x1b[0m"))
+		text += "\x1b[0m";
+	return text;
+}
+//文字に色コードを付ける
+export function addColor(color, text)
+{
+	// COLORSに無いキーが指定されたらwhiteにフォールバックする
+	const code = COLORS[color] || COLORS["white"] || "";
+
+	// 改行のたびに色がリセットされてしまう環境があるため、 1行ごとに色コードとリセットを付け直す
+	return text.split("\n").map((line) => TEC(code + line)).join("\n");
+}
+//色コンソール
+export function print(color, ...values)
+{
+	// 配列を展開して個別の引数として渡す
+	let text = toText(...values);
+	text = addColor(color, text);
+	text = TEC(text);
+
+	console.log(text);
 }
 
 
@@ -176,9 +206,8 @@ export function typeConsole(type)
 //ログエリアに書き込む
 export function addLog(type, message, logArea = chatLog)
 {
-	//オブジェクトなら文字にする
-	if (isObject(message))
-		message = JSON.stringify(message);
+	//文字列変換
+	message = toText(message);
 
 	//タイプコンソール取得
 	let consoleFunc = typeConsole(type);
@@ -205,6 +234,7 @@ export function addLog(type, message, logArea = chatLog)
 	}*/
 }
 
+//addLogだが、同じメッセージは送らない
 let debugMessage;
 export function debugLog(message)
 {
@@ -341,7 +371,6 @@ setTimeout(() =>
 //エクスポートの場合
 export let test;は変数そのものであり、通常のオブジェクトプロパティではないため、そのままではwait()のobj/propNameに渡せません。
 しかし、ES Modulesの名前空間オブジェクト（import * as ...で取得できるもの）を使うと、実質的にオブジェクトのプロパティとして参照できます。
-
 
 */
 //mode 0=値自体があれば返す、1=null,undefinedでなくなれば返す,2=値が変われば返す
@@ -551,7 +580,7 @@ export function waitMObs(element, attrName, timeout = 5000)
 }
 
 
-
+//タップできるか、チェック
 export function isCanTouch()
 {
 	return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);

@@ -21,16 +21,22 @@ export const MOVE_TARGET_THRESHOLD = 4;				// 目的地にどれだけ近づい�
 export const SEND_INTERVAL = 1 / 20;				// 座標送信は1秒間に最大20回まで（20Hz 0.05秒に1回)に制限する、　自キャラ(60fps 16.67ミリ秒)
 export const INTERP_SPEED = 32;						// 他プレイヤー座標を目標地点へ近づける速さ（大きいほどすぐ追いつく）
 
-//アニメーション
 export const SPRITE_WIDTH = 70;		//キャラ画像1コマの幅
 export const SPRITE_HEIGHT = 95;	//キャラ画像1コマの高さ
 export const ASSETSDIR = '/assets/player';	//キャラ画のディレクトリ
 export const CHARACTERS = ['maximin', 'tichiel', 'jellypi'];
+
+export const characters =
+{
+	maximin: { frameWidth: 70, frameHeight: 95, offsetFootY: 14.5 },
+	tichiel: { frameWidth: 70, frameHeight: 95, offsetFootY: 14.5 },
+	jellypi: { frameWidth: 70, frameHeight: 95, offsetFootY: 14.5 },
+};
+
+//アニメーション
 export const STATES = ["idle", "run", "sit", "walk"]//, "attack"];
 export const DIRECTIONS = ['forward', 'forside', 'side', 'backside', 'backward'];
-
-//アニメ更新間隔
-export const DEFAULT_DURATION = 0.07;					// アニメーションの更新間隔（秒単位：例 0.1秒ごとに1コマ進める）
+export const DEFAULT_DURATION = 0.07;	// アニメーションの更新間隔（秒単位：例 0.1秒ごとに1コマ進める）
 export const ANIME_FRAMES = {
 
 	walk_forward: 0.12, walk_forside: 0.12, walk_side: 0.12, walk_backside: 0.12, walk_backward: 0.12,
@@ -633,6 +639,8 @@ export class Player
 
 	drawCharacter()
 	{
+		const a = b;
+
 		if (!this.initialized)
 			return;
 
