@@ -7,7 +7,7 @@ import { SpriteAnimator } from './animator.js';
 //import { player } from './player.js';
 import { SPRITE_WIDTH as PLAYER_SPRITE_WIDTH, SPRITE_HEIGHT as PLAYER_SPRITE_HEIGHT } from './player.js'; //位置合わせ用
 
-export const FRAME_DURATION = 0.07;					// アニメーションの更新間隔（秒単位：例 0.1秒ごとに1コマ進める）
+//export const DEFAULT_DURATION = 0.07;					// アニメーションの更新間隔（秒単位：例 0.1秒ごとに1コマ進める）
 export const MAPDIR = "/assets/map";
 export const OBJECTDIR = "/assets/object";
 
@@ -33,10 +33,11 @@ export const maps =
 		//オブジェクト一覧
 		objects:
 		{
-			//portal: { name: "portal", width: 320, height: 320, frameCount: 38, duration: 0.085, charaX: 2583, charaY: 1913, x: null, y: null, animator: null, position: "front" },
-			portal: { name: "portal", width: 220, height: 250, frameCount: 38, duration: 0.085, charaX: 2583, charaY: 1913, x: null, y: null, animator: null, position: "front" },
-			warp0: { name: "warp", width: 195, height: 225, duration: 0.085, charaX: 3280, charaY: 341, x: null, y: null, animator: null, position: "back" },
-			warp1: { name: "warp", width: 195, height: 225, duration: 0.085, charaX: 2787, charaY: 3920, x: null, y: null, animator: null, position: "back" }
+			//予約  x: null, y: null, animator: null,
+			//portal: { name: "portal", width: 320, height: 320, frameCount: 38, duration: 0.085, charaX: 2583, charaY: 1913, position: "front" },
+			portal: { name: "portal", width: 220, height: 250, frameCount: 38, duration: 0.085, charaX: 2583, charaY: 1913, position: "front" },
+			warp0: { name: "warp", width: 195, height: 225, duration: 0.085, charaX: 3280, charaY: 341, position: "back" },
+			warp1: { name: "warp", width: 195, height: 225, duration: 0.085, charaX: 2787, charaY: 3920, position: "back" }
 		}
 	}
 }
@@ -68,7 +69,7 @@ export async function changeLocation(newLocation)
 		try
 		{
 			//画像読み込み＋アニメーション管理を、SpriteAnimatorにまとめて任せる（画像が無い場合ここでエラーになりキーは作られない）
-			const animator = await new SpriteAnimator({ frameWidth: obj.width, frameHeight: obj.height, durations: obj.duration, defaultDuration: FRAME_DURATION })
+			const animator = await new SpriteAnimator({ frameWidth: obj.width, frameHeight: obj.height, durations: obj.duration })
 				.load({ path, frameCount: obj.frameCount, bitmap: true });
 
 			obj.animator = animator;

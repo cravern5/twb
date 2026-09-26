@@ -10,7 +10,7 @@ export class SpriteAnimator
 	// durations   : 各コマの表示時間（秒）を並べた配列。例：[0.1, 0.1, 0.3, 0.1]
 	//               省略した場合は、defaultDurationを全コマ分並べたものを使う
 	// defaultDuration : durations省略時に使う、1コマあたりの共通表示時間（秒）
-	constructor({ frameWidth, frameHeight, durations = null, defaultDuration = 0.1 })
+	constructor({ frameWidth, frameHeight, durations = null })
 	{
 		this.initialized = false;
 		this.path = null;
@@ -18,7 +18,7 @@ export class SpriteAnimator
 		this.frameWidth = frameWidth;
 		this.frameHeight = frameHeight;
 		this.durations = durations;
-		this.defaultDuration = defaultDuration;
+		//this.defaultDuration = defaultDuration;
 		this.sequenceIndex = 0;	// 現在、sequenceの何番目（何ステップ目）を再生中か
 		this.frameTimer = 0;		// 現在のステップを表示し始めてからの経過時間
 	}
@@ -40,28 +40,40 @@ export class SpriteAnimator
 		this.frameCount = frameCount ?? (this.cols * Math.floor(this.img.height / this.frameHeight));
 
 		// 「何コマ目を、何秒表示するか」を { frame, duration } の配列（再生順そのもの）にまとめておく
-		this.sequence = this.buildSequence(this.durations, this.defaultDuration);
+		this.sequence = this.buildSequence();
 
 		this.initialized = true;
 		return this;
 	}
 
 	// durationsの指定方法（省略 / 秒数だけの配列 / ペアの配列）から、実際の再生順(sequence)を組み立てる
-	buildSequence(durations, defaultDuration)
+	buildSequence()
 	{
-		//③ペアの配列（[[コマ番号, 秒数], ...]）の場合：再生順そのものなので、そのまま使う
+		let defaultDuration = null;
+		let durations = this.durations;
+
+		//durationsにオブジェクトが指定された場合
+		if (typeof this.durations === "object" && !Array.isArray(this.durations))
+		{
+			durations = this.durations.durations;
+			defaultDuration = this.durations.defaultDuration;
+		}
+
+		//ペアの配列（[[コマ番号, 秒数], ...]）の場合：再生順そのものなので、そのまま使う
 		if (Array.isArray(durations) && Array.isArray(durations[0]))
-			return durations.map(([frame, duration]) => ({ frame, duration }));
+			return durations.map(([frame, duration]) => ({ frame, duration: duration ?? defaultDuration }));
+		//秒数だけの配列（[0.1, 0.1, ...]）の場合：0コマ目から順番に1回ずつ再生する
+		else if (Array.isArray(durations))
+			return durations.map((duration, frame) => ({ frame, duration: duration ?? defaultDuration }));
+		else
+		{
+			const sequence = [];
+			//①省略時：0コマ目からframeCount-1コマ目まで、順番に1回ずつdefaultDuration秒で再生する
+			for (let frame = 0; frame < this.frameCount; frame++)
+				sequence.push({ frame, duration: durations });
+			return sequence;
 
-		//②秒数だけの配列（[0.1, 0.1, ...]）の場合：0コマ目から順番に1回ずつ再生する
-		if (Array.isArray(durations))
-			return durations.map((duration, frame) => ({ frame, duration }));
-
-		//①省略時：0コマ目からframeCount-1コマ目まで、順番に1回ずつdefaultDuration秒で再生する
-		const sequence = [];
-		for (let frame = 0; frame < this.frameCount; frame++)
-			sequence.push({ frame, duration: defaultDuration });
-		return sequence;
+		}
 	}
 
 	// 指定したコマ（index）だけ表示時間を変更する（個別のdurationをあとから調整したいとき用）

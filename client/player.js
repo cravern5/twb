@@ -28,35 +28,24 @@ export const ASSETSDIR = '/assets/player';	//キャラ画のディレクトリ
 export const CHARACTERS = ['maximin', 'tichiel', 'jellypi'];
 export const STATES = ["idle", "run", "sit", "walk"]//, "attack"];
 export const DIRECTIONS = ['forward', 'forside', 'side', 'backside', 'backward'];
-export const FRAME_DURATION = 0.07;					// アニメーションの更新間隔（秒単位：例 0.1秒ごとに1コマ進める）
 
 //アニメ更新間隔
+export const DEFAULT_DURATION = 0.07;					// アニメーションの更新間隔（秒単位：例 0.1秒ごとに1コマ進める）
 export const ANIME_FRAMES = {
-	"idle_forside": [[0, 3], [1, 0.2], [2, 0.2], [3, 0.3], [4, 0.15]
-		, [5, 0.15], [6, 0.15]
-		, [5, 0.15], [4, 0.15]
-		, [5, 0.15], [6, 0.15]
-		, [5, 0.15], [4, 0.15]
-		, [5, 0.15], [6, 0.15]
-		, [5, 0.15], [4, 0.15]
-		, [5, 0.15], [6, 0.15]
-		, [5, 0.15], [4, 0.15]
-		, [3, 0.3], [2, 0.2], [1, 0.2]
-	],
-	//forsideと違って3-4が同じで6が無し
-	"idle_backside": [[0, 3], [1, 0.2], [2, 0.2], [3, 0.3], [3, 0.15]
-		, [4, 0.15], [5, 0.15]
-		, [4, 0.15], [3, 0.15]
-		, [4, 0.15], [5, 0.15]
-		, [4, 0.15], [3, 0.15]
-		, [4, 0.15], [5, 0.15]
-		, [4, 0.15], [3, 0.15]
-		, [4, 0.15], [5, 0.15]
-		, [4, 0.15], [3, 0.15]
-		, [3, 0.3], [2, 0.2], [1, 0.2]
-	],
-};
 
+	walk_forward: 0.12, walk_forside: 0.12, walk_side: 0.12, walk_backside: 0.12, walk_backward: 0.12,
+	idle_forside:
+	{
+		defaultDuration: 0.15,
+		durations: [[0, 3], [1, 0.2], [2, 0.2], [3, 0.3], [4], [5], [6], [5], [4], [5], [6], [5], [4], [5], [6], [5], [4], [5], [6], [5], [4], [3, 0.3], [2, 0.2], [1, 0.2]]
+	},
+	//forsideと違って3-4が同じで6が無し
+	idle_backside:
+	{
+		defaultDuration: 0.15,
+		durations: [[0, 3], [1, 0.2], [2, 0.2], [3, 0.3], [3], [4], [5], [4], [3], [4], [5], [4], [3], [4], [5], [4], [3], [4], [5], [4], [3], [3, 0.3], [2, 0.2], [1, 0.2]],
+	}
+}
 
 //チャット
 //const chatArea = document.getElementById("chatArea");
@@ -166,7 +155,7 @@ export class Player
 				const path = ASSETSDIR + "/" + chara + "/" + stt + "/" + dir + ".png";
 				const key = chara + "_" + stt + "_" + dir;
 				const durationKey = stt + "_" + dir;
-				const durations = ANIME_FRAMES[durationKey] ?? null;
+				const durations = ANIME_FRAMES[durationKey] ?? DEFAULT_DURATION;
 
 				if (chara === "maximin" && stt === "idle" && dir === "forside")
 				{
@@ -177,7 +166,7 @@ export class Player
 				{
 					//画像読み込み＋アニメーション管理を、SpriteAnimatorにまとめて任せる（画像が無い場合ここでエラーになりキーは作られない）
 					//durationを省略しているので、全コマ共通でFRAME_DURATION秒ずつ表示される
-					this.animes[key] = await new SpriteAnimator({ frameWidth: SPRITE_WIDTH, frameHeight: SPRITE_HEIGHT, durations, defaultDuration: FRAME_DURATION })
+					this.animes[key] = await new SpriteAnimator({ frameWidth: SPRITE_WIDTH, frameHeight: SPRITE_HEIGHT, durations })
 						.load({ path, bitmap: true });
 				}
 				catch (e)
