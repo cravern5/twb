@@ -8,7 +8,7 @@ import * as engine from './engine.js';
 import * as socket from './ws_bin_client.js';
 //import { player } from './ws_bin_client.js';
 import * as input from './input.js';
-import { keys, keysPress, mouseInfo } from './input.js';
+import { keys, keysPress, mouseInfo, nKey, nKeyPress } from './input.js';
 import * as world from './world.js';
 import * as Player from './player.js';
 //import { player } from './player.js';
@@ -200,9 +200,7 @@ export function keydown(e)
 	if (!player?.initialized)
 		return;
 
-	const key = e.key.toLowerCase();
-
-	if (key === 'enter')
+	if (nKey('enter'))
 		return player.SendChat(e);
 	//チャットバーにフォーカスがある状態
 	else if (document.activeElement === chatInput)
@@ -213,30 +211,30 @@ export function keydown(e)
 		return true;
 	}
 	//走り
-	else if (key === "r")
+	else if (nKey("r"))
 	{
 		leftFootBtn.click();
 		return true;
 	}
 	//座り
-	else if (key === "insert")
+	else if (nKey("insert"))
 	{
 		leftAfkBtn.click();
 		return true;
 	}
 	//移動キー
-	else if (key === "w" || key === "a" || key === "s" || key === "d")
+	else if (nKey("w") || nKey("a") || nKey("s") || nKey("d"))
 	{
 		// キー操作を優先する（マウスクリックでの目的地移動は中断する）
 		player.moveTarget = null;
 		return true;
 	}
 	//チャット表示切替
-	else if (key === "c")
+	else if (nKey("c"))
 	{
 		windows.chatWindow.show(-1);
 	}
-	/*else if (key === "f12")
+	/*else if (nKey("f12"))
 	{
 		windows.leftStatusWindow.show(-1);
 		e.stopPropagation();

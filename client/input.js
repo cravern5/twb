@@ -8,6 +8,7 @@ import * as game from './game.js';
 //キーボード==============================================================
 export const keys = {};
 export const keysPress = {};
+export const modifierKey = {};
 //export const keys = new Proxy({}, {	get: (target, key) => key in target ? target[key] : false});
 
 // フレーム末にエッジフラグをリセット（anime()の末尾などで呼ぶ）
@@ -30,6 +31,11 @@ document.addEventListener('keydown', (e) =>
 		keys[key] = true;// keysは最初の押下のみtrueになる（リピートは除外）
 	keysPress[key] = true; // keysPressはリピート含めて押している間ずっとtrue
 
+	modifierKey["shift"] = e.shiftKey;
+	modifierKey["ctrl"] = e.ctrlKey;
+	modifierKey["alt"] = e.altKey;
+	modifierKey["cmd"] = e.metaKey;
+
 	game.keydown(e);
 
 });
@@ -42,8 +48,22 @@ document.addEventListener('keyup', (e) =>
 	keys[key] = false;
 	keysPress[key] = false;
 
+	modifierKey["shift"] = e.shiftKey;
+	modifierKey["ctrl"] = e.ctrlKey;
+	modifierKey["alt"] = e.altKey;
+	modifierKey["cmd"] = e.metaKey;
+
 	game.keyup(e);
 });
+
+export function nKeyPress(key)
+{
+	return (keysPress[key] && !modifierKey["shift"] && !modifierKey["ctrl"] && !modifierKey["alt"] && !modifierKey["cmd"]);
+}
+export function nKey(key)
+{
+	return (keys[key] && !modifierKey["shift"] && !modifierKey["ctrl"] && !modifierKey["alt"] && !modifierKey["cmd"]);
+}
 
 
 //マウス==============================================================
