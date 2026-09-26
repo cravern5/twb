@@ -387,7 +387,7 @@ function animate(currentTime)
 	catch (e)
 	{
 		console.error("animateでエラーが発生しました", e);
-		debugger;
+		//debugger;
 	}
 
 	lastTime = currentTime;

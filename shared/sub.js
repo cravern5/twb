@@ -2,13 +2,21 @@
 //import fs from 'fs';//ブラウザ環境では使えない
 import { NAME_BYTE_LENGTH } from './config.js';
 
-//ブラウザ環境のみ
-let chatLog = null;
-if (typeof document !== 'undefined')
-	chatLog = document.getElementById('chatLog');
+//デバッグかどうか
+//(サーバー環境のみ) 開発環境（development）のときのみライブリロード（ファイル監視・SSE）を有効化、本番サーバー(Render/Koyebなど)ではNODE_ENV=productionを設定しておくこと
+export const isDev =
+	// ブラウザ環境で、localhost以外なら開発環境とみなす
+	(typeof location !== "undefined" && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') ||
+	// サーバー環境で、NODE_ENVがproduction以外なら開発環境とみなす
+	(typeof process !== "undefined" && process.env.NODE_ENV !== 'production');
 
-// 文字色・背景色などのエスケープコード一覧
-// ※Pythonの \033 とJavaScriptの \x1b は同じ「ESCシーケンス」を表す書き方です
+//直接実行されたかどうか(サーバー環境のみ)
+export const isMainModule = typeof process !== "undefined" && process.argv[1] === fileURLToPath(import.meta.url);
+
+//チャットログエリア(ブラウザ環境のみ)
+let chatLog = (typeof document !== 'undefined') ? document.getElementById('chatLog') : null;
+
+// 文字色・背景色などのエスケープコード一覧 ※Pythonの \033 とJavaScriptの \x1b は同じ「ESCシーケンス」を表す書き方です
 const COLORS = {
 
 	info: "\x1b[34m",
@@ -48,7 +56,6 @@ const COLORS = {
 	bg_green: "\x1b[42m\x1b[30m",
 	bg_yellow: "\x1b[43m\x1b[30m",
 };
-
 
 // 引数がオブジェクトかどうかを判定する関数
 export function isObject(value)
