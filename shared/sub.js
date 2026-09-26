@@ -120,7 +120,7 @@ export function toText(...values)
 		else if (typeof value === "object")
 		{
 			// オブジェクトの場合は JSON 文字列に変換する
-			results.push(b);
+			results.push(JSON.stringify(value));
 		}
 		else
 		{

@@ -386,6 +386,7 @@ function animate(currentTime)
 	}
 	catch (e)
 	{
+		//print("error", "animateでエラーが発生しました", [1, 2, 3], { a: "a", b: "b" }, e);
 		console.error("animateでエラーが発生しました", e);
 		if (isDev)
 			debugger;
