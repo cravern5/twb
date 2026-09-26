@@ -1,23 +1,34 @@
 //import path from 'path'; //ブラウザ環境では使えない
 //import fs from 'fs';//ブラウザ環境では使えない
+//import { fileURLToPath } from 'url'; //ブラウザ環境では使えない パスとURLを相互変換するための標準機能、isMainModule用
 import { NAME_BYTE_LENGTH } from './config.js';
 
 //デバッグかどうか
 //(サーバー環境のみ) 開発環境（development）のときのみライブリロード（ファイル監視・SSE）を有効化、本番サーバー(Render/Koyebなど)ではNODE_ENV=productionを設定しておくこと
 export const isDev =
-	// ブラウザ環境で、localhost以外なら開発環境とみなす
-	(typeof location !== "undefined" && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') ||
+	// ブラウザ環境で、localhostアクセスなら開発環境とみなす
+	(typeof location !== "undefined" && (location.hostname === 'localhost' || location.hostname === '127.0.0.1')) ||
 	// サーバー環境で、NODE_ENVがproduction以外なら開発環境とみなす
 	(typeof process !== "undefined" && process.env.NODE_ENV !== 'production');
 
 //直接実行されたかどうか(サーバー環境のみ)
-export const isMainModule = typeof process !== "undefined" && process.argv[1] === fileURLToPath(import.meta.url);
+//!!!!!!呼び出し方!!!!!　await isMainModule(import.meta.url)
+//import.meta.urlはサーバー・ブラウザ両方使えるが形式が違う＆fileURLToPathはブラウザで使えない
+export async function isMainModule(importMetaUrl)
+{
+	// ブラウザ環境では常にfalseを返す
+	if (typeof process === "undefined")
+		return false;
+	// Node.js環境でのみ 'url' モジュールを読み込む
+	const { fileURLToPath } = await import('url');
+	return process.argv[1] === fileURLToPath(importMetaUrl);
+}
 
 //チャットログエリア(ブラウザ環境のみ)
 let chatLog = (typeof document !== 'undefined') ? document.getElementById('chatLog') : null;
 
 // 文字色・背景色などのエスケープコード一覧 ※Pythonの \033 とJavaScriptの \x1b は同じ「ESCシーケンス」を表す書き方です
-const COLORS = {
+export const COLORS = {
 
 	info: "\x1b[34m",
 	warning: "\x1b[33m",

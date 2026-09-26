@@ -2,12 +2,10 @@
 import { fileURLToPath } from 'url'; // パスとURLを相互変換するための標準機能、isMainModule用
 import * as web from './web.js';
 import * as ws from './ws_bin_server.js'; //webserverに相乗り
+import { print, isMainModule, isDev } from '../shared/sub.js';
 //import * as dbs from './db_sync.js';
 
-//デバッグ情報
-//const isDebugging = inspector.url() !== undefined; //デバッグ実行
-const isMainModule = process.argv[1] === fileURLToPath(import.meta.url);//直接実行されたかどうか
-//logc("green", (isMainModule ? "(main)" : "") + (isDebugging ? "(debug)" : "") + "で実行中 引数:" + JSON.stringify(process.argv.slice(2)))
+//print("green", (isMainModule(import.meta.url) ? "(main)" : "") + (isDev ? "(debug)" : "") + "で実行中 引数:" + JSON.stringify(process.argv.slice(2)))
 
 //urlの文字列 と 実行する関数 の対応表（ルーティングテーブル）
 export const routesAPI =
@@ -16,18 +14,8 @@ export const routesAPI =
 	//"query": api_query,
 };
 
-//web返信用
-/*
-const webResult = Object.seal(
-	{
-		code: 0,
-		message: null,
-		results: null,
-	});
-*/
-
 //直接起動時
-if (isMainModule)
+if (await isMainModule(import.meta.url))
 {
 	//webserver立ち上げ
 	web.init(routesAPI);

@@ -6,7 +6,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { PORT } from '../shared/config.js';
-import { print } from '../shared/sub.js';
+import { print, isMainModule, isDev } from '../shared/sub.js';
 
 //https接続サンプル
 /*
@@ -35,8 +35,7 @@ const SHARED_DIR = path.join(__dirname, '../' + sharedPrefix);
 //クライアント側呼び出し方 '/shared/config.js'
 
 const WATCH_INTERVAL = 300;
-// 開発環境（development）のときのみライブリロード（ファイル監視・SSE）を有効化、本番サーバー(Render/Koyebなど)ではNODE_ENV=productionを設定しておくこと
-const isDev = process.env.NODE_ENV !== 'production';
+
 // クライアント(SSE)の接続管理用リスト
 const clients = [];
 // 監視対象のディレクトリ（clientディレクトリ）

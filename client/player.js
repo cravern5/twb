@@ -639,7 +639,7 @@ export class Player
 
 	drawCharacter()
 	{
-		const a = b;
+		//const a = b;
 
 		if (!this.initialized)
 			return;

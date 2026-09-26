@@ -1,20 +1,13 @@
 import { fileURLToPath } from 'url'; // パスとURLを相互変換するための標準機能、isMainModule用
 import { WebSocketServer } from 'ws';
 
-import { print, encodeFixedName, decodeFixedName } from '../shared/sub.js';
+import { print, isMainModule, isDev, encodeFixedName, decodeFixedName } from '../shared/sub.js';
 import { PACKET_TYPE, PORT, NAME_BYTE_LENGTH } from '../shared/config.js';
 //import * as web from './web.js';
 
-//直接実行されたかどうか
-const isMainModule = process.argv[1] === fileURLToPath(import.meta.url);
-
-//ポート番号 でWebSocketサーバーを起動
-//const wss = new WebSocketServer({ port: PORT });
-
 export let wss = null;
-
-let playerCount = 0;//上限 setUint16(65535）
-const JOIN_TIMEOUT = 5000; // 5秒待っても反応がなければタイムアウト扱い
+export let playerCount = 0;//上限 setUint16(65535）
+export const JOIN_TIMEOUT = 5000; // 5秒待っても反応がなければタイムアウト扱い
 
 export function init(server)
 {
@@ -315,5 +308,5 @@ function createLeavePacket(playerId)
 }
 
 
-if (isMainModule)
+if (await isMainModule(import.meta.url))
 	init();
