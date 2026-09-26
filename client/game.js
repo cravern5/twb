@@ -1,4 +1,4 @@
-import { print, addLog } from '../shared/sub.js';
+import { print, addLog, isDev } from '../shared/sub.js';
 import * as sub from '../shared/sub.js';
 
 import * as utils2 from './utils2.js';
@@ -387,7 +387,8 @@ function animate(currentTime)
 	catch (e)
 	{
 		console.error("animateでエラーが発生しました", e);
-		//debugger;
+		if (isDev)
+			debugger;
 	}
 
 	lastTime = currentTime;
