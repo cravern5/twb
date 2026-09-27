@@ -7,6 +7,7 @@ export let debugWindow;
 export let chatWindow;
 export let leftStatusWindow;
 export let leftQuickSlotWindow;
+export let skillWindow;
 export let windows = [];
 
 export const debugInfo = document.getElementById('debugInfo');
@@ -48,6 +49,7 @@ export function init()
 	debugWindow = new WindowController({ container: '#debugInfo', defaultDisplay: "block" });
 	leftStatusWindow = new WindowController({ container: '#leftStatusGroup', defaultDisplay: "block" });
 	leftQuickSlotWindow = new WindowController({ container: '#leftQuickSlot', drager: '#leftQuickSlotShortcut', defaultDisplay: "block", containerResize: false });
+	skillWindow = new WindowController({ container: '#skillWindow', drager: '#skillWindow', defaultDisplay: "block", containerResize: false });
 
 	windows.push(chatWindow);
 
@@ -341,8 +343,9 @@ class WindowController
 
 	isVisible()
 	{
+		const display = getComputedStyle(this.container).display;
 		//方法1 最終的に適用されている実際の display の値を取得して判定
-		if (getComputedStyle(this.container).display !== 'none')
+		if (display !== 'none')
 			return true;
 
 		//方法2 画面上に表示されていれば offsetParent は null 以外になる

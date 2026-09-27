@@ -15,6 +15,7 @@
 	<link rel="stylesheet" href="./css/rightMenu.css">
 	<link rel="stylesheet" href="./css/leftStatus.css">
 	<link rel="stylesheet" href="./css/leftQuickSlot.css">
+	<link rel="stylesheet" href="./css/skillWindow.css">
 	
 	<!--preScript-->
 	<!--<script>
@@ -83,7 +84,7 @@
 
 	<!-- 右メニュー -->
 	<div id="rightMenu">
-		<div id="rightMenuButtons" class="closed">
+		<div id="rightMenuButtons" ><!-- class="closed">-->
 			<div id="rightMenuCharacter" class="rightMenuBtn"></div>
 			<div id="rightMenuCombo" class="rightMenuBtn"></div>
 			<div id="rightMenuEquip" class="rightMenuBtn"></div>
@@ -149,6 +150,21 @@
 		<div id="leftQuickSlotShortcut"></div>
 	</div>
 
+	<!-- スキルウィンドウ -->
+	<div id="skillWindow" >
+		<!-- ログエリア -->
+		<div id="skillArea" class="logArea">
+			<div id="skillPanel" class="log"></div>
+			<div id="skillScrollArea" class="scrollArea">
+				<div id="skillScrollUp" class="scrollUp"></div>
+				<div id="skillScrollTrack" class="scrollTrack">
+					<div id="skillScrollBar" class="scrollBar"></div>
+				</div>
+				<div id="skillScrollDown" class="scrollDown"></div>
+			</div>
+		</div>
+
+	</div>
 
 	<!-- 最後に書く -->
 	<script type="module" src="./game.js"></script>
