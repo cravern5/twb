@@ -158,14 +158,11 @@ export function decodePacket(packetType, data)
 		else if (field.type === 'float32')
 			result[field.name] = view.getFloat32(offset, true);
 		else if (field.type === 'stringName')
-			result[field.name] = decodeFixedText(bytes.subarray(offset, offset + FIXED_SIZE[field.type]));
+			result[field.name] = decodeFixedText(bytes, offset, FIXED_SIZE[field.type]);
 		else if (field.type === 'stringChat')
-			result[field.name] = decodeFixedText(bytes.subarray(offset, offset + FIXED_SIZE[field.type]));
+			result[field.name] = decodeFixedText(bytes, offset, FIXED_SIZE[field.type]);
 		else if (field.type === 'string')
-		{
-			// 可変長かつ必ず最後に置く前提なので、残り全部を文字列として読み取る
-			result[field.name] = new TextDecoder().decode(bytes.subarray(offset));
-		}
+			result[field.name] = decodeFixedText(bytes, offset); // 可変長かつ最後に置く文字列、残り全部を文字列として読み取る
 
 		offset += FIXED_SIZE[field.type];
 	}
@@ -190,18 +187,9 @@ export function getPacketMinLength(packetType)
 //const dec = decodeFixedText(nam);
 //debugger;
 
-//キャラクター名を固定長のバイト列に変換する（余った部分は自動的に0埋めになる）
+//テキストを固定長のバイト列に変換する（余った部分は自動的に0埋めになる）
 export function encodeFixedText(text, byteLength)
 {
-	/*
-	// packetのオフセット3から直接BYTE_LENGTH_NAMEバイトの書き込み枠（サブアレイ）を作成
-		const nameTarget = packet.subarray(5, BYTE_LENGTH_NAME + 5);
-		const encoder = new TextEncoder();
-		// encodeIntoは target のサイズ（BYTE_LENGTH_NAME）を超えないよう、
-		// 文字の途中で切れない最大のところまで自動で安全に書き込んでくれます
-		encoder.encodeInto(playerName, nameTarget);
-	*/
-
 	const encoder = new TextEncoder();
 	let bytes = encoder.encode(text);
 
@@ -220,8 +208,11 @@ export function encodeFixedText(text, byteLength)
 }
 
 //固定長のバイト列から末尾の0埋め部分を取り除いて文字列に戻す
-export function decodeFixedText(bytes)
+export function decodeFixedText(bytes, offset, length = null)
 {
+	// lengthがnull（指定なし）なら、offsetから残り全部を対象にする
+	bytes = (length === null) ? bytes.subarray(offset) : bytes.subarray(offset, offset + length);
+
 	// 末尾に続く0x00（パディング）が終わる位置を探す
 	let end = bytes.length;
 	while (end > 0 && bytes[end - 1] === 0) end--;
@@ -229,5 +220,3 @@ export function decodeFixedText(bytes)
 	const decoder = new TextDecoder();
 	return decoder.decode(bytes.subarray(0, end));
 }
-
-
