@@ -1,6 +1,6 @@
 // client.js
-import { PACKET_TYPE, PORT, NAME_BYTE_LENGTH } from '/shared/config.js';
-import { addLog, encodeFixedName, decodeFixedName } from '../shared/sub.js';
+import { PACKET_TYPE, PORT, NAME_BYTE_LENGTH, encodeFixedName, decodeFixedName } from '/shared/network.js';
+import { addLog } from '../shared/sub.js';
 //クライアントwsはnode標準搭載
 
 import * as Player from './player.js';

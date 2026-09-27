@@ -1,8 +1,8 @@
 import { fileURLToPath } from 'url'; // パスとURLを相互変換するための標準機能、isMainModule用
 import { WebSocketServer } from 'ws';
 
-import { print, isMainModule, isDev, encodeFixedName, decodeFixedName } from '../shared/sub.js';
-import { PACKET_TYPE, PORT, NAME_BYTE_LENGTH } from '../shared/config.js';
+import { print, isMainModule, isDev } from '../shared/sub.js';
+import { PACKET_TYPE, PORT, NAME_BYTE_LENGTH, encodeFixedName, decodeFixedName } from '../shared/network.js';
 //import * as web from './web.js';
 
 export let wss = null;

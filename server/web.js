@@ -5,7 +5,7 @@ import fsp from 'node:fs/promises';
 import fs from 'fs';
 import path from 'path';
 
-import { PORT } from '../shared/config.js';
+import { PORT } from '../shared/network.js';
 import { print, isMainModule, isDev } from '../shared/sub.js';
 
 //https接続サンプル
@@ -32,7 +32,7 @@ const publicPrefix = 'client';
 const sharedPrefix = 'shared';
 const PUBLIC_DIR = path.join(__dirname, '../' + publicPrefix);
 const SHARED_DIR = path.join(__dirname, '../' + sharedPrefix);
-//クライアント側呼び出し方 '/shared/config.js'
+//クライアント側呼び出し方 '/shared/network.js'
 
 const WATCH_INTERVAL = 300;
 
@@ -297,7 +297,7 @@ export function init(api)
 					plainWrite(req, res, 400, 'Bad Request ' + e.message);
 				}
 
-				// URLが "/shared/" で始まっていたら、配信元フォルダを SHARED_DIR に切り替える　// "/shared/config.js" → SHARED_DIR + "/config.js" を読みに行く	
+				// URLが "/shared/" で始まっていたら、配信元フォルダを SHARED_DIR に切り替える　// "/shared/network.js" → SHARED_DIR + "/network.js" を読みに行く	
 				if (relativePath.startsWith('/' + sharedPrefix + '/'))
 				{
 					baseDir = SHARED_DIR;
