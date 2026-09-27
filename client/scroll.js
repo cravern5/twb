@@ -7,8 +7,8 @@ import { print, addLog, elementsAddEventListener } from '../shared/sub.js';
 // 　これ以降は「配列のようにたくさんの要素が並んでいるもの」として扱う必要がある。
 // 　「同じ並び順（＝何番目のチャットか）」の要素同士をセットとして扱うようにしている。
 
-const scrollLogAreas = document.getElementsByClassName("scrollLogArea");		//チャット全体（枠）※複数
-const scrollLogs = document.getElementsByClassName("scrollLog");				//チャット全体（中身）※複数
+const scrollContainers = document.getElementsByClassName("scrollContainer");		//チャット全体（枠）※複数
+const scrollContentses = document.getElementsByClassName("scrollContents");				//チャット全体（中身）※複数
 const scrollTracks = document.getElementsByClassName("scrollTrack");	//スクロールつまみ範囲　※複数
 const scrollUps = document.getElementsByClassName("scrollUp");			//スクロールUPボタン　※複数
 const scrollDowns = document.getElementsByClassName("scrollDown");		//スクロールDOWNボタン　※複数
@@ -28,7 +28,7 @@ export let draggingIndex = -1;			// ★追加：今ドラッグしているの�
 function updateScrollBar(index)
 {
 	// index番目のチャットの要素だけを取り出しておく
-	const log = scrollLogs[index];
+	const log = scrollContentses[index];
 	const scrollUp = scrollUps[index];
 	const scrollDown = scrollDowns[index];
 	const scrollBar = scrollBars[index];
@@ -80,17 +80,17 @@ function updateScrollBar(index)
 // 上ボタンを押したら、対応する番号(index)のログを少し上にスクロールする
 elementsAddEventListener(scrollUps, "click", (e, index) =>
 {
-	scrollLogs[index].scrollTop -= SCROLL_STEP;
+	scrollContentses[index].scrollTop -= SCROLL_STEP;
 });
 
 // 下ボタンを押したら、対応する番号のログを少し下にスクロールする
 elementsAddEventListener(scrollDowns, "click", (e, index) =>
 {
-	scrollLogs[index].scrollTop += SCROLL_STEP;
+	scrollContentses[index].scrollTop += SCROLL_STEP;
 });
 
 // ログがスクロールされたら（マウスホイールなども含む）、対応する番号のつまみを更新する
-elementsAddEventListener(scrollLogs, "scroll", (e, index) =>
+elementsAddEventListener(scrollContentses, "scroll", (e, index) =>
 {
 	updateScrollBar(index);
 });
@@ -143,7 +143,7 @@ export function dragStart(e, y, index)
 	isDraggingThumb = true;
 	dragStartY = y;
 	draggingIndex = index;					// ★追加：今どの番号のチャットをドラッグしているかを覚えておく
-	dragStartScrollTop = scrollLogs[index].scrollTop;
+	dragStartScrollTop = scrollContentses[index].scrollTop;
 }
 
 // マウス（や指）が動いたときの処理（スクロールバードラッグ処理）
@@ -155,7 +155,7 @@ export function dragMove(y)
 
 	// 覚えておいた番号を使って、ドラッグ対象のチャットの要素を取り出す
 	const index = draggingIndex;
-	const log = scrollLogs[index];
+	const log = scrollContentses[index];
 	const scrollTrack = scrollTracks[index];
 	const scrollBar = scrollBars[index];
 
@@ -188,7 +188,7 @@ export function dragEnd()
 
 // ログの中身が増えたり減ったりしたときにも、つまみの大きさを更新する
 // ★変更点：ログが複数あるので、1つずつ「自分は何番目か」を対応させて監視する
-for (let i = 0; i < scrollLogs.length; i++)
+for (let i = 0; i < scrollContentses.length; i++)
 {
 	const index = i;
 
@@ -197,27 +197,27 @@ for (let i = 0; i < scrollLogs.length; i++)
 	{
 		updateScrollBar(index);
 	});
-	logObserver.observe(scrollLogs[index], { childList: true });
+	logObserver.observe(scrollContentses[index], { childList: true });
 }
 
-// chatLogArea自体のサイズが変わったこと（ドラッグでのリサイズなど）を検知する仕組み
+// scrollContainers自体のサイズが変わったこと（ドラッグでのリサイズなど）を検知する仕組み
 // ★変更点：エリアが複数あるので、1つずつ「自分は何番目か」を対応させて監視する
-for (let i = 0; i < scrollLogAreas.length; i++)
+for (let i = 0; i < scrollContainers.length; i++)
 {
 	const index = i;
 
 	// ResizeObserverは「監視対象の大きさが変わったら知らせてくれる」機能で、
 	// windowのresizeイベントと違い、要素自体を直接リサイズした場合にも反応してくれる
-	const logAreaResizeObserver = new ResizeObserver(() =>
+	const scrollContainersResizeObserver = new ResizeObserver(() =>
 	{
 		updateScrollBar(index);
 	});
-	logAreaResizeObserver.observe(scrollLogAreas[index]);
+	scrollContainersResizeObserver.observe(scrollContainers[index]);
 }
 
 
 // ページが読み込まれた時点でも、すべてのチャットで一度つまみの状態を正しくしておく
-for (let i = 0; i < scrollLogs.length; i++)
+for (let i = 0; i < scrollContentses.length; i++)
 {
 	updateScrollBar(i);
 }

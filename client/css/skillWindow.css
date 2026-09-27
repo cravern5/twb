@@ -30,7 +30,7 @@
 
 /*スクロール============================================*/
 
-#skillLogArea {
+#skillScrollContainer {
 	/* 黒の50%半透明 */
 	/*background-color: rgba(0, 0, 0, 0.534);*/
 	/*「画面（親要素）の空きスペースに合わせて親要素内で伸縮し、コンテンツに応じた初期サイズを持つ」 設定です。
@@ -46,7 +46,7 @@
 }
 
 /*実際のテキストが流れる場所*/
-#skillLog {
+#skillContents {
 	/*background-color: rgb(21, 55, 250);*/
 
 	position: absolute;

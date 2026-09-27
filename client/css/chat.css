@@ -85,7 +85,7 @@
 
 /*2段目ログエリア&スクロールエリア===========================*/
 
-#chatLogArea {
+#chatScrollContainer {
 	/* 黒の50%半透明 */
 	background-color: rgba(0, 0, 0, 0.534);
 	/*「画面（親要素）の空きスペースに合わせて親要素内で伸縮し、コンテンツに応じた初期サイズを持つ」 設定です。
@@ -140,6 +140,7 @@
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	
 }
 
 /*スクロールつまみ可動域*/
