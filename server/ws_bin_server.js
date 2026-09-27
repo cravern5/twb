@@ -85,7 +85,7 @@ export function init(server)
 				//	return;
 
 				// クライアントが送ってきたIDは信用せず、サーバーが把握している本物のIDに上書きする
-				if (dataType === PACKET_TYPE.CHAT || dataType === PACKET_TYPE.STATE)
+				if (dataType === PACKET_TYPE.CHAT || dataType === PACKET_TYPE.STATE || dataType === PACKET_TYPE.JOIN)
 				{
 					const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
 					view.setUint16(1, ws.playerId, true); // 2〜3byte目のIDを正しい値に書き換える
