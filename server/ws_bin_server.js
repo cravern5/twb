@@ -2,12 +2,13 @@ import { fileURLToPath } from 'url'; // パスとURLを相互変換するため�
 import { WebSocketServer } from 'ws';
 
 import { print, isMainModule, isDev } from '../shared/sub.js';
-import { PACKET_TYPE, PORT, BYTE_LENGTH_NAME, encodeFixedName, decodeFixedName } from '../shared/network.js';
+import { PACKET_TYPE, PORT, encodePacket, decodePacket, FIXED_SIZE } from '../shared/network.js';
+import * as network from '../shared/network.js';
 //import * as web from './web.js';
 
 export let wss = null;
 export let playerCount = 0;//上限 setUint16(65535）
-export const JOIN_TIMEOUT = 5000; // 5秒待っても反応がなければタイムアウト扱い
+export const WELCOME_JOIN_TIMEOUT = 5000; // 5秒待っても反応がなければタイムアウト扱い
 
 export function init(server)
 {
@@ -49,43 +50,24 @@ export function init(server)
 
 		//ID作成
 		ws.playerId = playerCount;
+		playerCount++;
+
 		//このクライアントが最後に送ってきたSTATEパケット（Buffer）をキャッシュ、まだ一度もSTATEを送ってきていない場合はnull
 		ws.lastStateBuffer = null;
-		playerCount++;
 		print("white", '新しいプレイヤーが接続しました！(' + ws.playerId + ')');
 
 		//WELCOME送信 本人にIDを送信　タイプ(1byte) + プレイヤーID(2byte) の3byteパケット
-		const welcomePacket = createWelcomePacket(ws.playerId);
-		ws.send(welcomePacket, { binary: true });
+		ws.send(encodePacket(PACKET_TYPE.WELCOME, { playerId: ws.playerId }), { binary: true });
 
-		// JOINが一定時間内に届かなければ、正式なクライアントとして認めず強制切断する
-		ws.joinTimeoutId = setTimeout(() =>
+		//WELCOME送信後、クライアントからJOINが一定時間内に届かなければ、正式なクライアントとして認めず強制切断する
+		if (!isDev)
 		{
-			print("warning", "プレイヤー(" + ws.playerId + ")からJOINが届かなかったため切断します。");
-			ws.terminate(); // 強制切断→'close'イベントが発火し、wss.clientsから自動的に除外される
-		}, JOIN_TIMEOUT);
-
-		//JOIN送信 ※WELCOMEの後にクライアント側にJOINを送信させる　他の全員に自分を伝える タイプ(1byte) + プレイヤーID(2byte) の3byteパケット
-		/*//クライアントが情報を送るタイプ
-		//const joinPacket = createJoinPacket(ws.playerId);
-
-		//全ユーザー取得
-		wss.clients.forEach((client) =>
-		{
-			if (client === ws || client.readyState !== 1)
-				return;
-
-			// 新規参加者に既存プレイヤーを通知
-			const existingJoinPacket = createJoinPacket(client.playerId);
-			ws.send(existingJoinPacket, { binary: true });
-
-			// 既存プレイヤーが一度でもSTATEを送ってきていれば、そのままキャッシュ済みSTATEを送る
-			if (client.lastStateBuffer)
-				ws.send(client.lastStateBuffer, { binary: true });
-
-			// 既存参加者へ新規参加者を通知
-			client.send(joinPacket, { binary: true });
-		});*/
+			ws.joinTimeoutId = setTimeout(() =>
+			{
+				print("warning", "プレイヤー(" + ws.playerId + ")からJOINが届かなかったため切断します。");
+				ws.terminate(); // 強制切断→'close'イベントが発火し、wss.clientsから自動的に除外される
+			}, WELCOME_JOIN_TIMEOUT);
+		}
 
 		//クライアントから受信
 		ws.on('message', (data) =>
@@ -98,16 +80,20 @@ export function init(server)
 				// 先頭の1バイト目からタイプを読み取る
 				dataType = data[0];
 
+				//バイト数チェック
+				//if (data.length !== getPacketMinLength(data.length))
+				//	return;
+
+				// クライアントが送ってきたIDは信用せず、サーバーが把握している本物のIDに上書きする
+				if (dataType === PACKET_TYPE.CHAT || dataType === PACKET_TYPE.STATE)
+				{
+					const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+					view.setUint16(1, ws.playerId, true); // 2〜3byte目のIDを正しい値に書き換える
+				}
+
 				// クライアントから状態受信
 				if (dataType === PACKET_TYPE.STATE)
 				{
-					// タイプ1byte + ID(2byte) + Float32×2(8byte) + 状態(1byte) + 向き(1byte) + 反転(1byte) = 14バイト
-					if (data.length !== 14) return;
-
-					// クライアントが送ってきたIDは信用せず、サーバーが把握している本物のIDに上書きする
-					const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
-					view.setUint16(1, ws.playerId, true); // 2〜3byte目のIDを正しい値に書き換える
-
 					// 次に誰かが新規接続してきたとき、この人の紹介用に使えるよう最新状態を保存しておく
 					ws.lastStateBuffer = Buffer.from(data);
 				}
@@ -115,50 +101,37 @@ export function init(server)
 				else if (dataType === PACKET_TYPE.CHAT)
 				{
 					// タイプ1byte + ID(2byte) + 文字列 が最低構成（サーバーは中身を見ず、そのまま転送するだけ）
-					if (data.length < 3) return;
+					//if (data.length < 3) return;
 
-					const chatMessage = data.toString('utf-8', 3);// 2バイト目以降を文字列に変換
-					const chatMessageChars = [...chatMessage];
-
-					if (chatMessageChars.length > 50)
+					const decodeData = decodePacket(dataType, data);
+					if (decodeData.text.length > FIXED_SIZE["stringChat"])
 					{
 						//print("warning", "【検閲】50文字超過のバイナリチャットを破棄しました。");
 						//return;
 					}
-
-					// クライアントが送ってきたIDは信用せず、サーバーが把握している本物のIDに上書きする
-					const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
-					view.setUint16(1, ws.playerId, true); // 2〜3byte目のIDを正しい値に書き換える
-
 				}
 				// クライアントからキャラ情報取得
 				else if (dataType === PACKET_TYPE.JOIN)
 				{
 					// タイプ(1byte) + プレイヤーID(2byte) + キャラID(2byte)
 					// + x座標(4byte) + y座標(4byte) + 名前(固定BYTE_LENGTH_NAMEバイト)
-					if (data.length < 13 + BYTE_LENGTH_NAME) return;
+					//if (data.length < 13 + BYTE_LENGTH_NAME) return;
 
-					//data.byteOffset(読み書きの開始位置)、data.byteLength(対象のデータ長)
-					const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
-					//const dummyid = view.getUint16(1, true); // プレイヤーIDを記録
-					ws.characterIndex = view.getUint16(3, true); // キャラIDを記録
-
-					// クライアントが送ってきた「前回の位置」を取得する
-					const requestedX = view.getFloat32(5, true);
-					const requestedY = view.getFloat32(9, true);
-
-					ws.x = Number.isNaN(requestedX) ? 0 : requestedX;
-					ws.y = Number.isNaN(requestedY) ? 0 : requestedY;
-
-					// 14byte目から固定長分を取り出し、プレイヤー名として記録する
-					const nameBytes = data.subarray(13, 13 + BYTE_LENGTH_NAME);
-					ws.playerName = decodeFixedName(nameBytes);
+					//キャラクター情報取得し、wsへコピー
+					const decodeData = decodePacket(dataType, data);
+					Object.assign(ws, decodeData);
 
 					// JOINを正常に受け取れたので、タイムアウト強制切断の予約はもう不要→解除する
-					clearTimeout(ws.joinTimeoutId);
+					if (ws.joinTimeoutId)
+						clearTimeout(ws.joinTimeoutId);
 
 					// 新規参加者自身のJOINパケットに、決定した位置も乗せる
-					const myJoinPacket = createJoinPacket(ws.playerId, ws.characterIndex, ws.playerName, ws.x, ws.y);
+					const myJoinPacket = encodePacket(PACKET_TYPE.JOIN, {
+						playerId: ws.playerId,
+						characterIndex: ws.characterIndex,
+						playerName: ws.playerName,
+						x: ws.x, y: ws.y
+					});
 
 					//自分自身に対してJOINパケットを送る
 					ws.send(myJoinPacket, { binary: true });
@@ -171,7 +144,12 @@ export function init(server)
 						// 新規参加者へ、既存プレイヤーの情報(ID+キャラID+位置)を通知
 						if (client.characterIndex !== undefined)
 						{
-							const existingJoinPacket = createJoinPacket(client.playerId, client.characterIndex, client.playerName, client.x, client.y);
+							const existingJoinPacket = encodePacket(PACKET_TYPE.JOIN, {
+								playerId: client.playerId,
+								characterIndex: client.characterIndex,
+								playerName: client.playerName,
+								x: client.x, y: client.y
+							});
 							ws.send(existingJoinPacket, { binary: true });
 						}
 
@@ -195,8 +173,7 @@ export function init(server)
 				wss.clients.forEach((client) =>
 				{
 					// 1人への送信が失敗しても、他のクライアントへの配信を止めないようにする
-					if (client.readyState !== 1) return;
-					//if (client === ws || client.readyState !== 1) return;
+					//if (client.readyState !== 1) return;
 					try
 					{
 						//STATEが自分自身も入ってくる状態になっている（クライアントでidで除外している）
@@ -227,10 +204,11 @@ export function init(server)
 			print("white", "プレイヤーが切断しました。(" + ws.playerId + ")");
 
 			// JOIN待ちタイマーが残っていれば解除する（二重発火防止のお作法）
-			clearTimeout(ws.joinTimeoutId);
+			if (ws.joinTimeoutId)
+				clearTimeout(ws.joinTimeoutId);
 
 			//LEAVE送信 他の全員に自分の切断を伝える
-			const leavePacket = createLeavePacket(ws.playerId);
+			const leavePacket = encodePacket(PACKET_TYPE.LEAVE, { playerId: ws.playerId });
 			wss.clients.forEach((client) =>
 			{
 				if (client.readyState === 1)
@@ -240,73 +218,6 @@ export function init(server)
 	});
 
 }
-
-
-//WELCOME 本人にIDを送信　タイプ(1byte) + プレイヤーID(2byte) の3byteパケット
-function createWelcomePacket(playerId)
-{
-	const welcomePacket = new Uint8Array(3);
-	try
-	{
-		const welcomeView = new DataView(welcomePacket.buffer);
-		welcomeView.setUint8(0, PACKET_TYPE.WELCOME);
-		welcomeView.setUint16(1, playerId, true); // 第3引数trueは「リトルエンディアン」という並び順の指定（clientと合わせる必要あり）
-	}
-	catch (e)
-	{
-		print("error", "createWelcomePacket:" + e.message);
-		throw e;
-	}
-
-
-	return welcomePacket;
-}
-
-//JOIN 入ってきた人 (タイプ1byte + ID 2byte + キャラID 2byte + x 4byte + y 4byte + 名前(固定BYTE_LENGTH_NAMEバイト))
-function createJoinPacket(playerId, characterIndex, playerName, x, y)
-{
-	const joinPacket = new Uint8Array(13 + BYTE_LENGTH_NAME);
-	try
-	{
-		const view = new DataView(joinPacket.buffer);
-		view.setUint8(0, PACKET_TYPE.JOIN);
-		view.setUint16(1, playerId, true);
-		view.setUint16(3, characterIndex, true);
-		view.setFloat32(5, x, true);
-		view.setFloat32(9, y, true);
-
-		// 14byte目(offset:13)以降に名前を固定長のバイト列として書き込む
-		joinPacket.set(encodeFixedName(playerName, BYTE_LENGTH_NAME), 13);
-	}
-	catch (e)
-	{
-		print("error", "createJoinPacket:" + e.message);
-		throw e;
-	}
-
-	return joinPacket;
-}
-
-//LEAVE 自分の切断を伝える タイプ(1byte) + プレイヤーID(2byte) の3byteパケット
-function createLeavePacket(playerId)
-{
-	const leavePacket = new Uint8Array(3);
-	try
-	{
-		const leaveView = new DataView(leavePacket.buffer);
-		leaveView.setUint8(0, PACKET_TYPE.LEAVE);
-		leaveView.setUint16(1, playerId, true);
-	}
-	catch (e)
-	{
-		print("error", "createLeavePacket:" + e.message);
-		throw e;
-	}
-
-
-	return leavePacket;
-}
-
 
 if (await isMainModule(import.meta.url))
 	init();

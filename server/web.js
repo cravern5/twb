@@ -34,7 +34,7 @@ const PUBLIC_DIR = path.join(__dirname, '../' + publicPrefix);
 const SHARED_DIR = path.join(__dirname, '../' + sharedPrefix);
 //クライアント側呼び出し方 '/shared/network.js'
 
-const WATCH_INTERVAL = 300;
+const WATCH_INTERVAL = 500;
 
 // クライアント(SSE)の接続管理用リスト
 const clients = [];

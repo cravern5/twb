@@ -1,5 +1,5 @@
 // client.js
-import { PACKET_TYPE, PORT, BYTE_LENGTH_NAME, encodeFixedName, decodeFixedName } from '/shared/network.js';
+import { PACKET_TYPE, PORT, encodePacket, decodePacket, FIXED_SIZE } from '/shared/network.js';
 import { addLog } from '../shared/sub.js';
 //クライアントwsはnode標準搭載
 
@@ -35,7 +35,7 @@ export function init()
 
 	ws = new WebSocket(`${protocol}://${host}`);
 
-	// これをつけることで、サーバーから届くバイナリを正しく受け取れるようになります
+	//サーバーから届くバイナリを受け取る、届いたバイナリを何に包むか指定
 	ws.binaryType = 'arraybuffer';
 
 	// サーバーからのチャット・移動データを受け取る窓口を、モジュール読み込み時に1回だけ登録する
@@ -79,47 +79,30 @@ export function init()
 		// ─── 状態データを受信した場合 ───
 		if (dataType === PACKET_TYPE.STATE)
 		{
-			// DataViewを使って、バイト列から小数を正しく引き抜く
-			const view = new DataView(event.data);
-			const id = view.getUint16(1, true);			// 2〜3byte目：送信元のプレイヤーID
-			const x = view.getFloat32(3, true);			// 4〜7byte目：X座標
-			const y = view.getFloat32(7, true);			// 8〜11byte目：Y座標
-			const stateIndex = view.getUint8(11);		// 12byte目：状態
-			const directionIndex = view.getUint8(12);	// 13byte目：向き
-			const flip = view.getUint8(13) === 1;		// 14byte目：反転
+			const ddata = decodePacket(dataType, event.data);
 
 			if (callbacks.onstate)
-				callbacks.onstate(id, x, y, stateIndex, directionIndex, flip);
+				callbacks.onstate(ddata.playerId, ddata.x, ddata.y, ddata.stateIndex, ddata.directionIndex, ddata.flip === 1);
 			else
 				addLog("WARNING", "onstateコールバック指定無し");
 		}
 		// ─── チャットを受信した場合 ───
 		else if (dataType === PACKET_TYPE.CHAT)
 		{
-			// dataはUint8Arrayなので、中のArrayBufferを使ってDataViewを作る
-			const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
-
-			// 2〜3byte目：送信元のプレイヤーID
-			const id = view.getUint16(1, true);
-
-			// 4byte目以降を文字列に変換
-			const textBytes = data.subarray(3);
-			const decoder = new TextDecoder();
-			const chatMessage = decoder.decode(textBytes);
+			const ddata = decodePacket(dataType, event.data);
 
 			// 誰からのチャットかも含めてコールバックに渡す
 			if (callbacks.onchat)
-				callbacks.onchat(id, chatMessage);
+				callbacks.onchat(ddata.playerId, ddata.text);
 			else
 				addLog("WARNING", "onChatコールバック指定無し");
 		}
 		// ─── 自分のIDを教えてもらった場合 ───
 		else if (dataType === PACKET_TYPE.WELCOME)
 		{
-			// DataViewを使って2バイト目からID(Uint16)を読み取る
-			const view = new DataView(event.data);
-			myPlayerId = view.getUint16(1, true); // trueはサーバー側と合わせてリトルエンディアン指定
-			//addLog("INFO", "サーバーとの接続を確立しました（" + myPlayerId + "）");
+			const ddata = decodePacket(dataType, event.data);
+
+			myPlayerId = ddata.playerId;
 
 			if (callbacks.onwelcome)
 				callbacks.onwelcome(myPlayerId);
@@ -129,29 +112,20 @@ export function init()
 		// ─── 他プレイヤーが入ってきた場合 ───
 		else if (dataType === PACKET_TYPE.JOIN)
 		{
-			const view = new DataView(event.data);
-			const joinedId = view.getUint16(1, true);
-			const characterIndex = view.getUint16(3, true);
-			const x = view.getFloat32(5, true);
-			const y = view.getFloat32(9, true);
-
-			// 14byte目から固定長ぶんを取り出し、0埋め部分を除いて名前に戻す
-			const nameBytes = new Uint8Array(event.data, 13, BYTE_LENGTH_NAME);
-			const playerName = decodeFixedName(nameBytes);
+			const ddata = decodePacket(dataType, event.data);
 
 			if (callbacks.onjoin)
-				callbacks.onjoin(joinedId, characterIndex, playerName, x, y);
+				callbacks.onjoin(ddata.playerId, ddata.characterIndex, ddata.playerName, ddata.x, ddata.y);
 			else
 				addLog("WARNING", "onjoinコールバック指定無し");
 		}
 		// ─── 他プレイヤーが抜けた場合 ───
 		else if (dataType === PACKET_TYPE.LEAVE)
 		{
-			const view = new DataView(event.data);
-			const leftId = view.getUint16(1, true);
+			const ddata = decodePacket(dataType, event.data);
 
 			if (callbacks.onleave)
-				callbacks.onleave(leftId);
+				callbacks.onleave(ddata.playerId);
 			else
 				addLog("WARNING", "onleaveコールバック指定無し");
 		}
@@ -160,58 +134,23 @@ export function init()
 	return true;
 }
 
-//データを送信する汎用関数
-function sendBinary(buffer)
-{
-	if (ws && ws.readyState === WebSocket.OPEN)
-	{
-		// type と data をセットにして、JSON文字列にして送信
-		//const packet = JSON.stringify({ type: type, data: data });
-		ws.send(buffer);
-	}
-}
-
 // WELCOMEでJOINを返送する　キャラ選択情報をサーバーへ送り返す関数
 export function sendJoin(characterIndex, playerName, x = null, y = null)
 {
-	// タイプ(1byte) + プレイヤーID(2byte) + キャラID(2byte) + 名前(固定BYTE_LENGTH_NAMEバイト)
-	const packet = new Uint8Array(13 + BYTE_LENGTH_NAME);
-	const view = new DataView(packet.buffer);
+	const packet = encodePacket(PACKET_TYPE.JOIN, { playerId: myPlayerId, characterIndex, playerName, x, y });
 
-	view.setUint8(0, PACKET_TYPE.JOIN);
-	view.setUint16(1, myPlayerId, true);
-	view.setUint16(3, characterIndex, true);
-
-	// ?? はnull/undefinedのときだけ右側を使う演算子。座標が無ければNaNを送る
-	view.setFloat32(5, x ?? NaN, true);
-	view.setFloat32(9, y ?? NaN, true);
-
-
-	// 名前を固定長のバイト列（0埋め込み）に変換して14byte目以降へコピー
-	packet.set(encodeFixedName(playerName, BYTE_LENGTH_NAME), 13);
-
-	sendBinary(packet);
+	if (ws && ws.readyState === WebSocket.OPEN)
+		ws.send(packet);
 }
 
 //チャット送信
 export function sendChat(text)
 {
-	// 1. 文字列をバイナリ（UTF-8）のバイト列に変換する便利メカニズム
-	const encoder = new TextEncoder();
-	const textBytes = encoder.encode(text); // 例: "あ" -> [227, 129, 130]
-
-	//const packet = new Uint8Array(1 + textBytes.length);// 2. 「タイプ用(1バイト) + 文字列用」の合計サイズを持つ新しいバイナリの箱を作る
-	//packet[0] = PACKET_TYPE.CHAT;						// 3. 1バイト目にチャットのタイプ（1）を入れる
-	//packet.set(textBytes, 1);							// 4. 2バイト目以降に、変換した文字列のバイナリをそっくりコピーする
-
-	const packet = new Uint8Array(1 + 2 + textBytes.length);
-	const view = new DataView(packet.buffer);
-	view.setUint8(0, PACKET_TYPE.CHAT);// 3. 1byte目にチャットのタイプ（1）を入れる
-	view.setUint16(1, myPlayerId, true);// 4. 2〜3byte目に自分のIDを入れる（trueはmoveパケットと同じくリトルエンディアン指定）
-	packet.set(textBytes, 3);// 5. 4byte目以降に、変換した文字列のバイナリをそっくりコピーする
+	const packet = encodePacket(PACKET_TYPE.CHAT, { playerId: myPlayerId, text: text });
 
 	// 5. サーバーへ生のバイナリのまま送信！
-	sendBinary(packet);
+	if (ws && ws.readyState === WebSocket.OPEN)
+		ws.send(packet);
 }
 
 //移動を送信
@@ -222,20 +161,10 @@ export function sendState(x, y, state, direction, flip)
 	const stateIndex = Math.max(0, Player.STATES.indexOf(state));
 	const directionIndex = Math.max(0, Player.DIRECTIONS.indexOf(direction));
 
-	// タイプ(1byte) + プレイヤーID(2byte) + x座標(4byte) + y座標(4byte)
-	// + 状態(1byte) + 向き(1byte) + 反転(1byte) = 合計14byte
-	const buffer = new ArrayBuffer(14);
-	const view = new DataView(buffer);
+	const packet = encodePacket(PACKET_TYPE.STATE, { playerId: myPlayerId, x, y, stateIndex, directionIndex, flip: flip ? 1 : 0 });
 
-	view.setUint8(0, PACKET_TYPE.STATE);	// 1byte目：タイプ
-	view.setUint16(1, myPlayerId, true);	// 2〜3byte目：自分のID
-	view.setFloat32(3, x, true);			// 4〜7byte目：X座標
-	view.setFloat32(7, y, true);			// 8〜11byte目：Y座標
-	view.setUint8(11, stateIndex);			// 12byte目：状態（idle/run/sit/walkのどれか）
-	view.setUint8(12, directionIndex);		// 13byte目：向き（forward/forside/side/backside/backwardのどれか）
-	view.setUint8(13, flip ? 1 : 0);		// 14byte目：反転しているか（0=通常、1=反転）
-
-	sendBinary(buffer);
+	if (ws && ws.readyState === WebSocket.OPEN)
+		ws.send(packet);
 }
 
 

@@ -9,8 +9,8 @@ export const PORT =
 		? process.env.PORT
 		: 5135;
 
-export const NAME_MAX_CHARS = 20;
-export const BYTE_LENGTH_NAME = NAME_MAX_CHARS * 3; // 漢字はUTF-8で1文字3byteなので3倍しておく
+//export const NAME_MAX_CHARS = 20;
+//export const BYTE_LENGTH_NAME = NAME_MAX_CHARS * 3; // 漢字はUTF-8で1文字3byteなので3倍しておく
 
 // 型ごとの固定バイト数（固定長の型だけをここに書く。可変長の fixedName/string は個別に計算する）
 export const FIXED_SIZE =
@@ -20,7 +20,7 @@ export const FIXED_SIZE =
 	uint32: Uint32Array.BYTES_PER_ELEMENT,
 	float32: Float32Array.BYTES_PER_ELEMENT,
 	float64: Float64Array.BYTES_PER_ELEMENT,
-	stringName: BYTE_LENGTH_NAME,
+	stringName: 60,
 	stringChat: 100,
 };
 
@@ -120,9 +120,9 @@ export function encodePacket(packetType, fields)
 		else if (field.type === 'float32')
 			view.setFloat32(offset, value ?? NaN, true);
 		else if (field.type === 'stringName')
-			packet.set(encodeFixedName(value ?? '', FIXED_SIZE[field.type]), offset);
+			packet.set(encodeFixedText(value ?? '', FIXED_SIZE[field.type]), offset);
 		else if (field.type === 'stringChat')
-			packet.set(encodeFixedName(value ?? '', FIXED_SIZE[field.type]), offset);
+			packet.set(encodeFixedText(value ?? '', FIXED_SIZE[field.type]), offset);
 		else
 			throw new Error("不明な型の指定です");
 
@@ -137,7 +137,13 @@ export function encodePacket(packetType, fields)
 export function decodePacket(packetType, data)
 {
 	const schema = PACKET_SCHEMA[packetType];
-	const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+
+	//Uint8Arrayは、ArrayBuffer という空箱に対して、「1バイトずつ、符号なし整数として読み書きしますよ」というルールを被せたものです。（これを「ビュー(view)」と呼びます）
+	// ・クライアント側(binaryType='arraybuffer')→ ArrayBuffer(仕切りのない生のバイナリ)が渡ってくる
+	// ・サーバー側(Node.jsのws)→ Buffer（Uint8Arrayの仲間）が渡ってくる
+	const bytes = (data instanceof ArrayBuffer) ? new Uint8Array(data) : data;
+	const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+
 	const result = {};
 	let offset = 1; // 0byte目はタイプなので読み飛ばす
 
@@ -152,13 +158,13 @@ export function decodePacket(packetType, data)
 		else if (field.type === 'float32')
 			result[field.name] = view.getFloat32(offset, true);
 		else if (field.type === 'stringName')
-			result[field.name] = decodeFixedName(data.subarray(offset, offset + FIXED_SIZE[field.type]));
+			result[field.name] = decodeFixedText(bytes.subarray(offset, offset + FIXED_SIZE[field.type]));
 		else if (field.type === 'stringChat')
-			result[field.name] = decodeFixedName(data.subarray(offset, offset + FIXED_SIZE[field.type]));
+			result[field.name] = decodeFixedText(bytes.subarray(offset, offset + FIXED_SIZE[field.type]));
 		else if (field.type === 'string')
 		{
 			// 可変長かつ必ず最後に置く前提なので、残り全部を文字列として読み取る
-			result[field.name] = new TextDecoder().decode(data.subarray(offset));
+			result[field.name] = new TextDecoder().decode(bytes.subarray(offset));
 		}
 
 		offset += FIXED_SIZE[field.type];
@@ -180,9 +186,12 @@ export function getPacketMinLength(packetType)
 	return size;
 }
 
+//const nam = encodeFixedText("feあwfwea", 60);
+//const dec = decodeFixedText(nam);
+//debugger;
 
 //キャラクター名を固定長のバイト列に変換する（余った部分は自動的に0埋めになる）
-export function encodeFixedName(text, byteLength)
+export function encodeFixedText(text, byteLength)
 {
 	/*
 	// packetのオフセット3から直接BYTE_LENGTH_NAMEバイトの書き込み枠（サブアレイ）を作成
@@ -211,7 +220,7 @@ export function encodeFixedName(text, byteLength)
 }
 
 //固定長のバイト列から末尾の0埋め部分を取り除いて文字列に戻す
-export function decodeFixedName(bytes)
+export function decodeFixedText(bytes)
 {
 	// 末尾に続く0x00（パディング）が終わる位置を探す
 	let end = bytes.length;

@@ -853,9 +853,6 @@ export async function onWelcome(id)
 
 	//JOINでキャラ情報を送る
 	socket.sendJoin(characterIndex, playerName, positionX, positionY);
-
-	//JOINを受信して初めてキャラ追加する
-	//player = await addPlayer(id, playerName, character);
 }
 // 他プレイヤーが新しく入ってきたときの処理
 export async function onJoin(joinedId, characterIndex, playerName, x, y)
