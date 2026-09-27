@@ -68,10 +68,10 @@ window.addEventListener('pagehide', () =>
 ///////ボタンイベント//////////
 
 //スキルウィンドウ
-rightMenuSkill.addEventListener('mousemove', (e) =>
+rightMenuSkill.addEventListener('mouseenter', (e) =>
 {
-	if (!windows.skillWindow.isVisible())
-		windows.skillWindow.show(-1);
+	//if (!windows.skillWindow.isVisible())
+	windows.skillWindow.show(-1);
 });
 
 //チャットDMボタン
