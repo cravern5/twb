@@ -2,7 +2,7 @@ import { fileURLToPath } from 'url'; // パスとURLを相互変換するため�
 import { WebSocketServer } from 'ws';
 
 import { print, isMainModule, isDev } from '../shared/sub.js';
-import { PACKET_TYPE, PORT, NAME_BYTE_LENGTH, encodeFixedName, decodeFixedName } from '../shared/network.js';
+import { PACKET_TYPE, PORT, BYTE_LENGTH_NAME, encodeFixedName, decodeFixedName } from '../shared/network.js';
 //import * as web from './web.js';
 
 export let wss = null;
@@ -135,8 +135,8 @@ export function init(server)
 				else if (dataType === PACKET_TYPE.JOIN)
 				{
 					// タイプ(1byte) + プレイヤーID(2byte) + キャラID(2byte)
-					// + x座標(4byte) + y座標(4byte) + 名前(固定NAME_BYTE_LENGTHバイト)
-					if (data.length < 13 + NAME_BYTE_LENGTH) return;
+					// + x座標(4byte) + y座標(4byte) + 名前(固定BYTE_LENGTH_NAMEバイト)
+					if (data.length < 13 + BYTE_LENGTH_NAME) return;
 
 					//data.byteOffset(読み書きの開始位置)、data.byteLength(対象のデータ長)
 					const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
@@ -151,7 +151,7 @@ export function init(server)
 					ws.y = Number.isNaN(requestedY) ? 0 : requestedY;
 
 					// 14byte目から固定長分を取り出し、プレイヤー名として記録する
-					const nameBytes = data.subarray(13, 13 + NAME_BYTE_LENGTH);
+					const nameBytes = data.subarray(13, 13 + BYTE_LENGTH_NAME);
 					ws.playerName = decodeFixedName(nameBytes);
 
 					// JOINを正常に受け取れたので、タイムアウト強制切断の予約はもう不要→解除する
@@ -262,10 +262,10 @@ function createWelcomePacket(playerId)
 	return welcomePacket;
 }
 
-//JOIN 入ってきた人 (タイプ1byte + ID 2byte + キャラID 2byte + x 4byte + y 4byte + 名前(固定NAME_BYTE_LENGTHバイト))
+//JOIN 入ってきた人 (タイプ1byte + ID 2byte + キャラID 2byte + x 4byte + y 4byte + 名前(固定BYTE_LENGTH_NAMEバイト))
 function createJoinPacket(playerId, characterIndex, playerName, x, y)
 {
-	const joinPacket = new Uint8Array(13 + NAME_BYTE_LENGTH);
+	const joinPacket = new Uint8Array(13 + BYTE_LENGTH_NAME);
 	try
 	{
 		const view = new DataView(joinPacket.buffer);
@@ -276,7 +276,7 @@ function createJoinPacket(playerId, characterIndex, playerName, x, y)
 		view.setFloat32(9, y, true);
 
 		// 14byte目(offset:13)以降に名前を固定長のバイト列として書き込む
-		joinPacket.set(encodeFixedName(playerName, NAME_BYTE_LENGTH), 13);
+		joinPacket.set(encodeFixedName(playerName, BYTE_LENGTH_NAME), 13);
 	}
 	catch (e)
 	{

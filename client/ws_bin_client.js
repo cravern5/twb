@@ -1,5 +1,5 @@
 // client.js
-import { PACKET_TYPE, PORT, NAME_BYTE_LENGTH, encodeFixedName, decodeFixedName } from '/shared/network.js';
+import { PACKET_TYPE, PORT, BYTE_LENGTH_NAME, encodeFixedName, decodeFixedName } from '/shared/network.js';
 import { addLog } from '../shared/sub.js';
 //クライアントwsはnode標準搭載
 
@@ -136,7 +136,7 @@ export function init()
 			const y = view.getFloat32(9, true);
 
 			// 14byte目から固定長ぶんを取り出し、0埋め部分を除いて名前に戻す
-			const nameBytes = new Uint8Array(event.data, 13, NAME_BYTE_LENGTH);
+			const nameBytes = new Uint8Array(event.data, 13, BYTE_LENGTH_NAME);
 			const playerName = decodeFixedName(nameBytes);
 
 			if (callbacks.onjoin)
@@ -174,8 +174,8 @@ function sendBinary(buffer)
 // WELCOMEでJOINを返送する　キャラ選択情報をサーバーへ送り返す関数
 export function sendJoin(characterIndex, playerName, x = null, y = null)
 {
-	// タイプ(1byte) + プレイヤーID(2byte) + キャラID(2byte) + 名前(固定NAME_BYTE_LENGTHバイト)
-	const packet = new Uint8Array(13 + NAME_BYTE_LENGTH);
+	// タイプ(1byte) + プレイヤーID(2byte) + キャラID(2byte) + 名前(固定BYTE_LENGTH_NAMEバイト)
+	const packet = new Uint8Array(13 + BYTE_LENGTH_NAME);
 	const view = new DataView(packet.buffer);
 
 	view.setUint8(0, PACKET_TYPE.JOIN);
@@ -188,7 +188,7 @@ export function sendJoin(characterIndex, playerName, x = null, y = null)
 
 
 	// 名前を固定長のバイト列（0埋め込み）に変換して14byte目以降へコピー
-	packet.set(encodeFixedName(playerName, NAME_BYTE_LENGTH), 13);
+	packet.set(encodeFixedName(playerName, BYTE_LENGTH_NAME), 13);
 
 	sendBinary(packet);
 }

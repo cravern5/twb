@@ -10,16 +10,17 @@ export const PORT =
 		: 5135;
 
 export const NAME_MAX_CHARS = 20;
-export const NAME_BYTE_LENGTH = NAME_MAX_CHARS * 3; // 漢字はUTF-8で1文字3byteなので3倍しておく
+export const BYTE_LENGTH_NAME = NAME_MAX_CHARS * 3; // 漢字はUTF-8で1文字3byteなので3倍しておく
 
 // 型ごとの固定バイト数（固定長の型だけをここに書く。可変長の fixedName/string は個別に計算する）
 export const FIXED_SIZE =
 {
-	uint8: 1,
-	uint16: 2,
-	uint32: 4,
-	float32: 4,
-	stringName: 60.,
+	uint8: Uint8Array.BYTES_PER_ELEMENT,
+	uint16: Uint16Array.BYTES_PER_ELEMENT,
+	uint32: Uint32Array.BYTES_PER_ELEMENT,
+	float32: Float32Array.BYTES_PER_ELEMENT,
+	float64: Float64Array.BYTES_PER_ELEMENT,
+	stringName: BYTE_LENGTH_NAME,
 	stringChat: 100,
 };
 
@@ -73,10 +74,9 @@ export const PACKET_SCHEMA =
 		],
 };
 
-const schema = PACKET_SCHEMA[PACKET_TYPE.STATE];
-
-encodePacket(PACKET_TYPE.JOIN, { playerId: 1, characterIndex: 0, x: 10, y: 20, playerName: "タロウ" });
-debugger;
+//let encode = encodePacket(PACKET_TYPE.JOIN, { playerId: 1, characterIndex: 0, x: 10, y: 20, playerName: "タロウ" });
+//let decode = decodePacket(PACKET_TYPE.JOIN, encode);
+//debugger;
 
 // スキーマとフィールドの値(オブジェクト)から、送信用のバイナリを組み立てる
 // 例: encodePacket(PACKET_TYPE.JOIN, { playerId:1, characterIndex:0, x:10, y:20, playerName:"タロウ" })
@@ -86,63 +86,47 @@ export function encodePacket(packetType, fields)
 
 	// まず全体のバイト数を計算する（可変長のstringだけ、先にバイト列へ変換しておく）
 	let bodySize = 0;
-	let textBytes = null;
+	//let textBytes = null;
 
 	for (const field of schema)
 	{
-		if (field.type === 'fixedName')
-			bodySize += field.length;
-		else if (field.type === 'string')
+		/*if (field.type === 'string')
 		{
 			textBytes = new TextEncoder().encode(fields[field.name] ?? '');
 			bodySize += textBytes.length;
 		}
-		else
-			bodySize += FIXED_SIZE[field.type];
+		else*/
+		bodySize += FIXED_SIZE[field.type];
 	}
 
 	// タイプ(1byte) + 中身(bodySize byte) の箱を用意する
 	const packet = new Uint8Array(1 + bodySize);
 	const view = new DataView(packet.buffer);
 
+	//TYPEID情報
 	view.setUint8(0, packetType);
-	let offset = 1;
+	let offset = Uint8Array.BYTES_PER_ELEMENT;
 
 	// スキーマの順番通りに、1つずつ値を書き込んでいく
 	for (const field of schema)
 	{
 		const value = fields[field.name];
-
 		if (field.type === 'uint8')
-		{
 			view.setUint8(offset, value ?? 0);
-			offset += 1;
-		}
 		else if (field.type === 'uint16')
-		{
 			view.setUint16(offset, value ?? 0, true); // trueはリトルエンディアン指定（受信側と合わせる）
-			offset += 2;
-		}
 		else if (field.type === 'uint32')
-		{
 			view.setUint32(offset, value ?? 0, true);
-			offset += 4;
-		}
 		else if (field.type === 'float32')
-		{
 			view.setFloat32(offset, value ?? NaN, true);
-			offset += 4;
-		}
-		else if (field.type === 'fixedName')
-		{
-			packet.set(encodeFixedName(value ?? '', field.length), offset);
-			offset += field.length;
-		}
-		else if (field.type === 'string')
-		{
-			packet.set(textBytes, offset);
-			offset += textBytes.length;
-		}
+		else if (field.type === 'stringName')
+			packet.set(encodeFixedName(value ?? '', FIXED_SIZE[field.type]), offset);
+		else if (field.type === 'stringChat')
+			packet.set(encodeFixedName(value ?? '', FIXED_SIZE[field.type]), offset);
+		else
+			throw new Error("不明な型の指定です");
+
+		offset += FIXED_SIZE[field.type];
 	}
 
 	return packet;
@@ -160,35 +144,24 @@ export function decodePacket(packetType, data)
 	for (const field of schema)
 	{
 		if (field.type === 'uint8')
-		{
 			result[field.name] = view.getUint8(offset);
-			offset += 1;
-		}
 		else if (field.type === 'uint16')
-		{
 			result[field.name] = view.getUint16(offset, true);
-			offset += 2;
-		}
 		else if (field.type === 'uint32')
-		{
 			result[field.name] = view.getUint32(offset, true);
-			offset += 4;
-		}
 		else if (field.type === 'float32')
-		{
 			result[field.name] = view.getFloat32(offset, true);
-			offset += 4;
-		}
-		else if (field.type === 'fixedName')
-		{
-			result[field.name] = decodeFixedName(data.subarray(offset, offset + field.length));
-			offset += field.length;
-		}
+		else if (field.type === 'stringName')
+			result[field.name] = decodeFixedName(data.subarray(offset, offset + FIXED_SIZE[field.type]));
+		else if (field.type === 'stringChat')
+			result[field.name] = decodeFixedName(data.subarray(offset, offset + FIXED_SIZE[field.type]));
 		else if (field.type === 'string')
 		{
 			// 可変長かつ必ず最後に置く前提なので、残り全部を文字列として読み取る
 			result[field.name] = new TextDecoder().decode(data.subarray(offset));
 		}
+
+		offset += FIXED_SIZE[field.type];
 	}
 
 	return result;
@@ -202,14 +175,7 @@ export function getPacketMinLength(packetType)
 	let size = 1; // タイプ分の1byte
 
 	for (const field of schema)
-	{
-		if (field.type === 'fixedName')
-			size += field.length;
-		else if (field.type === 'string')
-			size += 0; // 可変長なので最低0byteでもOKとする
-		else
-			size += FIXED_SIZE[field.type];
-	}
+		size += FIXED_SIZE[field.type];
 
 	return size;
 }
@@ -219,10 +185,10 @@ export function getPacketMinLength(packetType)
 export function encodeFixedName(text, byteLength)
 {
 	/*
-	// packetのオフセット3から直接NAME_BYTE_LENGTHバイトの書き込み枠（サブアレイ）を作成
-		const nameTarget = packet.subarray(5, NAME_BYTE_LENGTH + 5);
+	// packetのオフセット3から直接BYTE_LENGTH_NAMEバイトの書き込み枠（サブアレイ）を作成
+		const nameTarget = packet.subarray(5, BYTE_LENGTH_NAME + 5);
 		const encoder = new TextEncoder();
-		// encodeIntoは target のサイズ（NAME_BYTE_LENGTH）を超えないよう、
+		// encodeIntoは target のサイズ（BYTE_LENGTH_NAME）を超えないよう、
 		// 文字の途中で切れない最大のところまで自動で安全に書き込んでくれます
 		encoder.encodeInto(playerName, nameTarget);
 	*/
