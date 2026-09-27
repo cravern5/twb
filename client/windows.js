@@ -49,7 +49,7 @@ export function init()
 	debugWindow = new WindowController({ container: '#debugInfo', defaultDisplay: "block" });
 	leftStatusWindow = new WindowController({ container: '#leftStatusGroup', defaultDisplay: "block" });
 	leftQuickSlotWindow = new WindowController({ container: '#leftQuickSlot', drager: '#leftQuickSlotShortcut', defaultDisplay: "block", containerResize: false });
-	skillWindow = new WindowController({ container: '#skillWindow', drager: '#skillWindow', defaultDisplay: "block", containerResize: false });
+	skillWindow = new WindowController({ container: '#skillWindow', drager: '#skillWindow', childLock: true, defaultDisplay: "block", containerResize: false });
 
 	windows.push(chatWindow);
 

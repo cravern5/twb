@@ -71,7 +71,9 @@ window.addEventListener('pagehide', () =>
 rightMenuSkill.addEventListener('mouseenter', (e) =>
 {
 	//if (!windows.skillWindow.isVisible())
-	windows.skillWindow.show(-1);
+	//windows.skillWindow.show(-1);
+
+	addLog("info", "test\ntest2\ntest2\ntest2\ntest2\ntest2\ntest2\ntest2", document.getElementById("skillContents"));
 });
 
 //チャットDMボタン
