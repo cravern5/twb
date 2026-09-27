@@ -261,6 +261,21 @@ export function debugLog(message)
 	}
 }
 
+//HTMLCollectionに対してaddEventListenerする
+export function elementsAddEventListener(elements, type, func)
+{
+	let i = 0;
+	for (const element of elements)
+	{
+		// ループの中の非同期処理（addEventListenerのコールバック）で使うため、
+		// その時点の番号をこの変数に固定しておく（固定しないと全部最後の番号になってしまう）
+		const index = i;
+
+		element.addEventListener(type, (e) => { func(e, index); });
+
+		i++;
+	}
+}
 
 
 //丸め処理
