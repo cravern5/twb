@@ -1,5 +1,5 @@
 /*チャットログと入力部分のフォント*/
-.logLine, #chatUnder input {
+#chatArea .logLine, #chatUnder input {
 
 
 	/*文字数分の横幅*/
