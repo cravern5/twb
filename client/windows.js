@@ -10,10 +10,10 @@ export let leftQuickSlotWindow;
 export let skillWindow;
 export let windows = [];
 
-export const debugInfo = document.getElementById('debugInfo');
+export const debugContainer = document.getElementById('debugContainer');
 
 //チャットバー
-export const chatArea = document.getElementById("chatArea");
+export const chatContainer = document.getElementById("chatContainer");
 export const chatWhisperInput = document.getElementById("chatWhisperInput");
 export const chatInput = document.getElementById("chatInput");
 export const chatLog = document.getElementById("chatLog");
@@ -25,11 +25,11 @@ export const chatMessanger = document.getElementById("chatMessanger");
 export const chatDM = document.getElementById("chatDM");
 export const chatFixedText = document.getElementById("chatFixedText");
 export const chatEmote = document.getElementById("chatEmote");
-export const chatRange = document.getElementById("chatRange");
+export const chatRangeContainer = document.getElementById("chatRangeContainer");
 
 //左ステータス 開閉ボタンの要素と、開閉対象の箱の要素を取得
+export const leftStatusContainer = document.getElementById("leftStatusContainer");
 export const leftStatusBtns = document.getElementsByClassName("leftStatusBtn");
-export const leftStatus = document.getElementById("leftStatus");
 export const leftStatusTab = document.getElementById("leftStatusTab");
 export const leftOpen = document.getElementById("leftOpen");
 export const leftAfkBtn = document.getElementById("leftAfkBtn");
@@ -45,11 +45,11 @@ export const leftQuickSlotTab = document.getElementById("leftQuickSlotTab");
 export function init()
 {
 	//ウィンドウコンテナ作成
-	chatWindow = new WindowController({ container: '#chatArea', drager: '#chatLog', minWidth: 300, minHeight: 90, childLock: true, defaultDisplay: 'flex' });
-	debugWindow = new WindowController({ container: '#debugInfo', defaultDisplay: "block" });
+	chatWindow = new WindowController({ container: '#chatContainer', drager: '#chatLog', minWidth: 300, minHeight: 90, childLock: true, defaultDisplay: 'flex' });
+	debugWindow = new WindowController({ container: '#debugContainer', defaultDisplay: "block" });
 	leftStatusWindow = new WindowController({ container: '#leftStatusGroup', defaultDisplay: "block" });
-	leftQuickSlotWindow = new WindowController({ container: '#leftQuickSlot', drager: '#leftQuickSlotShortcut', defaultDisplay: "block", containerResize: false });
-	skillWindow = new WindowController({ container: '#skillWindow', drager: '#skillWindow', childLock: true, defaultDisplay: "block", containerResize: false });
+	leftQuickSlotWindow = new WindowController({ container: '#leftQuickSlotContainer', drager: '#leftQuickSlotShortcut', defaultDisplay: "block", containerResize: false });
+	skillWindow = new WindowController({ container: '#skillContainer', drager: '#skillContainer', childLock: true, defaultDisplay: "block", containerResize: false });
 
 	windows.push(chatWindow);
 

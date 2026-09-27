@@ -31,8 +31,8 @@ export const MAX_DELTA = 0.1;
 //初期化
 async function init()
 {
-	//debugInfo.style.display = 'block';
-	//chatArea.style.display = 'none';
+	//debugContainer.style.display = 'block';
+	//chatContainer.style.display = 'none';
 	//rightMenuButtons.classList.toggle("closed");
 
 	engine.setProgressCount(5);
@@ -121,9 +121,9 @@ chatOpen.addEventListener('click', (e) =>
 	const x = rect.left;
 	const y = rect.top - (19 * 3);
 
-	chatRange.style.display = 'flex';
-	/*	chatRange.style.left = `${x}px`;
-		chatRange.style.top = `${y}px`;*/
+	chatRangeContainer.style.display = 'flex';
+	/*	chatRangeContainer.style.left = `${x}px`;
+		chatRangeContainer.style.top = `${y}px`;*/
 });
 
 //デバッグ表示
@@ -265,10 +265,10 @@ export function keyup(e)
 export function click(e)
 {
 	// クリックされた要素が chatRange 内のボタン、または chatRange の外側であれば非表示
-	if (chatRange.style.display === 'flex')
+	if (chatRangeContainer.style.display === 'flex')
 	{
-		if (e.target.classList.contains('chatRangeBtn') || !chatRange.contains(e.target))
-			chatRange.style.display = 'none';
+		if (e.target.classList.contains('chatRangeBtn') || !chatRangeContainer.contains(e.target))
+			chatRangeContainer.style.display = 'none';
 	}
 }
 
@@ -415,7 +415,7 @@ function showModelDebugInfo()
 	if (!player?.initialized || !world?.initialized)
 		return;
 
-	debugInfo.textContent =
+	debugContainer.textContent =
 		"[Debug Info]"
 		+ "\n canvas.width:" + canvas.width + " canvas.height:" + canvas.height
 		+ "\n camera.x:" + engine.camera.x.toFixed(1) + " camera.y:" + engine.camera.y.toFixed(1)

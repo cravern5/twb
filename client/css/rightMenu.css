@@ -1,4 +1,4 @@
-#rightMenu {
+#rightMenuContainer {
 
 	/* ドットを崩さずに拡大表示する指定 ctx.imageSmoothingEnabled=falseと併用可能*/
 	/* Chrome, Edge, Safari */

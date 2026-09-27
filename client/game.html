@@ -31,25 +31,25 @@
 	<canvas id="gameCanvas" tabindex="0"></canvas>
 
 	<!--デバッグ用-->
-	<div id="debugInfo"></div>
+	<div id="debugContainer"></div>
 
 	<!-- ロード画面 -->
-	<div id="loading-screen">
-		<div class="loading-content">
-			<p id="loading-text">Loading... 0%</p>
-			<div class="progress-bar-bg">
-				<div id="progress-bar"></div>
+	<div id="loadingContainer">
+		<div class="loadingContent">
+			<p id="loadingText">Loading... 0%</p>
+			<div class="progressBackground">
+				<div id="progressBar"></div>
 			</div>
 		</div>
 	</div>
 
 	<!-- チャットウィンドウ -->
-	<div id="chatArea">
+	<div id="chatContainer">
 
-		<div id="chatTopBar"></div>
+		<div id="chatTopContainer"></div>
 
 		<!-- チャット範囲選択 -->
-		<div id="chatRange">
+		<div id="chatRangeContainer">
 			<div id="chatRangeClub" class="chatRangeBtn"></div>
 			<div id="chatRangeWhisper" class="chatRangeBtn"></div>
 			<div id="chatRangeParty" class="chatRangeBtn"></div>
@@ -57,7 +57,7 @@
 		</div>
 
 		<!-- ログエリア -->
-		<div id="chatScrollContainer" class="scrollContainer">
+		<div id="chatLogContainer" class="scrollContainer">
 			<div id="chatLog" class="scrollContents"></div>
 			<div id="chatScrollArea" class="scrollArea">
 				<div id="chatScrollUp" class="scrollUp"></div>
@@ -69,7 +69,7 @@
 		</div>
 			
 		<!-- インプットエリア -->
-		<div id="chatUnder">
+		<div id="chatUnderContainer">
 			<div id="chatOpen" class="chatBtn"></div>
 			<input type="text" id="chatWhisperInput">
 			<input type="text" id="chatInput" placeholder="">
@@ -83,7 +83,7 @@
 	</div>
 
 	<!-- 右メニュー -->
-	<div id="rightMenu">
+	<div id="rightMenuContainer">
 		<div id="rightMenuButtons" ><!-- class="closed">-->
 			<div id="rightMenuCharacter" class="rightMenuBtn"></div>
 			<div id="rightMenuCombo" class="rightMenuBtn"></div>
@@ -99,7 +99,7 @@
 	</div>
 
 	<!--左ステータス-->
-	<div id="leftStatus">
+	<div id="leftStatusContainer">
 		<div id="leftXpBar"></div>
 		<div id="leftOpen"></div>
 		<div id="leftStatusGroup">
@@ -145,13 +145,13 @@
 	</div>
 
 	<!--左クイックスロット-->
-	<div id="leftQuickSlot">
+	<div id="leftQuickSlotContainer">
 		<div id="leftQuickSlotTab"></div>
 		<div id="leftQuickSlotShortcut"></div>
 	</div>
 
 	<!-- スキルウィンドウ -->
-	<div id="skillWindow" >
+	<div id="skillContainer" >
 		<!-- ログエリア -->
 		<div id="skillScrollContainer" class="scrollContainer">
 			<div id="skillContents" class="scrollContents"></div>

@@ -84,7 +84,7 @@ export const mouseInfo =
 	downTarget: null,//mousedownした時のtarget
 };
 
-// chatRange非表示
+
 document.addEventListener('click', (e) =>
 {
 	//addLog("info", "click");

@@ -53,7 +53,7 @@ canvas {
 	border-radius: 4px;
 }*/
 
-#debugInfo {
+#debugContainer {
 	display: none;
 	position: fixed;
 	top: 10px;
@@ -77,7 +77,7 @@ canvas {
    ========================================================================== */
 
 /* 全面を覆うロード画面 */
-#loading-screen {
+#loadingContainer {
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -93,13 +93,13 @@ canvas {
 	/* スムーズに消える演出 */
 }
 
-.loading-content {
+.loadingContent {
 	text-align: center;
 	width: 80%;
 	max-width: 300px;
 }
 
-.progress-bar-bg {
+.progressBackground {
 	width: 100%;
 	height: 12px;
 	background-color: #333;
@@ -108,7 +108,7 @@ canvas {
 	margin-top: 10px;
 }
 
-#progress-bar {
+#progressBar {
 	width: 0%;
 	height: 100%;
 	background-color: #4caf50;

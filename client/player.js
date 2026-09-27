@@ -54,7 +54,7 @@ export const ANIME_FRAMES = {
 }
 
 //チャット
-//const chatArea = document.getElementById("chatArea");
+//const chatContainer = document.getElementById("chatContainer");
 const chatInput = document.getElementById("chatInput");
 //const chatLog = document.getElementById("chatLog");
 //バブル用の各種サイズ設定（調整・描画の両方で使うので関数の外に出しておく）
@@ -547,7 +547,7 @@ export class Player
 				engine.canvas.focus();//キャンバスに戻る
 			else if (text.toUpperCase() === '/SHOWFPS')
 			{
-				windows.debugInfo.show(-1);
+				windows.debugWindow.show(-1);
 				chatInput.value = '';// 入力欄をクリア
 				engine.canvas.focus();//キャンバスに戻る
 			}

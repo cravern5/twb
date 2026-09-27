@@ -24,11 +24,11 @@ export function init()
 }
 
 // プログレスバーとテキストの更新=================
-let loadedCount = 0;
+export let loadedCount = 0;
 export let loadTotal = null;
-const loadingScreen = document.getElementById('loading-screen');
-const loadingText = document.getElementById('loading-text');
-const progressBar = document.getElementById('progress-bar');
+export const loadingScreen = document.getElementById('loadingContainer');
+export const loadingText = document.getElementById('loadingText');
+export const progressBar = document.getElementById('progressBar');
 export function setProgressCount(count) { loadTotal = count; }
 export function updateProgress(message = "")
 {
