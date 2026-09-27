@@ -9,30 +9,30 @@ export const PORT =
 		? process.env.PORT
 		: 5135;
 
-//通信のタイプ
-export const PACKET_TYPE =
-{
-	CHAT: 1,
-	STATE: 2,
-	WELCOME: 3,	// サーバー→本人だけに送る「あなたのIDはこれです」通知
-	JOIN: 4,	// サーバー→他の全員に送る「新しい人が入ってきました」通知
-	LEAVE: 5	// サーバー→他の全員に送る「この人が抜けました」通知
-};
-
 export const NAME_MAX_CHARS = 20;
 export const NAME_BYTE_LENGTH = NAME_MAX_CHARS * 3; // 漢字はUTF-8で1文字3byteなので3倍しておく
 
-
-
-
 // 型ごとの固定バイト数（固定長の型だけをここに書く。可変長の fixedName/string は個別に計算する）
-const FIXED_SIZE =
+export const FIXED_SIZE =
 {
 	uint8: 1,
 	uint16: 2,
 	uint32: 4,
 	float32: 4,
+	stringName: 60.,
+	stringChat: 100,
 };
+
+//通信のタイプ
+export const PACKET_TYPE =
+{
+	CHAT: 1,	//チャット送信
+	STATE: 2,	//状態を送る
+	WELCOME: 3,	// サーバー→本人だけに送る「あなたのIDはこれです」通知
+	JOIN: 4,	// サーバー→他の全員に送る「新しい人が入ってきました」通知
+	LEAVE: 5	// サーバー→他の全員に送る「この人が抜けました」通知
+};
+
 
 // ここに新しいパケットタイプを追加するだけで、送受信できるフィールドが増える
 // name  : プログラム内で使うフィールド名（decodePacketで取り出すときのキーになる）
@@ -55,7 +55,7 @@ export const PACKET_SCHEMA =
 			{ name: 'characterIndex', type: 'uint16' },
 			{ name: 'x', type: 'float32' },
 			{ name: 'y', type: 'float32' },
-			{ name: 'playerName', type: 'fixedName', length: NAME_BYTE_LENGTH },
+			{ name: 'playerName', type: 'stringName' },
 		],
 	[PACKET_TYPE.STATE]:
 		[
@@ -69,9 +69,14 @@ export const PACKET_SCHEMA =
 	[PACKET_TYPE.CHAT]:
 		[
 			{ name: 'playerId', type: 'uint16' },
-			{ name: 'text', type: 'string' },
+			{ name: 'text', type: 'stringChat' },
 		],
 };
+
+const schema = PACKET_SCHEMA[PACKET_TYPE.STATE];
+
+encodePacket(PACKET_TYPE.JOIN, { playerId: 1, characterIndex: 0, x: 10, y: 20, playerName: "タロウ" });
+debugger;
 
 // スキーマとフィールドの値(オブジェクト)から、送信用のバイナリを組み立てる
 // 例: encodePacket(PACKET_TYPE.JOIN, { playerId:1, characterIndex:0, x:10, y:20, playerName:"タロウ" })
