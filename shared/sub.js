@@ -568,7 +568,27 @@ export function waitMObs(element, attrName, timeout = 5000)
 
 
 //タップできるか、チェック
-export function isCanTouch()
+export function canTouch()
 {
 	return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+}
+
+//マウスポインタを持っているかどうか
+export function canPointer()
+{
+	//fine高精度なポインター（指より細かく狙える）マウス、トラックパッド、ペン入力
+	//coarse粗い（大雑把な）ポインター指（スマホ・タブレットのタッチパネル）
+	//noneポインティングデバイスが存在しないキーボード操作のみ、Smart TV、一部のスマートウォッチ
+
+	// メディアクエリの条件を設定
+	const isPointer = window.matchMedia('(pointer: fine)').matches;
+	return isPointer;
+}
+
+//マウスポインタを持っているかどうか
+export function canHover()
+{
+	// メディアクエリの条件を設定
+	const isHoverDevice = window.matchMedia('(hover: hover)').matches;
+	return isHoverDevice;
 }

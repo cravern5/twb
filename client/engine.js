@@ -8,7 +8,7 @@ export let ctx = canvas.getContext("2d");
 export function init()
 {
 	//タッチ操作が可能なら
-	useTouch = sub.isCanTouch();
+	useTouch = sub.canTouch();
 
 	//画像を滑らかに拡大するかどうかを示します　※ここで変更してもダメcanvas.widthなど呼ばれると戻る
 	//ctx.imageSmoothingEnabled = false;

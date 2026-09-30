@@ -48,15 +48,19 @@
 	width: 18px;
 	height: 51px;
 }
-@media (max-height: 450px) {
-	#rightMenuButtons {
+@media (max-height: 450px) 
+{
+	#rightMenuButtons 
+	{
 		max-height: calc(38px * 9);
 	}
-	.rightMenuBtn {
+	.rightMenuBtn 
+	{
 		height: 38px;
 	}
 }
-@media (max-height: 350px) {
+@media (max-height: 350px)
+{
 	#rightMenuButtons {
 		max-height: calc(34px * 9);
 	}
@@ -66,7 +70,8 @@
 }
 
 /* 各メニューボタン共通のサイズ・見た目 */
-.rightMenuOpenBtn {
+.rightMenuOpenBtn 
+{
 	/* 画像の横幅を2倍(200%)にすることで、画像全体を 左半分・右半分の2コマとして扱えるようにする */
 	/*background-size: 200% 100%;*/
 	/* 画像が繰り返し表示されないようにする */
@@ -77,21 +82,38 @@
 	height: 18px;
 }
 
-/* ホバー時は背景位置を右半分にずらして「押された画像」に見せる */
-.rightMenuBtn:hover {
-	background-position: right top;
+/* PCなど：ホバーが可能なデバイス（if） */
+
+@media (hover: hover) and (pointer: fine) 
+{
+	.rightMenuBtn:hover 
+	{
+		background-position: right top;
+	}
+
 }
-.rightMenuOpenBtn:active {
-	background-position: right top;
+
+/* スマホなど：上記以外のデバイス（else） */
+@media not ((hover: hover) and (pointer: fine)) 
+{
+	.rightMenuBtn:active 
+	{
+		background-position: right top;
+	}
 }
+
+
 /* rightMenuButtonsが閉じていない=開いている時は、rightMenuOpenの画像をclose.pngに差し替える 
 ~ (チルダ)は「隣接兄弟セレクタ」で、「同じ親を持ち、かつ前に書いた要素より後ろにある要素」を指します*/
-#rightMenuButtons:not(.closed) ~ #rightMenuOpen {
+#rightMenuButtons:not(.closed) ~ #rightMenuOpen 
+{
 	background-position: left bottom;
 }
-#rightMenuButtons:not(.closed) ~ #rightMenuOpen:active {
+#rightMenuButtons:not(.closed) ~ #rightMenuOpen:active 
+{
 	background-position: right bottom;
 }
+
 
 #rightMenuCharacter {
 	background-image: url("../assets/ui/RightMenu/character.png");

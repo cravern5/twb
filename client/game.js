@@ -68,12 +68,14 @@ window.addEventListener('pagehide', () =>
 ///////ボタンイベント//////////
 
 //スキルウィンドウ
-rightMenuSkill.addEventListener('mouseenter', (e) =>
+rightMenuSkill.addEventListener(sub.canHover() ? 'mouseenter' : 'click', (e) =>
 {
-	//if (!windows.skillWindow.isVisible())
-	//windows.skillWindow.show(-1);
 
-	addLog("info", "test\ntest2\ntest2\ntest2\ntest2\ntest2\ntest2\ntest2", document.getElementById("skillContents"));
+	//if (!windows.skillWindow.isVisible())
+	windows.skillWindow.show(-1);
+
+	//addLog("info", "test\ntest2\ntest2\ntest2\ntest2\ntest2\ntest2\ntest2", document.getElementById("skillContents"));
+
 });
 
 //チャットDMボタン
