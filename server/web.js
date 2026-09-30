@@ -230,6 +230,9 @@ export function init(api)
 		//Cache - Control: no - cache	毎回サーバーに「変わってない？」と確認しにくる（304を活用できる）
 		//Cache - Control: no - store	毎回まるごと再ダウンロード（開発中の確認向け）
 
+		//web.js側のCache - Controlまわりは「通常のHTTP通信での、ブラウザ標準のキャッシュ挙動」の話
+		//service - worker.js側のcachesは「オフラインでも動かすための、独自に用意したキャッシュの仕組み」
+
 		try
 		{
 			//ログ
