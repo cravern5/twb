@@ -146,7 +146,7 @@ export function isVisible(x, y, width, height)
 }
 
 // スクリーン座標（ページ基準のe.clientX/clientY）をワールド座標に変換する、マウスクリック位置から「地図上のどこがクリックされたか」を求めるときに使う
-export function screenToWorld(clientX, clientY)
+export function screenToWorld(clientX, clientY, { render = false } = {})
 {
 	// キャンバスがページ内のどこに表示されているかを取得する
 	const rect = canvas.getBoundingClientRect();
@@ -156,17 +156,34 @@ export function screenToWorld(clientX, clientY)
 	const localY = clientY - rect.top;
 
 	// ローカル座標をズーム倍率で割り戻し、カメラ位置を足してワールド座標にする
-	return {
-		x: localX / camera.zoom + camera.x,
-		y: localY / camera.zoom + camera.y
-	};
+	let x = localX / camera.zoom + camera.x;
+	let y = localY / camera.zoom + camera.y;
+
+	// 描画用として使う場合だけ、ワールドのピクセル単位に丸める
+	// （キャラやカメラも同じsnapToPixelで丸めているので、基準が揃う）
+	if (render)
+	{
+		x = snapToPixel(x);
+		y = snapToPixel(y);
+	}
+
+	return { x: x, y: y };
 }
 
 // ワールド座標を、実際のキャンバス上のピクセル座標に変換する（ズームを計算済みの値）、カメラ変形をかけずに描きたいUI要素（ズームしても大きさを変えたくないもの）で使う
-export function worldToScreen(worldX, worldY)
+export function worldToScreen(worldX, worldY, { render = false } = {})
 {
-	return {
-		x: (worldX - camera.x) * camera.zoom,
-		y: (worldY - camera.y) * camera.zoom
-	};
+	// カメラ位置を引いてズーム倍率を掛ける（ここでは小数のまま）
+	let x = (worldX - camera.x) * camera.zoom;
+	let y = (worldY - camera.y) * camera.zoom;
+
+	// 描画用として使う場合だけ、ピクセル単位に丸める
+	// ズーム倍率が小数（1.5倍など）だと結果も小数になり、描画位置が震える原因になるため
+	if (render)
+	{
+		x = snapToPixel(x);
+		y = snapToPixel(y);
+	}
+
+	return { x: x, y: y };
 }

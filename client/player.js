@@ -668,10 +668,12 @@ export class Player
 		if (!engine.isVisible(this.position.x, this.position.y, SPRITE_WIDTH, SPRITE_HEIGHT))
 			return;
 
+		const pos = this.getPosition({ render: true });
 		const offsetY = -5;
+
 		//バブルを出す基準位置（キャラの頭の少し上）をワールド座標で決める
-		const worldX = this.position.x + SPRITE_WIDTH / 2;
-		const worldY = this.position.y + offsetY;
+		const worldX = pos.x + SPRITE_WIDTH / 2;
+		const worldY = pos.y + offsetY;
 		let x = worldX;
 		let y = worldY;
 
@@ -682,7 +684,7 @@ export class Player
 			ctx.save();							// 今の変形（カメラ変形）を退避しておく
 			ctx.setTransform(1, 0, 0, 1, 0, 0);	// 変形を一旦まっさらな状態に戻す
 
-			const screen = engine.worldToScreen(worldX, worldY);
+			const screen = engine.worldToScreen(worldX, worldY, { render: true });
 			x = screen.x;
 			y = screen.y;
 		}
