@@ -25,151 +25,6 @@ export async function isMainModule(importMetaUrl)
 //チャットログエリア(ブラウザ環境のみ)
 let chatLog = (typeof document !== 'undefined') ? document.getElementById('chatLog') : null;
 
-// 文字色・背景色などのエスケープコード一覧 ※Pythonの \033 とJavaScriptの \x1b は同じ「ESCシーケンス」を表す書き方です
-export const COLORS = {
-
-	info: "\x1b[34m",
-	warning: "\x1b[33m",
-	error: "\x1b[31m",
-
-	// 文字色
-	black: "\x1b[30m",
-	red: "\x1b[31m",
-	green: "\x1b[32m",
-	yellow: "\x1b[33m",
-	blue: "\x1b[34m",
-	magenta: "\x1b[35m",
-	cyan: "\x1b[36m",
-	white: "\x1b[37m",
-
-	// 太字の文字色
-	bold_red: "\x1b[1;31m",
-	bold_green: "\x1b[1;32m",
-	bold_yellow: "\x1b[1;33m",
-	bold_blue: "\x1b[1;34m",
-	bold_magenta: "\x1b[1;35m",
-	bold_cyan: "\x1b[1;36m",
-
-	// 明るい文字色（bright系）を追加
-	bright_black: "\x1b[90m",
-	bright_red: "\x1b[91m",
-	bright_green: "\x1b[92m",
-	bright_yellow: "\x1b[93m",
-	bright_blue: "\x1b[94m",
-	bright_magenta: "\x1b[95m",
-	bright_cyan: "\x1b[96m",
-	bright_white: "\x1b[97m",
-
-	// 背景色つき（例: 赤背景に白文字など）
-	bg_red: "\x1b[41m\x1b[37m",
-	bg_green: "\x1b[42m\x1b[30m",
-	bg_yellow: "\x1b[43m\x1b[30m",
-};
-
-// 引数がオブジェクトかどうかを判定する関数
-export function isObject(value)
-{
-	// typeof で "object" 型かどうかを確認する
-	// typeof null も "object" になってしまうため、null を除外する
-	// また、配列も typeof では "object" になるので Array.isArray で除外する
-	return (typeof value === "object" && value !== null && !Array.isArray(value));
-}
-
-// 引数が配列かどうかを判定する関数
-export function isArray(value)
-{
-	// Array.isArray は配列かどうかを正確に判定できる標準メソッド
-	// typeof value === "object" だけでは配列と判定できないため、専用メソッドを使う
-	return Array.isArray(value);
-}
-
-// 引数が関数かどうかを判定する関数
-export function isFunction(value)
-{
-	// typeof で "function" 型かどうかを確認する
-	// 通常の関数・アロー関数・クラスなども typeof は "function" になる
-	return typeof value === "function";
-}
-
-//引数全て文字列で返す
-export function toText(...values)
-{
-	// 変換結果を格納する配列
-	let results = [];
-
-	for (const value of values)
-	{
-		if (value === null || value === undefined)
-		{
-			results.push(String(value));
-		}
-		else if (value instanceof Error)// Error は message や stack が JSON.stringify で消えてしまうため専用処理にする
-		{
-			//results.push(value.name + ":" + value.message + "\n" + value.stack);
-			//どうしてもローカルファイルを示すことは難しそうである
-			results.push(value.stack);
-			//results.push(value);
-		}
-		else if (Array.isArray(value))
-		{
-			// 配列の場合は中身を展開(スプレッド)して再帰的に toText を呼び出す ※ Array.isArray はオブジェクト判定より先に行う必要がある
-			//results.push(toText(...value));
-			// 配列の中身は改行させず、"[1,2,3]" のように1行にまとめる、各要素は再帰的に toText で文字列化し、", " で連結する
-			results.push("[" + value.map((v) => toText(v)).join(", ") + "]");
-		}
-		else if (typeof value === "object")
-		{
-			// オブジェクトの場合は JSON 文字列に変換する
-			results.push(JSON.stringify(value));
-		}
-		else
-		{
-			// それ以外(数値・文字列・真偽値など)はそのまま文字列化する
-			results.push(String(value));
-		}
-	}
-
-	// 各要素を改行でつないで1つの文字列として返す
-	return results.join("\n");
-}
-
-// RGB値（0-255ずつ）を直接指定して約1677万色を出力（truecolor対応端末のみ）
-export function TRGB(r, g, b)
-{
-	// 各成分を0-255にクリップ
-	r = Math.max(0, Math.min(255, r));
-	g = Math.max(0, Math.min(255, g));
-	b = Math.max(0, Math.min(255, b));
-
-	return `\x1b[38;2;${r};${g};${b}m`;
-}
-//文字の色コードに終わりを付ける
-export function TEC(text)
-{
-	if (!text.endsWith("\x1b[0m"))
-		text += "\x1b[0m";
-	return text;
-}
-//文字に色コードを付ける
-export function addColor(color, text)
-{
-	// COLORSに無いキーが指定されたらwhiteにフォールバックする
-	const code = COLORS[color] || COLORS["white"] || "";
-
-	// 改行のたびに色がリセットされてしまう環境があるため、 1行ごとに色コードとリセットを付け直す
-	return text.split("\n").map((line) => TEC(code + line)).join("\n");
-}
-//色コンソール
-export function print(color, ...values)
-{
-	// 配列を展開して個別の引数として渡す
-	let text = toText(...values);
-	text = addColor(color, text);
-	text = TEC(text);
-
-	console.log(text);
-}
-
 
 //色付きdiv作成
 export function createTypeFont(type, message)
@@ -277,6 +132,162 @@ export function elementsAddEventListener(elements, type, func)
 	}
 }
 
+//DOMのフォントスタイルを取得
+export function getDOMFont(dom)
+{
+	// "font-size" と "font-family" をつなげて、ctx.fontで使える形の文字列にしておく（毎フレーム計算すると無駄なので、最初に1回だけ作って使い回す）
+	const style = getComputedStyle(dom);
+	const font = style.fontSize && style.fontFamily ? (`${style.fontSize} ${style.fontFamily}`) : ("");
+	return { font: font, color: style.color };
+}
+
+
+// 文字色・背景色などのエスケープコード一覧 ※Pythonの \033 とJavaScriptの \x1b は同じ「ESCシーケンス」を表す書き方です
+export const COLORS = {
+
+	info: "\x1b[34m",
+	warning: "\x1b[33m",
+	error: "\x1b[31m",
+
+	// 文字色
+	black: "\x1b[30m",
+	red: "\x1b[31m",
+	green: "\x1b[32m",
+	yellow: "\x1b[33m",
+	blue: "\x1b[34m",
+	magenta: "\x1b[35m",
+	cyan: "\x1b[36m",
+	white: "\x1b[37m",
+
+	// 太字の文字色
+	bold_red: "\x1b[1;31m",
+	bold_green: "\x1b[1;32m",
+	bold_yellow: "\x1b[1;33m",
+	bold_blue: "\x1b[1;34m",
+	bold_magenta: "\x1b[1;35m",
+	bold_cyan: "\x1b[1;36m",
+
+	// 明るい文字色（bright系）を追加
+	bright_black: "\x1b[90m",
+	bright_red: "\x1b[91m",
+	bright_green: "\x1b[92m",
+	bright_yellow: "\x1b[93m",
+	bright_blue: "\x1b[94m",
+	bright_magenta: "\x1b[95m",
+	bright_cyan: "\x1b[96m",
+	bright_white: "\x1b[97m",
+
+	// 背景色つき（例: 赤背景に白文字など）
+	bg_red: "\x1b[41m\x1b[37m",
+	bg_green: "\x1b[42m\x1b[30m",
+	bg_yellow: "\x1b[43m\x1b[30m",
+};
+
+// RGB値（0-255ずつ）を直接指定して約1677万色を出力（truecolor対応端末のみ）
+export function TRGB(r, g, b)
+{
+	// 各成分を0-255にクリップ
+	r = Math.max(0, Math.min(255, r));
+	g = Math.max(0, Math.min(255, g));
+	b = Math.max(0, Math.min(255, b));
+
+	return `\x1b[38;2;${r};${g};${b}m`;
+}
+//文字の色コードに終わりを付ける
+export function TEC(text)
+{
+	if (!text.endsWith("\x1b[0m"))
+		text += "\x1b[0m";
+	return text;
+}
+//文字に色コードを付ける
+export function addColor(color, text)
+{
+	// COLORSに無いキーが指定されたらwhiteにフォールバックする
+	const code = COLORS[color] || COLORS["white"] || "";
+
+	// 改行のたびに色がリセットされてしまう環境があるため、 1行ごとに色コードとリセットを付け直す
+	return text.split("\n").map((line) => TEC(code + line)).join("\n");
+}
+//色コンソール
+export function print(color, ...values)
+{
+	// 配列を展開して個別の引数として渡す
+	let text = toText(...values);
+	text = addColor(color, text);
+	text = TEC(text);
+
+	console.log(text);
+}
+
+
+// 引数がオブジェクトかどうかを判定する関数
+export function isObject(value)
+{
+	// typeof で "object" 型かどうかを確認する
+	// typeof null も "object" になってしまうため、null を除外する
+	// また、配列も typeof では "object" になるので Array.isArray で除外する
+	return (typeof value === "object" && value !== null && !Array.isArray(value));
+}
+
+// 引数が配列かどうかを判定する関数
+export function isArray(value)
+{
+	// Array.isArray は配列かどうかを正確に判定できる標準メソッド
+	// typeof value === "object" だけでは配列と判定できないため、専用メソッドを使う
+	return Array.isArray(value);
+}
+
+// 引数が関数かどうかを判定する関数
+export function isFunction(value)
+{
+	// typeof で "function" 型かどうかを確認する
+	// 通常の関数・アロー関数・クラスなども typeof は "function" になる
+	return typeof value === "function";
+}
+
+//引数全て文字列で返す
+export function toText(...values)
+{
+	// 変換結果を格納する配列
+	let results = [];
+
+	for (const value of values)
+	{
+		if (value === null || value === undefined)
+		{
+			results.push(String(value));
+		}
+		else if (value instanceof Error)// Error は message や stack が JSON.stringify で消えてしまうため専用処理にする
+		{
+			//results.push(value.name + ":" + value.message + "\n" + value.stack);
+			//どうしてもローカルファイルを示すことは難しそうである
+			results.push(value.stack);
+			//results.push(value);
+		}
+		else if (Array.isArray(value))
+		{
+			// 配列の場合は中身を展開(スプレッド)して再帰的に toText を呼び出す ※ Array.isArray はオブジェクト判定より先に行う必要がある
+			//results.push(toText(...value));
+			// 配列の中身は改行させず、"[1,2,3]" のように1行にまとめる、各要素は再帰的に toText で文字列化し、", " で連結する
+			results.push("[" + value.map((v) => toText(v)).join(", ") + "]");
+		}
+		else if (typeof value === "object")
+		{
+			// オブジェクトの場合は JSON 文字列に変換する
+			results.push(JSON.stringify(value));
+		}
+		else
+		{
+			// それ以外(数値・文字列・真偽値など)はそのまま文字列化する
+			results.push(String(value));
+		}
+	}
+
+	// 各要素を改行でつないで1つの文字列として返す
+	return results.join("\n");
+}
+
 
 //丸め処理
 export function roundTo(value, digits)
@@ -290,7 +301,6 @@ export function nearlyEqual(a, b, epsilon = 1e-4)
 {
 	return Math.abs(a - b) <= epsilon;
 }
-
 
 
 //拡張子変更
@@ -592,3 +602,5 @@ export function canHover()
 	const isHoverDevice = window.matchMedia('(hover: hover)').matches;
 	return isHoverDevice;
 }
+
+

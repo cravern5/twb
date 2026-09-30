@@ -65,8 +65,6 @@ window.addEventListener('pagehide', () =>
 });
 
 
-///////ボタンイベント//////////
-
 //スキルウィンドウ
 rightMenuSkill.addEventListener(sub.canHover() ? 'mouseenter' : 'click', (e) =>
 {

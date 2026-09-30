@@ -1,3 +1,4 @@
+import * as sub from '../shared/sub.js';
 import { print, addLog } from '../shared/sub.js';
 
 import * as socket from './ws_bin_client.js';
@@ -53,11 +54,7 @@ export const ANIME_FRAMES = {
 	}
 }
 
-//チャット
-//const chatContainer = document.getElementById("chatContainer");
-const chatInput = document.getElementById("chatInput");
-//const chatLog = document.getElementById("chatLog");
-//バブル用の各種サイズ設定（調整・描画の両方で使うので関数の外に出しておく）
+//バブルフォント
 export const BUBBLE_SCALE_WITH_ZOOM = true;	//trueなら、これ以降の描画をズーム倍率ぶん拡大縮小しておく
 export const BUBBLE_MAX_WIDTH = 197;	// ふきだしの最大の幅
 export const BUBBLE_MAX_HEIGHT = 73;	// ふきだしの最大の高さ
@@ -66,8 +63,15 @@ export const BUBBLE_PADDING_Y = 6;		// 文字の上下の余白
 export const BUBBLE_LINE_HEIGHT = 20;	// 1行分の高さ（フォントサイズ14pxに行間を足した目安）
 export const BUBBLE_DURATION = 4.5;		// ふきだしを表示しておく秒数
 
+//const chatContainer = document.getElementById("chatContainer");
+const chatInput = document.getElementById("chatInput");
+//const chatLog = document.getElementById("chatLog");
+export const bubbleFont = chatInput ? sub.getDOMFont(chatInput) : ["13px 'MS PGothic', 'Meiryo', sans-serif", "#CEFFCE"];
+bubbleFont.backcolor = "rgba(0, 0, 0, 0.6)";
+
 //左ステータス
 const leftStatusList = document.querySelector('#leftStatusValueCol .leftStatusValue span');
+export const leftStatusListValueFont = leftStatusList ? sub.getDOMFont(leftStatusList) : ["14px 'maruminya'", "#ffffff"];
 
 export class Player
 {
@@ -116,33 +120,7 @@ export class Player
 
 		//チャットバブル
 		this.bubbleLines = null;		// 頭上に表示中のチャット内容
-		this.bubbleTimer = 0;			// ふきだしが消えるまでの残り時間（秒）
-		this.bubbleFont = "14px 'MS PGothic', 'Meiryo', sans-serif";	//バブルフォント
-		this.bubbleColor = "#CEFFCE";								//バブル文字色
-		this.bubbleBackcolor = "rgba(0, 0, 0, 0.6)";				//バブル背景色
-		if (chatInput)
-		{
-			// "font-size" と "font-family" をつなげて、ctx.fontで使える形の文字列にしておく（毎フレーム計算すると無駄なので、最初に1回だけ作って使い回す）
-			const chatFontStyle = getComputedStyle(chatInput);
-			this.bubbleFont = chatFontStyle.fontSize && chatFontStyle.fontFamily ? (`${chatFontStyle.fontSize} ${chatFontStyle.fontFamily}`) : ("");
-			this.bubbleColor = chatFontStyle.color;
-		}
-
-		//左ステータスフォント
-		this.leftStatusListValueFont = "14px 'maruminya'";	//バブルフォント
-		this.leftStatusListValueColor = "#ffffff";								//バブル文字色
-		if (leftStatusList)
-		{
-			// "font-size" と "font-family" をつなげて、ctx.fontで使える形の文字列にしておく（毎フレーム計算すると無駄なので、最初に1回だけ作って使い回す）
-			const leftStatusListStyle = getComputedStyle(leftStatusList);
-			this.leftStatusListValueFont = leftStatusListStyle.fontSize && leftStatusListStyle.fontFamily ? (`${leftStatusListStyle.fontSize} ${leftStatusListStyle.fontFamily}`) : ("");
-			this.leftStatusListValueColor = leftStatusListStyle.color;
-		}
-
-		//他プレイヤーが含まれるのでここでは書かない
-		//this.socket.callbacks.onchat = onChat;
-		//socket.callbacks.onchat = this.onChat.bind(this);
-		//socket.callbacks.onmove = this.onMove.bind(this);
+		this.bubbleTimer = 0;			// ふきだしが消えるまでの残り時間（秒）		
 	}
 
 	//初期化
@@ -610,7 +588,7 @@ export class Player
 	{
 
 		//フォントを先に設定しておく（measureTextの結果はフォント設定に依存するため）
-		ctx.font = this.bubbleFont;
+		ctx.font = bubbleFont.font;
 
 		// 実際に文字を置ける横幅・最大行数を、余白を引いて計算する
 		const maxTextWidth = BUBBLE_MAX_WIDTH - BUBBLE_PADDING_X * 2;
@@ -710,7 +688,7 @@ export class Player
 		}
 
 		//adjustBubbleTextで既に設定してある
-		//ctx.font = bubbleFont;
+		//ctx.font = bubbleFont.font;
 
 		// xを中心にして描く// yを縦方向の中心にして描く
 		ctx.textAlign = "center";
@@ -729,11 +707,11 @@ export class Player
 		const boxY = y - boxHeight;
 
 		// 薄い黒背景の四角を描画
-		ctx.fillStyle = this.bubbleBackcolor;
+		ctx.fillStyle = bubbleFont.backcolor;
 		ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
 
 		// 文字を1行ずつ描画する（各行が縦方向にも中央に来るように位置を計算）
-		ctx.fillStyle = this.bubbleColor;
+		ctx.fillStyle = bubbleFont.color;
 		for (let i = 0; i < this.bubbleLines.length; i++)
 		{
 			const lineY = boxY + BUBBLE_PADDING_Y + BUBBLE_LINE_HEIGHT * i + BUBBLE_LINE_HEIGHT / 2;
