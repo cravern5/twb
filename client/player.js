@@ -73,6 +73,184 @@ bubbleFont.backcolor = "rgba(0, 0, 0, 0.6)";
 const leftStatusList = document.querySelector('#leftStatusValueCol .leftStatusValue span');
 export const leftStatusListValueFont = leftStatusList ? sub.getDOMFont(leftStatusList) : ["14px 'maruminya'", "#ffffff"];
 
+
+//プレイヤー管理================================
+export let players = [];
+
+//IDからプレイヤーを検索する（見つからなければundefined）
+export function getPlayerById(id)
+{
+	return players.find((p) => p.id === id);
+}
+//プレイヤーの追加
+export async function addPlayer(id, characterName, playerName, x, y)
+{
+	const player = new Player(id, characterName, playerName, x, y);
+
+	//※本来はinit前に書いたほうが良い
+	//画像読み込み前にSTATEパケットが届くと、「存在しないプレイヤー」扱いされる
+	players.push(player);
+
+	// init前に呼ぶ、画像読み込みを待つ前にここでセットしておく。画像読み込み待ち中に届いたSTATEパケットでせっかく、remotePositionが正しく更新されても、あとから古い位置で上書きしてしまう
+	if (x !== undefined && y !== undefined)
+		player.setPosition(x, y);
+
+	//画像の読み込みが終わるまで待つ（描画に使うだけなので、後からで問題ない）
+	await player.init();
+
+	return player;
+}
+//IDを指定してプレイヤーをplayers配列から取り除く
+export function removePlayer(id)
+{
+	// findIndexで「配列の何番目にいるか」を調べる（見つからなければ-1）
+	const index = players.findIndex((p) => p.id === id);
+
+	if (index !== -1)
+		players.splice(index, 1); // 見つかった位置から1個だけ取り除く
+}
+//自身のログイン
+export async function onWelcome(id)
+{
+	//データ読み込み
+	let characterName = localStorage.getItem('characterName');
+	let playerName = localStorage.getItem('playerName');
+	const savedX = localStorage.getItem('positionX');
+	const savedY = localStorage.getItem('positionY');
+	const positionX = (savedX !== null) ? Number(savedX) : 2585;
+	const positionY = (savedY !== null) ? Number(savedY) : 1956;
+
+	//デフォルト指定(直接game.htmlにアクセスされるのを許容)
+	if (!characterName)
+		characterName = CHARACTERS[0];
+	if (!playerName)
+		playerName = "名無し";
+
+	let characterIndex = CHARACTERS.indexOf(characterName);
+
+
+	//JOINでキャラ情報を送る
+	socket.sendJoin(characterIndex, playerName, positionX, positionY);
+}
+// 他プレイヤーが新しく入ってきたときの処理
+export async function onJoin(joinedId, characterIndex, playerName, x, y)
+{
+	let joiner = null;
+	// 念のため、既に同じIDが存在していないか確認してから追加する
+	if (!getPlayerById(joinedId))
+	{
+		joiner = await addPlayer(joinedId, CHARACTERS[characterIndex], playerName, x, y);
+
+		//自分自身
+		if (joinedId == socket.myPlayerId)
+		{
+			player = joiner;
+		}
+	}
+}
+// 他プレイヤーが抜けたときの処理
+export function onLeave(leftId)
+{
+	removePlayer(leftId);
+}
+//他プレイヤーのチャット受信
+export function onChat(id, text)
+{
+	const player = getPlayerById(id);
+	if (!player)
+	{
+		addLog("WARNING", "存在しないプレイヤーからのチャットです（ID: " + id + "）");
+		return;
+	}
+
+	addLog("INFO", text);
+
+	//表示するテキストの残り表示時間をセット
+	player.bubbleTimer = BUBBLE_DURATION;
+	player.bubbleLines = player.adjustBubbleText(text);
+}
+//状態受信
+export function onState(id, x, y, stateIndex, directionIndex, flip)
+{
+	//自分自身の状態データは無視する（ローカルの計算結果の方が新しいため）
+	if (id === socket.myPlayerId)
+		return;
+
+	const player = getPlayerById(id);
+	if (!player)
+	{
+		addLog("WARNING", "存在しないプレイヤーからのSTATE受信データです（ID: " + id + "）");
+		return;
+	}
+
+	//onStateの受信間隔計測(デバッグ用)
+	const now = performance.now();// 現在時刻をミリ秒の高精度な値で取得
+
+	// 前回受信からの経過時間
+	if (player.lastReceiveTime !== null)
+		player.lastReceiveInterval = now - player.lastReceiveTime;
+	player.lastReceiveTime = now;
+
+	// 1秒間の受信回数カウントに+1
+	player.receiveCount++;
+
+	const state = STATES[stateIndex] || STATES[0];
+	const direction = DIRECTIONS[directionIndex] || DIRECTIONS[0];
+
+	//再計算
+	//player.recalc({ x, y, state, direction, flip });
+
+	//状態更新
+	//player.position.x = x;
+	//player.position.y = y;
+
+	//位置は直接書き換えず、まず「目標地点」だけ更新する（実際の見た目の位置はupdate()の中で少しずつ近づけて滑らかにする）
+	player.remotePosition.x = x;
+	player.remotePosition.y = y;
+
+	//状態か向きが変わったかどうかを先に判定しておく（この時点ではまだplayer.stateは古い値のまま）
+	const stateChanged = (player.state !== state || player.direction !== direction || player.flip != flip);
+
+	player.state = state;
+	player.direction = direction;
+	player.flip = flip;
+
+	//状態が変わった瞬間だけ、新しい状態のアニメーションのコマを最初に戻す
+	if (stateChanged)
+		player.resetAnimationFrame();
+}
+
+//プレイヤー一覧をYSortしたものを出力
+export function playerYSort()
+{
+	//足元のY座標が小さい（奥）順に並べ替える
+	//→ Y座標が大きい（画面の下＝手前）キャラを後から重ねて描くことで、自然な前後関係（Y-sort）になる
+	const sortedPlayers = [...players].sort((a, b) =>
+	{
+		const footA = a.getPosition({ foot: true });
+		const footB = b.getPosition({ foot: true });
+		return footA.y - footB.y;
+	});
+	return sortedPlayers;
+}
+
+//プレイヤー全員の位置・状態だけを更新する（描画はしない）
+export function updateAll(delta)
+{
+	players.forEach((p) => { p.update(delta); });
+}
+
+//プレイヤーを描画する
+export function drawAll()
+{
+	//足元のY座標が小さい（奥）順に並べ替える
+	const sortedPlayers = playerYSort();
+	sortedPlayers.forEach((p) => { p.drawCharacter(); });
+	sortedPlayers.forEach((p) => { p.drawBubble(); });
+}
+
+
+//プレイヤークラス================================
 export class Player
 {
 	constructor(id, characterName, playerName)
@@ -770,183 +948,3 @@ export class Player
 
 }
 
-
-
-
-
-
-
-//プレイヤー管理================================
-export let players = [];
-
-//IDからプレイヤーを検索する（見つからなければundefined）
-export function getPlayerById(id)
-{
-	return players.find((p) => p.id === id);
-}
-//プレイヤーの追加
-export async function addPlayer(id, characterName, playerName, x, y)
-{
-	const player = new Player(id, characterName, playerName, x, y);
-
-	//※本来はinit前に書いたほうが良い
-	//画像読み込み前にSTATEパケットが届くと、「存在しないプレイヤー」扱いされる
-	players.push(player);
-
-	// init前に呼ぶ、画像読み込みを待つ前にここでセットしておく。画像読み込み待ち中に届いたSTATEパケットでせっかく、remotePositionが正しく更新されても、あとから古い位置で上書きしてしまう
-	if (x !== undefined && y !== undefined)
-		player.setPosition(x, y);
-
-	//画像の読み込みが終わるまで待つ（描画に使うだけなので、後からで問題ない）
-	await player.init();
-
-	return player;
-}
-//IDを指定してプレイヤーをplayers配列から取り除く
-export function removePlayer(id)
-{
-	// findIndexで「配列の何番目にいるか」を調べる（見つからなければ-1）
-	const index = players.findIndex((p) => p.id === id);
-
-	if (index !== -1)
-		players.splice(index, 1); // 見つかった位置から1個だけ取り除く
-}
-//自身のログイン
-export async function onWelcome(id)
-{
-	//データ読み込み
-	let characterName = localStorage.getItem('characterName');
-	let playerName = localStorage.getItem('playerName');
-	const savedX = localStorage.getItem('positionX');
-	const savedY = localStorage.getItem('positionY');
-	const positionX = (savedX !== null) ? Number(savedX) : 2585;
-	const positionY = (savedY !== null) ? Number(savedY) : 1956;
-
-	//デフォルト指定(直接game.htmlにアクセスされるのを許容)
-	if (!characterName)
-		characterName = CHARACTERS[0];
-	if (!playerName)
-		playerName = "名無し";
-
-	let characterIndex = CHARACTERS.indexOf(characterName);
-
-
-	//JOINでキャラ情報を送る
-	socket.sendJoin(characterIndex, playerName, positionX, positionY);
-}
-// 他プレイヤーが新しく入ってきたときの処理
-export async function onJoin(joinedId, characterIndex, playerName, x, y)
-{
-	let joiner = null;
-	// 念のため、既に同じIDが存在していないか確認してから追加する
-	if (!getPlayerById(joinedId))
-	{
-		joiner = await addPlayer(joinedId, CHARACTERS[characterIndex], playerName, x, y);
-
-		//自分自身
-		if (joinedId == socket.myPlayerId)
-		{
-			player = joiner;
-		}
-	}
-}
-// 他プレイヤーが抜けたときの処理
-export function onLeave(leftId)
-{
-	removePlayer(leftId);
-}
-//他プレイヤーのチャット受信
-export function onChat(id, text)
-{
-	const player = getPlayerById(id);
-	if (!player)
-	{
-		addLog("WARNING", "存在しないプレイヤーからのチャットです（ID: " + id + "）");
-		return;
-	}
-
-	addLog("INFO", text);
-
-	//表示するテキストの残り表示時間をセット
-	player.bubbleTimer = BUBBLE_DURATION;
-	player.bubbleLines = player.adjustBubbleText(text);
-}
-//状態受信
-export function onState(id, x, y, stateIndex, directionIndex, flip)
-{
-	//自分自身の状態データは無視する（ローカルの計算結果の方が新しいため）
-	if (id === socket.myPlayerId)
-		return;
-
-	const player = getPlayerById(id);
-	if (!player)
-	{
-		addLog("WARNING", "存在しないプレイヤーからのSTATE受信データです（ID: " + id + "）");
-		return;
-	}
-
-	//onStateの受信間隔計測(デバッグ用)
-	const now = performance.now();// 現在時刻をミリ秒の高精度な値で取得
-
-	// 前回受信からの経過時間
-	if (player.lastReceiveTime !== null)
-		player.lastReceiveInterval = now - player.lastReceiveTime;
-	player.lastReceiveTime = now;
-
-	// 1秒間の受信回数カウントに+1
-	player.receiveCount++;
-
-	const state = STATES[stateIndex] || STATES[0];
-	const direction = DIRECTIONS[directionIndex] || DIRECTIONS[0];
-
-	//再計算
-	//player.recalc({ x, y, state, direction, flip });
-
-	//状態更新
-	//player.position.x = x;
-	//player.position.y = y;
-
-	//位置は直接書き換えず、まず「目標地点」だけ更新する（実際の見た目の位置はupdate()の中で少しずつ近づけて滑らかにする）
-	player.remotePosition.x = x;
-	player.remotePosition.y = y;
-
-	//状態か向きが変わったかどうかを先に判定しておく（この時点ではまだplayer.stateは古い値のまま）
-	const stateChanged = (player.state !== state || player.direction !== direction || player.flip != flip);
-
-	player.state = state;
-	player.direction = direction;
-	player.flip = flip;
-
-	//状態が変わった瞬間だけ、新しい状態のアニメーションのコマを最初に戻す
-	if (stateChanged)
-		player.resetAnimationFrame();
-}
-
-//プレイヤー一覧をYSortしたものを出力
-export function playerYSort()
-{
-	//足元のY座標が小さい（奥）順に並べ替える
-	//→ Y座標が大きい（画面の下＝手前）キャラを後から重ねて描くことで、自然な前後関係（Y-sort）になる
-	const sortedPlayers = [...players].sort((a, b) =>
-	{
-		const footA = a.getPosition({ foot: true });
-		const footB = b.getPosition({ foot: true });
-		return footA.y - footB.y;
-	});
-	return sortedPlayers;
-}
-
-//プレイヤー全員の位置・状態だけを更新する（描画はしない）
-export function updateAll(delta)
-{
-	players.forEach((p) => { p.update(delta); });
-}
-
-//プレイヤーを描画する
-export function drawAll()
-{
-	//足元のY座標が小さい（奥）順に並べ替える
-	const sortedPlayers = playerYSort();
-	sortedPlayers.forEach((p) => { p.drawCharacter(); });
-	sortedPlayers.forEach((p) => { p.drawBubble(); });
-}
