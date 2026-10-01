@@ -1,32 +1,30 @@
+
+//※ここの順序は特に気にしたほうが良い
 import { print, addLog, isDev } from '../shared/sub.js';
 import * as sub from '../shared/sub.js';
 
+import { ctx, canvas } from './DOM.js';
+import * as engine from './engine.js';
 import * as utils2 from './utils2.js';
 import * as windows from './windows.js';
-import { ctx, canvas } from './engine.js';
-import * as engine from './engine.js';
 import * as socket from './ws_bin_client.js';
 //import { player } from './ws_bin_client.js';
-import * as input from './input.js';
 import { keys, keysPress, mouseInfo, nKey, nKeyPress } from './input.js';
+import * as input from './input.js';
+
 import * as world from './world.js';
 import * as Player from './player.js';
-//import { player } from './player.js';
+import { player, players } from './player.js';
 import * as scroll from './scroll.js';
 import * as sound from './sound.js';
 
-let player = null;
-
 export let firstUpdate = false;
 export let lastTime = null;
-export let fps = 0;			// 直近1秒間に実際に描画できたフレーム数
+export let fps = 0;				// 直近1秒間に実際に描画できたフレーム数
 export let frameCount = 0;		// 1秒間のフレームカウンター
 export let fpsTimer = 0;		// 1秒経過したかを計るための経過時間
-export let lastSelectID = "";
-
-// 別タブに移動していた間はrequestAnimationFrameが呼ばれないため、戻ってきた瞬間はcurrentTime - lastTimeが数秒分の差になってしまうことがある。
-// その差をそのまま使うと、移動やアニメーションが一気に進んで「早送り」のように見えてしまう。そこで1フレームあたりの経過時間に上限（例：0.1秒＝10FPS相当）を設け、それ以上は切り捨てる。
-export const MAX_DELTA = 0.1;
+export let lastSelectID = "";	//最後に触ったDOM
+export const MAX_DELTA = 0.1;	// 別タブに移動していた間はrequestAnimationFrameが呼ばれないため、戻ってきた瞬間はcurrentTime - lastTimeが数秒分の差になってしまうことがある。差をそのまま使うと、移動やアニメーションが一気に進んで「早送り」のように見えてしまう。そこで1フレームあたりの経過時間に上限（例：0.1秒＝10FPS相当）を設け、それ以上は切り捨てる。
 
 //初期化
 async function init()
@@ -47,110 +45,25 @@ async function init()
 	await world.init();
 
 	engine.updateProgress("<プレイヤー初期化>");
-	player = await sub.wait({ obj: Player, propName: "player" });
+	await sub.wait({ obj: Player, propName: "player" });
 	//print("info", player.myPlayerId);
 
 	engine.endProgress();
 }
 
-///////全般イベント//////////
-
-// タブを閉じる・別ページへ移動するときに発火する
-
-//ページが閉じられた時
-window.addEventListener('pagehide', () =>
+//ゲーム開始
+function start()
 {
-	localStorage.setItem('positionX', player.position.x);
-	localStorage.setItem('positionY', player.position.y);
-});
+	//フレームスタート
+	requestAnimationFrame(animate);
 
+	//デバッグウィンドウ
+	showModelDebugInfo();
+	setInterval(showModelDebugInfo, 500);
 
-//スキルウィンドウ
-rightMenuSkill.addEventListener(sub.canHover() ? 'mouseenter' : 'click', (e) =>
-{
-
-	//if (!windows.skillWindow.isVisible())
-	windows.skillWindow.show(-1);
-
-	//addLog("info", "test\ntest2\ntest2\ntest2\ntest2\ntest2\ntest2\ntest2", document.getElementById("skillContents"));
-
-});
-
-//チャットDMボタン
-chatDM.addEventListener('click', (e) =>
-{
-
-});
-
-//クイックスロット切り替え
-leftQuickSlotTab.addEventListener('click', (e) =>
-{
-	if (e.offsetX <= leftQuickSlotTab.clientWidth / 2)
-		leftQuickSlotTab.classList.remove("quickSlotTab2");
-	else
-		leftQuickSlotTab.classList.add("quickSlotTab2");
-});
-
-//run/walk
-leftFootBtn.addEventListener('click', (e) =>
-{
-	if (player) player.isRunning = !player.isRunning;
-});
-
-//afk=座り
-leftAfkBtn.addEventListener('click', (e) =>
-{
-	player.moveTarget = null;
-	if (player) player.isSitting = !player.isSitting;
-});
-
-//はみ出し抑制
-leftEnvironmentTab.addEventListener('click', (e) =>
-{
-	//はみ出し抑制
-	//for (const win of windows.windows) { win.insideScreen(); }
-	windows.windows.forEach(win => { win.insideScreen(); });
-});
-
-//チャット範囲選択
-chatOpen.addEventListener('click', (e) =>
-{
-	e.stopPropagation(); // ドキュメント側へのクリックイベント伝播を防止
-
-	const rect = chatOpen.getBoundingClientRect();
-	const x = rect.left;
-	const y = rect.top - (19 * 3);
-
-	chatRangeContainer.style.display = 'flex';
-	/*	chatRangeContainer.style.left = `${x}px`;
-		chatRangeContainer.style.top = `${y}px`;*/
-});
-
-//デバッグ表示
-chatMail.addEventListener('click', (e) =>
-{
-	windows.debugWindow.show(-1);
-});
-
-//BGM再生
-chatEmote.addEventListener('click', (e) =>
-{
-	if (!world?.initialized)
-		return;
-
-	let fileBGM = sub.getFileName(world.location);
-	fileBGM = fileBGM + ".mp4";
-	fileBGM = sub.changeExt(fileBGM, "mp3");
-	fileBGM = sound.pathBGM + "/" + fileBGM;
-	sound.setBGM(fileBGM).play();
-
-});
-
-//画面フルスクリーン
-chatFixedText.addEventListener('click', (e) =>
-{
-	windows.chatWindow.restoreFullScreen();
-});
+	//レンダラーにフォーカス
+	canvas.focus();
+}
 
 ///////入力イベント//////////
 
@@ -282,7 +195,7 @@ export function mousedown(e)
 		return;
 
 	// キャンバス上を左クリックしたら、その場所を目的地にして歩き出す
-	if (input.mouseInfo.left && e.target === engine.canvas)
+	if (input.mouseInfo.left && e.target === canvas)
 	{
 		//シフトキーのキャラ向き更新
 		if (e.shiftKey)
@@ -328,6 +241,41 @@ export function mousewheel(e)
 
 ///////ゲーム//////////
 
+//アニメーション
+function animate(currentTime)
+{
+	try
+	{
+		if (!lastTime)
+			lastTime = currentTime;
+
+		let deltaTime = (currentTime - lastTime) / 1000;
+		if (deltaTime > MAX_DELTA)
+			deltaTime = MAX_DELTA;
+
+		//フレームレート　1秒ごとに「何回animateが呼ばれたか」を数える
+		frameCount++;
+		fpsTimer += deltaTime;
+		if (fpsTimer >= 1)
+		{
+			fps = frameCount;		// 直近1秒間のフレーム数を確定
+			frameCount = 0;
+			fpsTimer %= 1;
+		}
+
+		update(deltaTime);
+		requestAnimationFrame(animate);
+	}
+	catch (e)
+	{
+		//print("error", "animateでエラーが発生しました", [1, 2, 3], { a: "a", b: "b" }, e);
+		console.error("animateでエラーが発生しました", e);
+		if (isDev)
+			debugger;
+	}
+
+	lastTime = currentTime;
+}
 
 //画面更新
 function update(delta)
@@ -365,52 +313,8 @@ function update(delta)
 	firstUpdate = true;
 }
 
-
-//アニメーション
-function animate(currentTime)
-{
-	try
-	{
-		if (!lastTime)
-			lastTime = currentTime;
-
-		let deltaTime = (currentTime - lastTime) / 1000;
-		if (deltaTime > MAX_DELTA)
-			deltaTime = MAX_DELTA;
-
-		//フレームレート　1秒ごとに「何回animateが呼ばれたか」を数える
-		frameCount++;
-		fpsTimer += deltaTime;
-		if (fpsTimer >= 1)
-		{
-			fps = frameCount;		// 直近1秒間のフレーム数を確定
-			frameCount = 0;
-			fpsTimer %= 1;
-		}
-
-		update(deltaTime);
-		requestAnimationFrame(animate);
-	}
-	catch (e)
-	{
-		//print("error", "animateでエラーが発生しました", [1, 2, 3], { a: "a", b: "b" }, e);
-		console.error("animateでエラーが発生しました", e);
-		if (isDev)
-			debugger;
-	}
-
-	lastTime = currentTime;
-}
-
-//初期化
-await init();
-
-//ゲーム開始
-requestAnimationFrame(animate);
-
-
-//デバッグ表示
-function showModelDebugInfo()
+//デバッグ画面
+export function showModelDebugInfo()
 {
 	if (!player?.initialized || !world?.initialized)
 		return;
@@ -429,7 +333,7 @@ function showModelDebugInfo()
 		+ "\n position.x:" + player.position.x.toFixed(1) + " position.y:" + player.position.y.toFixed(1)
 		+ "\n state:" + player.state + " direction:" + player.direction + " flip:" + player.flip
 		+ "\n[Network]"
-		+ Player.players
+		+ players
 			.filter((p) => p.id !== socket.myPlayerId)		// 自分以外の全プレイヤーが対象
 			.map((p) =>
 				"\n ID:" + p.id
@@ -438,8 +342,10 @@ function showModelDebugInfo()
 			)
 			.join("");
 }
-showModelDebugInfo();
-setInterval(showModelDebugInfo, 500);
 
-//レンダラーにフォーカス
-engine.canvas.focus();
+
+//初期化
+await init();
+
+//ゲーム開始
+start();

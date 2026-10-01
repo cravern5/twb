@@ -1,6 +1,9 @@
-//windows.js
 import { addLog } from '../shared/sub.js';
-import { canvas } from './engine.js';
+import * as sub from '../shared/sub.js';
+import { ctx, canvas } from './DOM.js';
+import { player } from './player.js';
+import * as world from './world.js';
+import * as sound from './sound.js';
 
 export let activeWindow = null;
 export let debugWindow;
@@ -9,37 +12,6 @@ export let leftStatusWindow;
 export let leftQuickSlotWindow;
 export let skillWindow;
 export let windows = [];
-
-export const debugContainer = document.getElementById('debugContainer');
-
-//チャットバー
-export const chatContainer = document.getElementById("chatContainer");
-export const chatWhisperInput = document.getElementById("chatWhisperInput");
-export const chatInput = document.getElementById("chatInput");
-export const chatLog = document.getElementById("chatLog");
-//チャットバーボタン
-export const chatOpen = document.getElementById("chatOpen");
-export const chatMail = document.getElementById("chatMail");
-export const chatMemo = document.getElementById("chatMemo");
-export const chatMessanger = document.getElementById("chatMessanger");
-export const chatDM = document.getElementById("chatDM");
-export const chatFixedText = document.getElementById("chatFixedText");
-export const chatEmote = document.getElementById("chatEmote");
-export const chatRangeContainer = document.getElementById("chatRangeContainer");
-
-//左ステータス 開閉ボタンの要素と、開閉対象の箱の要素を取得
-export const leftStatusContainer = document.getElementById("leftStatusContainer");
-export const leftStatusBtns = document.getElementsByClassName("leftStatusBtn");
-export const leftStatusTab = document.getElementById("leftStatusTab");
-export const leftOpen = document.getElementById("leftOpen");
-export const leftAfkBtn = document.getElementById("leftAfkBtn");
-
-//右メニュー
-export const rightMenuButtons = document.getElementById("rightMenuButtons");
-export const rightMenuOpenBtn = document.getElementById("rightMenuOpen");
-
-//左クイックスロット
-export const leftQuickSlotTab = document.getElementById("leftQuickSlotTab");
 
 //ウィンドウクラス追加 呼び出し
 export function init()
@@ -57,8 +29,254 @@ export function init()
 	repaint();
 }
 
+//全般===========================================================================
 
-//ウィンドウズクラス
+//ページが閉じられた時。タブを閉じる・別ページへ移動するときに発火する
+window.addEventListener('pagehide', () =>
+{
+	localStorage.setItem('positionX', player.position.x);
+	localStorage.setItem('positionY', player.position.y);
+});
+
+// 画面リサイズへの対応
+window.addEventListener('resize', () =>
+{
+	//キャンバスリフレッシュ
+	repaint();
+});
+
+// ページ読み込み時
+window.addEventListener('load', () =>
+{
+	// ページの準備が完全に整ってからフォーカスを当てる
+	//canvas.focus();
+
+	//(いまいち) ページ全体のスクロールを左上(0,0)にリセットする
+	//window.scrollTo(0, 0);
+
+	//入力DOMのクリック時の自動スクロールを止めてフォーカスする
+	for (let el of [chatWhisperInput, chatInput])
+		el.addEventListener("mousedown", (e) => (e.preventDefault(), el.focus({ preventScroll: true })));
+});
+
+// タブが切り替わったり別ウィンドウに移った
+window.addEventListener('blur', () =>
+{
+});
+
+//メニューが表示されたとき
+document.addEventListener('contextmenu', (e) =>
+{
+	//addLog("warning", "contextmenu");
+	//ブラウザの標準右クリックメニューが出ないようにする
+	e.preventDefault();
+});
+
+//リサイズイベントを待つ
+// 画面のリサイズイベント完了を待つ非同期ヘルパー関数
+export function waitForResize(timeout = 100)
+{
+	return new Promise((resolve) =>
+	{
+		const onResize = () =>
+		{
+			window.removeEventListener('resize', onResize);
+			resolve();
+		};
+		window.addEventListener('resize', onResize);
+
+		// リサイズイベントがすでに発火済み、または発火しない場合のためのタイマー
+		setTimeout(() =>
+		{
+			window.removeEventListener('resize', onResize);
+			resolve();
+		}, timeout);
+	});
+}
+
+//ブラウザのアドレスを消して全画面表示 -1=auto ,1=full,2=解除
+export async function fullScreen(flg = -1)
+{
+	//自動
+	if (flg == -1)
+		flg = !(document.fullscreenElement);
+
+	try
+	{
+		if (flg)
+		{
+			// Promise を返して待機可能にする
+			await document.documentElement.requestFullscreen();
+		}
+		else if (document.fullscreenElement)
+		{
+			await document.exitFullscreen();
+		}
+	}
+	catch (err)
+	{
+		console.log("全画面化の切替に失敗しました:", err);
+	}
+}
+
+//ウィンドウリサイズ時の再描画
+export function repaint()
+{
+	// 実際にサイズが変わっていなければ何もしない（無駄なリセット＝チラつきを防ぐ）
+	if (canvas.width === window.innerWidth && canvas.height === window.innerHeight)
+		return;
+
+	canvas.width = window.innerWidth;
+	canvas.height = window.innerHeight;
+}
+
+// 汎用トグルボタン(down)
+export function downedToggleClick(e)
+{
+	e.currentTarget.classList.toggle("downed");
+}
+
+
+
+//デバッグ============================================================
+export const debugContainer = document.getElementById('debugContainer');
+
+//チャット============================================================
+export const chatContainer = document.getElementById("chatContainer");
+export const chatWhisperInput = document.getElementById("chatWhisperInput");
+export const chatInput = document.getElementById("chatInput");
+export const chatLog = document.getElementById("chatLog");
+//チャットバーボタン
+export const chatOpen = document.getElementById("chatOpen");
+export const chatMail = document.getElementById("chatMail");
+export const chatMemo = document.getElementById("chatMemo");
+export const chatMessanger = document.getElementById("chatMessanger");
+export const chatDM = document.getElementById("chatDM");
+export const chatFixedText = document.getElementById("chatFixedText");
+export const chatEmote = document.getElementById("chatEmote");
+export const chatRangeContainer = document.getElementById("chatRangeContainer");
+
+//チャットDMボタン
+chatDM.addEventListener('click', (e) =>
+{
+
+});
+
+//チャット範囲選択
+chatOpen.addEventListener('click', (e) =>
+{
+	e.stopPropagation(); // ドキュメント側へのクリックイベント伝播を防止
+
+	const rect = chatOpen.getBoundingClientRect();
+	const x = rect.left;
+	const y = rect.top - (19 * 3);
+
+	chatRangeContainer.style.display = 'flex';
+	/*	chatRangeContainer.style.left = `${x}px`;
+		chatRangeContainer.style.top = `${y}px`;*/
+});
+
+//デバッグ表示
+chatMail.addEventListener('click', (e) =>
+{
+	debugWindow.show(-1);
+});
+
+//BGM再生
+chatEmote.addEventListener('click', (e) =>
+{
+	if (!world?.initialized)
+		return;
+
+	let fileBGM = sub.getFileName(world.location);
+	fileBGM = fileBGM + ".mp4";
+	fileBGM = sub.changeExt(fileBGM, "mp3");
+	fileBGM = sound.pathBGM + "/" + fileBGM;
+	sound.setBGM(fileBGM).play();
+
+});
+
+//画面フルスクリーン
+chatFixedText.addEventListener('click', (e) =>
+{
+	chatWindow.restoreFullScreen();
+});
+
+
+//左ステータス 開閉ボタンの要素と、開閉対象の箱の要素を取得=================
+export const leftStatusContainer = document.getElementById("leftStatusContainer");
+export const leftStatusBtns = document.getElementsByClassName("leftStatusBtn");
+export const leftStatusTab = document.getElementById("leftStatusTab");
+export const leftOpen = document.getElementById("leftOpen");
+export const leftAfkBtn = document.getElementById("leftAfkBtn");
+leftAfkBtn.addEventListener("click", downedToggleClick);
+leftFootBtn.addEventListener("click", downedToggleClick);
+leftStatusTab.addEventListener("click", downedToggleClick);
+leftEnvironmentTab.addEventListener("click", downedToggleClick);
+leftNoExpandTab.addEventListener("click", downedToggleClick);
+
+//左ステータス オープンボタン
+leftOpen.addEventListener("click", () =>
+{
+	leftStatusWindow.show(-1);
+});
+
+//左ステータス run/walk
+leftFootBtn.addEventListener('click', (e) =>
+{
+	if (player) player.isRunning = !player.isRunning;
+});
+
+//左ステータス afk=座り
+leftAfkBtn.addEventListener('click', (e) =>
+{
+	player.moveTarget = null;
+	if (player) player.isSitting = !player.isSitting;
+});
+
+//左ステータス 環境タブボタン はみ出し抑制
+leftEnvironmentTab.addEventListener('click', (e) =>
+{
+	//はみ出し抑制
+	//for (const win of windows.windows) { win.insideScreen(); }
+	windows.forEach(win => { win.insideScreen(); });
+});
+
+//左クイックスロット=====================================================
+export const leftQuickSlotTab = document.getElementById("leftQuickSlotTab");
+
+//左クイックスロット タブ切り替えボタン
+leftQuickSlotTab.addEventListener('click', (e) =>
+{
+	if (e.offsetX <= leftQuickSlotTab.clientWidth / 2)
+		leftQuickSlotTab.classList.remove("quickSlotTab2");
+	else
+		leftQuickSlotTab.classList.add("quickSlotTab2");
+});
+
+//右メニュー============================================================
+export const rightMenuButtons = document.getElementById("rightMenuButtons");
+export const rightMenuOpenBtn = document.getElementById("rightMenuOpen");
+
+// 開閉ボタンがクリックされたら
+rightMenuOpenBtn.addEventListener("click", () =>
+{
+	rightMenuButtons.classList.toggle("closed");
+});
+
+//スキルウィンドウ============================================================
+rightMenuSkill.addEventListener(sub.canHover() ? 'mouseenter' : 'click', (e) =>
+{
+
+	//if (!windows.skillWindow.isVisible())
+	windows.skillWindow.show(-1);
+
+	//addLog("info", "test\ntest2\ntest2\ntest2\ntest2\ntest2\ntest2\ntest2", document.getElementById("skillContents"));
+
+});
+
+
+//ウィンドウズクラス=====================================================
 class WindowController
 {
 	//container　全面サイズ変更
@@ -454,148 +672,3 @@ class WindowController
 		this.insideScreen();
 	}
 }
-
-
-//リサイズイベントを待つ
-// 画面のリサイズイベント完了を待つ非同期ヘルパー関数
-export function waitForResize(timeout = 100)
-{
-	return new Promise((resolve) =>
-	{
-		const onResize = () =>
-		{
-			window.removeEventListener('resize', onResize);
-			resolve();
-		};
-		window.addEventListener('resize', onResize);
-
-		// リサイズイベントがすでに発火済み、または発火しない場合のためのタイマー
-		setTimeout(() =>
-		{
-			window.removeEventListener('resize', onResize);
-			resolve();
-		}, timeout);
-	});
-}
-
-//ブラウザのアドレスを消して全画面表示 -1=auto ,1=full,2=解除
-export async function fullScreen(flg = -1)
-{
-	//自動
-	if (flg == -1)
-		flg = !(document.fullscreenElement);
-
-	try
-	{
-		if (flg)
-		{
-			// Promise を返して待機可能にする
-			await document.documentElement.requestFullscreen();
-		}
-		else if (document.fullscreenElement)
-		{
-			await document.exitFullscreen();
-		}
-	}
-	catch (err)
-	{
-		console.log("全画面化の切替に失敗しました:", err);
-	}
-}
-
-//ウィンドウリサイズ時の再描画
-export function repaint()
-{
-	// 実際にサイズが変わっていなければ何もしない（無駄なリセット＝チラつきを防ぐ）
-	if (canvas.width === window.innerWidth && canvas.height === window.innerHeight)
-		return;
-
-	canvas.width = window.innerWidth;
-	canvas.height = window.innerHeight;
-}
-
-
-// (down)トグルボタン
-export function downedToggleClick(e)
-{
-	e.currentTarget.classList.toggle("downed");
-}
-
-
-//左ステータス
-leftAfkBtn.addEventListener("click", downedToggleClick);
-leftFootBtn.addEventListener("click", downedToggleClick);
-leftStatusTab.addEventListener("click", downedToggleClick);
-leftEnvironmentTab.addEventListener("click", downedToggleClick);
-leftNoExpandTab.addEventListener("click", downedToggleClick);
-
-//左上オープンボタン
-leftOpen.addEventListener("click", () =>
-{
-	leftStatusWindow.show(-1);
-});
-
-
-//右メニュー
-
-// 開閉ボタンがクリックされたら
-rightMenuOpenBtn.addEventListener("click", () =>
-{
-	rightMenuButtons.classList.toggle("closed");
-});
-
-
-
-// 画面リサイズへの対応
-window.addEventListener('resize', () =>
-{
-	//キャンバスリフレッシュ
-	repaint();
-});
-
-// ページ読み込み時
-window.addEventListener('load', () =>
-{
-	// ページの準備が完全に整ってからフォーカスを当てる
-	//engine.canvas.focus();
-
-	//(いまいち) ページ全体のスクロールを左上(0,0)にリセットする
-	//window.scrollTo(0, 0);
-
-	//入力DOMのクリック時の自動スクロールを止めてフォーカスする
-	for (let el of [chatWhisperInput, chatInput])
-		el.addEventListener("mousedown", (e) => (e.preventDefault(), el.focus({ preventScroll: true })));
-});
-
-// タブが切り替わったり別ウィンドウに移った
-window.addEventListener('blur', () =>
-{
-});
-
-//メニューが表示されたとき
-document.addEventListener('contextmenu', (e) =>
-{
-	//addLog("warning", "contextmenu");
-	//ブラウザの標準右クリックメニューが出ないようにする
-	e.preventDefault();
-});
-
-
-
-export function mousemove(e)
-{
-	//if (activeWindow)
-	//	activeWindow.handleMouseMove(e);
-	//全ウィンドウクラスの移動・リサイズ
-	//windows.forEach(win => win.handleMouseMove(e));
-}
-
-export function mouseup(e)
-{
-	//if (activeWindow)
-	//	activeWindow.handleMouseUp(e);
-
-	//全ウィンドウクラスの移動・リサイズ
-	//windows.forEach(win => win.handleMouseUp(e));
-}
-

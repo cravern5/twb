@@ -1,7 +1,7 @@
 import { print, addLog } from '../shared/sub.js';
 
 import * as utils2 from './utils2.js';
-import { ctx } from './engine.js';
+import { ctx, canvas } from './DOM.js';
 import * as engine from './engine.js';
 import { SpriteAnimator } from './animator.js';
 //import { player } from './player.js';

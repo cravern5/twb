@@ -1,8 +1,7 @@
 import { print, addLog } from '../shared/sub.js';
-import { canvas } from './engine.js';
+import { ctx, canvas } from './DOM.js';
 //import * as world from './world.js';
 //import { player } from './player.js';
-//import * as engine from './engine.js';
 import * as game from './game.js';
 
 //キーボード==============================================================

@@ -6,7 +6,7 @@ import * as utils2 from './utils2.js';
 import * as input from './input.js';
 import * as windows from './windows.js';
 import * as engine from './engine.js';
-import { canvas, ctx } from './engine.js';
+import { ctx, canvas } from './DOM.js';
 //import { MAP_WIDTH, MAP_HEIGHT } from './world.js';
 //import * as world from './world.js';
 import { SpriteAnimator } from './animator.js';
@@ -14,6 +14,7 @@ import { SpriteAnimator } from './animator.js';
 
 //プレイヤー
 export let player = null;
+export let players = [];
 
 export const MOVE_SPEED_RUN = 130; 					// 1秒あたりの移動ピクセル数
 export const MOVE_SPEED_WALK = 90;					// 1秒あたりの移動ピクセル数
@@ -75,7 +76,6 @@ export const leftStatusListValueFont = leftStatusList ? sub.getDOMFont(leftStatu
 
 
 //プレイヤー管理================================
-export let players = [];
 
 //IDからプレイヤーを検索する（見つからなければundefined）
 export function getPlayerById(id)
@@ -700,12 +700,12 @@ export class Player
 		{
 			//テキスト入力
 			if (text === '')
-				engine.canvas.focus();//キャンバスに戻る
+				canvas.focus();//キャンバスに戻る
 			else if (text.toUpperCase() === '/SHOWFPS')
 			{
 				windows.debugWindow.show(-1);
 				chatInput.value = '';// 入力欄をクリア
-				engine.canvas.focus();//キャンバスに戻る
+				canvas.focus();//キャンバスに戻る
 			}
 			else
 			{
@@ -719,7 +719,7 @@ export class Player
 				socket.sendChat(sendText);
 
 				chatInput.value = '';// 入力欄をクリア
-				engine.canvas.focus();//キャンバスに戻る
+				canvas.focus();//キャンバスに戻る
 			}
 		}
 		//チャットバーにフォーカス

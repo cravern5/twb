@@ -1,10 +1,12 @@
 import { print, addLog } from '../shared/sub.js';
 import * as sub from '../shared/sub.js';
 
-export let useTouch;
-export let canvas = document.getElementById("gameCanvas");
-export let ctx = canvas.getContext("2d");
+import { ctx, canvas } from './DOM.js';
+//import * as world from './world.js';
 
+export let useTouch;
+
+//初期化
 export function init()
 {
 	//タッチ操作が可能なら
@@ -23,7 +25,8 @@ export function init()
 	return true;
 }
 
-// プログレスバーとテキストの更新=================
+
+// プログレスバーとテキストの更新===========================================
 export let loadedCount = 0;
 export let loadTotal = null;
 export const loadingScreen = document.getElementById('loadingContainer');
@@ -71,8 +74,7 @@ export function autoPageReloader()
 	};
 }
 
-
-// カメラ（視点）関連 ==========================
+// カメラ（視点）関連 ====================================================
 
 // zoom: 1が等倍。2なら「画面の半分の範囲」を切り出して拡大表示＝2倍ズームになる
 // カメラが動ける範囲（＝現在のマップサイズ）。マップ側からsetCameraBoundsで教えてもらう
@@ -91,7 +93,6 @@ export function snapToPixel(value)
 {
 	return Math.round(value);
 }
-
 
 // 中心座標をもとに、カメラの位置を計算
 // 中心座標をもとにカメラ位置を計算し、カメラ変形（ズーム・平行移動）を開始する
@@ -187,3 +188,5 @@ export function worldToScreen(worldX, worldY, { render = false } = {})
 
 	return { x: x, y: y };
 }
+
+
