@@ -65,6 +65,108 @@ function start()
 	canvas.focus();
 }
 
+//アニメーション
+function animate(currentTime)
+{
+	try
+	{
+		if (!lastTime)
+			lastTime = currentTime;
+
+		let deltaTime = (currentTime - lastTime) / 1000;
+		if (deltaTime > MAX_DELTA)
+			deltaTime = MAX_DELTA;
+
+		//フレームレート　1秒ごとに「何回animateが呼ばれたか」を数える
+		frameCount++;
+		fpsTimer += deltaTime;
+		if (fpsTimer >= 1)
+		{
+			fps = frameCount;		// 直近1秒間のフレーム数を確定
+			frameCount = 0;
+			fpsTimer %= 1;
+		}
+
+		update(deltaTime);
+		requestAnimationFrame(animate);
+	}
+	catch (e)
+	{
+		//print("error", "animateでエラーが発生しました", [1, 2, 3], { a: "a", b: "b" }, e);
+		console.error("animateでエラーが発生しました", e);
+		if (isDev)
+			debugger;
+	}
+
+	lastTime = currentTime;
+}
+
+//画面更新
+function update(delta)
+{
+	if (!player?.initialized || !world?.initialized)
+		return;
+
+	// フレームの最初にキャンバス全体をクリア
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+	// プレイヤーの位置・状態を「先に」動かして確定させる　この後でカメラを合わせないと、カメラだけ1フレーム前の位置を追いかけることになり、丸め処理と合わさって震えて見える）
+	Player.updateAll(delta);
+
+	//マップ更新
+	world.update(delta);
+
+	// カメラ計算のため、プレイヤーの中心座標を渡す（更新済みの最新位置を使う）
+	const center = player.getPosition({ render: true, center: true });
+
+	// カメラ変形（ズーム・平行移動）を開始する、これ以降、マップやプレイヤーの描画はズームを意識せずワールド座標のまま書ける
+	engine.beginCameraTransform(center.x, center.y);
+
+	//マップ描画(後ろ)
+	world.draw(true);
+
+	//プレイヤー描画（カメラ変形が有効なうちに描画する）
+	Player.drawAll();
+
+	//マップ描画(手前)
+	world.draw(false);
+
+	// カメラ変形を元に戻す（beginCameraTransformと必ずセットで呼ぶ）
+	engine.endCameraTransform();
+
+	firstUpdate = true;
+}
+
+//デバッグ画面
+function showModelDebugInfo()
+{
+	if (!player?.initialized || !world?.initialized)
+		return;
+
+	debugContainer.textContent =
+		"[Debug Info]"
+		+ "\n canvas.width:" + canvas.width + " canvas.height:" + canvas.height
+		+ "\n camera.x:" + engine.camera.x.toFixed(1) + " camera.y:" + engine.camera.y.toFixed(1)
+		+ "\n camera.zoom:" + engine.camera.zoom.toFixed(3)
+		+ "\n FPS:" + fps
+		+ "\n Log:" + chatLog.children.length
+		+ "\n useTouch:" + engine.useTouch
+		+ "\n lastSelect:" + lastSelectID
+		+ "\n[Player]"
+		+ "\n ID:" + socket.myPlayerId
+		+ "\n position.x:" + player.position.x.toFixed(1) + " position.y:" + player.position.y.toFixed(1)
+		+ "\n state:" + player.state + " direction:" + player.direction + " flip:" + player.flip
+		+ "\n[Network]"
+		+ players
+			.filter((p) => p.id !== socket.myPlayerId)		// 自分以外の全プレイヤーが対象
+			.map((p) =>
+				"\n ID:" + p.id
+				+ "  受信:" + p.receivePerSecond + "回/秒"
+				+ "  前回間隔:" + p.lastReceiveInterval.toFixed(0) + "ms"
+			)
+			.join("");
+}
+
 ///////入力イベント//////////
 
 //タップ
@@ -236,111 +338,6 @@ export function mouseup(e)
 //マウスホイール
 export function mousewheel(e)
 {
-}
-
-
-///////ゲーム//////////
-
-//アニメーション
-function animate(currentTime)
-{
-	try
-	{
-		if (!lastTime)
-			lastTime = currentTime;
-
-		let deltaTime = (currentTime - lastTime) / 1000;
-		if (deltaTime > MAX_DELTA)
-			deltaTime = MAX_DELTA;
-
-		//フレームレート　1秒ごとに「何回animateが呼ばれたか」を数える
-		frameCount++;
-		fpsTimer += deltaTime;
-		if (fpsTimer >= 1)
-		{
-			fps = frameCount;		// 直近1秒間のフレーム数を確定
-			frameCount = 0;
-			fpsTimer %= 1;
-		}
-
-		update(deltaTime);
-		requestAnimationFrame(animate);
-	}
-	catch (e)
-	{
-		//print("error", "animateでエラーが発生しました", [1, 2, 3], { a: "a", b: "b" }, e);
-		console.error("animateでエラーが発生しました", e);
-		if (isDev)
-			debugger;
-	}
-
-	lastTime = currentTime;
-}
-
-//画面更新
-function update(delta)
-{
-	if (!player?.initialized || !world?.initialized)
-		return;
-
-	// フレームの最初にキャンバス全体をクリア
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-	// プレイヤーの位置・状態を「先に」動かして確定させる　この後でカメラを合わせないと、カメラだけ1フレーム前の位置を追いかけることになり、丸め処理と合わさって震えて見える）
-	Player.updateAll(delta);
-
-	//マップ更新
-	world.update(delta);
-
-	// カメラ計算のため、プレイヤーの中心座標を渡す（更新済みの最新位置を使う）
-	const center = player.getPosition({ render: true, center: true });
-
-	// カメラ変形（ズーム・平行移動）を開始する、これ以降、マップやプレイヤーの描画はズームを意識せずワールド座標のまま書ける
-	engine.beginCameraTransform(center.x, center.y);
-
-	//マップ描画(後ろ)
-	world.draw(true);
-
-	//プレイヤー描画（カメラ変形が有効なうちに描画する）
-	Player.drawAll();
-
-	//マップ描画(手前)
-	world.draw(false);
-
-	// カメラ変形を元に戻す（beginCameraTransformと必ずセットで呼ぶ）
-	engine.endCameraTransform();
-
-	firstUpdate = true;
-}
-
-//デバッグ画面
-export function showModelDebugInfo()
-{
-	if (!player?.initialized || !world?.initialized)
-		return;
-
-	debugContainer.textContent =
-		"[Debug Info]"
-		+ "\n canvas.width:" + canvas.width + " canvas.height:" + canvas.height
-		+ "\n camera.x:" + engine.camera.x.toFixed(1) + " camera.y:" + engine.camera.y.toFixed(1)
-		+ "\n camera.zoom:" + engine.camera.zoom.toFixed(3)
-		+ "\n FPS:" + fps
-		+ "\n Log:" + chatLog.children.length
-		+ "\n useTouch:" + engine.useTouch
-		+ "\n lastSelect:" + lastSelectID
-		+ "\n[Player]"
-		+ "\n ID:" + socket.myPlayerId
-		+ "\n position.x:" + player.position.x.toFixed(1) + " position.y:" + player.position.y.toFixed(1)
-		+ "\n state:" + player.state + " direction:" + player.direction + " flip:" + player.flip
-		+ "\n[Network]"
-		+ players
-			.filter((p) => p.id !== socket.myPlayerId)		// 自分以外の全プレイヤーが対象
-			.map((p) =>
-				"\n ID:" + p.id
-				+ "  受信:" + p.receivePerSecond + "回/秒"
-				+ "  前回間隔:" + p.lastReceiveInterval.toFixed(0) + "ms"
-			)
-			.join("");
 }
 
 

@@ -141,6 +141,8 @@ export function downedToggleClick(e)
 //デバッグ============================================================
 export const debugContainer = document.getElementById('debugContainer');
 
+
+
 //チャット============================================================
 export const chatContainer = document.getElementById("chatContainer");
 export const chatWhisperInput = document.getElementById("chatWhisperInput");
@@ -257,19 +259,15 @@ leftQuickSlotTab.addEventListener('click', (e) =>
 //右メニュー============================================================
 export const rightMenuButtons = document.getElementById("rightMenuButtons");
 export const rightMenuOpenBtn = document.getElementById("rightMenuOpen");
-
 // 開閉ボタンがクリックされたら
-rightMenuOpenBtn.addEventListener("click", () =>
-{
-	rightMenuButtons.classList.toggle("closed");
-});
+rightMenuOpenBtn.addEventListener("click", () => { rightMenuButtons.classList.toggle("closed"); });
 
-//スキルウィンドウ============================================================
+//右メニュー　スキルウィンドウ============================================================
 rightMenuSkill.addEventListener(sub.canHover() ? 'mouseenter' : 'click', (e) =>
 {
 
-	//if (!windows.skillWindow.isVisible())
-	windows.skillWindow.show(-1);
+	//if (!skillWindow.isVisible())
+	skillWindow.show(-1);
 
 	//addLog("info", "test\ntest2\ntest2\ntest2\ntest2\ntest2\ntest2\ntest2", document.getElementById("skillContents"));
 

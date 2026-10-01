@@ -11,6 +11,13 @@
 	src: url('../assets/fonts/khdotfont/KH-Dot-Kodenmachou-16-Ki.ttf') format('opentype');
 }
 
+/* 全適用 */
+*, *::before, *::after
+{
+	box-sizing:border-box;
+}
+
+
 html {
 	/*manipulationはダブルタップでのズームなど、標準外のジェスチャーを無効します*/
 	touch-action: manipulation;
