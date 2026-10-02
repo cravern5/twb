@@ -13,7 +13,7 @@ export let wins =
 	leftQuickSlot: { drager: "leftQuickSlotShortcut", containerResize: false },
 	chat: { inside: true, drager: "chatLog", minWidth: 300, minHeight: 90, defaultDisplay: "flex", containerResize: true },
 
-	identity: { esc: true, rightMenu: "character" },
+	identity: { esc: true, },
 	combo: { esc: true },
 	equip: { esc: true },
 	item: { esc: true },
