@@ -6,8 +6,8 @@
 export let canvas = document.getElementById("gameCanvas");
 export let ctx = canvas.getContext("2d");
 
-//タッチ操作が可能なら
-export const useTouch = canTouch();
+export const useTouch = canTouch();//タッチ操作が可能なら
+export const useHover = canHover();//ホバーが可能なら
 
 //デバッグかどうか
 export const isDev =
@@ -308,6 +308,11 @@ export function nearlyEqual(a, b, epsilon = 1e-4)
 	return Math.abs(a - b) <= epsilon;
 }
 
+//一文字目を大きくする
+export function bigHead(text)
+{
+	return text.charAt(0).toUpperCase() + text.slice(1);
+}
 
 //拡張子変更
 export function changeExt(filePath, newExt)

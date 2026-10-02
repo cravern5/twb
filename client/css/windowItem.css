@@ -1,0 +1,28 @@
+#itemContainer {
+	
+
+	background-image: url("../assets/ui/windowItem/window.png");
+
+	/* ドットを崩さずに拡大表示する指定 ctx.imageSmoothingEnabled=falseと併用可能*/
+	/* Chrome, Edge, Safari */
+	image-rendering: pixelated;
+	/* Firefox */
+	image-rendering: crisp-edges;
+
+	/* 画面上に位置を固定 */
+	position: fixed;
+	/*margin: 0;
+	padding: 0;*/
+	width: 341px;
+	height: 277px;
+
+	/*
+	top: 20px;
+	right: 100px;
+	*/
+
+	/*数値が大きいほど手前に表示されます*/
+	z-index: 2;
+
+	display:none;
+}

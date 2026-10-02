@@ -254,7 +254,7 @@ export function keydown(e)
 	//チャット表示切替
 	else if (nKey("c"))
 	{
-		windows.chatWindow.show(-1);
+		windows.wins["chat"].window.show(-1);
 	}
 	/*else if (nKey("f12"))
 	{

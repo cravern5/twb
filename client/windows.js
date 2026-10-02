@@ -1,319 +1,64 @@
-import { addLog, ctx, canvas } from '../shared/sub.js';
+import { addLog, ctx, canvas, useHover } from '../shared/sub.js';
 import * as sub from '../shared/sub.js';
 import { player } from './player.js';
 import * as world from './world.js';
 import * as sound from './sound.js';
 
 export let activeWindow = null;
-export let debugWindow;
-export let leftStatusWindow;
-export let leftQuickSlotWindow;
 
-export let inWins = [];
-export let chatWindow;
+export let wins =
+{
+	debug: { esc: true, nodrag: true },
+	leftStatus: { nodrag: true, container: "leftStatusGroup" },
+	leftQuickSlot: { drager: "leftQuickSlotShortcut", containerResize: false },
+	chat: { inside: true, drager: "chatLog", minWidth: 300, minHeight: 90, defaultDisplay: "flex", containerResize: true },
 
-export let escWins = [];
-export let skillWindow;
-export let identityWindow;
-
-export const canHover = sub.canHover();
+	identity: { esc: true, rightMenu: "character" },
+	combo: { esc: true },
+	equip: { esc: true },
+	item: { esc: true },
+	option: { esc: true },
+	skill: { esc: true },
+	team: { esc: true },
+	club: { esc: true },
+	quest: { esc: true },
+};
 
 //ウィンドウクラス追加 呼び出し
 export function init()
 {
-	//ウィンドウコンテナ作成
-	debugWindow = new WindowController({ container: '#debugContainer', defaultDisplay: "block" });
-	leftStatusWindow = new WindowController({ container: '#leftStatusGroup', defaultDisplay: "block" });
-	leftQuickSlotWindow = new WindowController({ container: '#leftQuickSlotContainer', drager: '#leftQuickSlotShortcut', defaultDisplay: "block", containerResize: false });
+	//右メニュー ウィンドウ関連付け
+	for (const [key, obj] of Object.entries(wins))
+	{
+		obj.container = document.getElementById(obj.container ?? key + "Container");
+		if (!obj.nodrag)
+			obj.drager = obj.drager ? document.getElementById(obj.drager) : obj.container;
 
-	//はみ出し戻すウィンドウズ
-	chatWindow = new WindowController({ container: '#chatContainer', drager: '#chatLog', minWidth: 300, minHeight: 90, childLock: true, defaultDisplay: 'flex' });
-	inWins.push(chatWindow);
+		//ウィンドウクラス登録
+		obj.window = new WindowController({
+			container: obj.container,
+			drager: obj.drager,
+			childLock: obj.childLock,
+			minWidth: obj.minWidth, minHeight: obj.minHeight,
+			defaultDisplay: obj.defaultDisplay ?? "block",
+			containerResize: obj.containerResize ?? false,
+		});
 
-	//ESC非表示ウィンドウ
-	skillWindow = new WindowController({ container: '#skillContainer', drager: '#skillContainer', childLock: true, defaultDisplay: "block", containerResize: false });
-	identityWindow = new WindowController({ container: '#identityContainer', drager: '#identityContainer', childLock: true, defaultDisplay: "block", containerResize: false });
-	escWins.push(skillWindow);
-	escWins.push(identityWindow);
+		//ウィンドウ名が右メニューにあれば関連付けて表示する
+		obj.rightMenu = document.getElementById(obj.rightMenu ?? ("rightMenu" + sub.bigHead(key)));
+		if (obj.rightMenu)
+		{
+			obj.rightMenu.addEventListener(useHover ? 'mouseenter' : 'click', (e) =>
+			{
+				obj.window.show(-1);
+				setRightBtnPos(obj.window.container, e.target);
+			});
+		}
+	}
 
 	//canvasサイズ初期化
 	repaint();
 }
-
-//全般===========================================================================
-
-//ページが閉じられた時。タブを閉じる・別ページへ移動するときに発火する
-window.addEventListener('pagehide', () =>
-{
-	localStorage.setItem('positionX', player.position.x);
-	localStorage.setItem('positionY', player.position.y);
-});
-
-// 画面リサイズへの対応
-window.addEventListener('resize', () =>
-{
-	//キャンバスリフレッシュ
-	repaint();
-});
-
-// ページ読み込み時
-window.addEventListener('load', () =>
-{
-	// ページの準備が完全に整ってからフォーカスを当てる
-	//canvas.focus();
-
-	//(いまいち) ページ全体のスクロールを左上(0,0)にリセットする
-	//window.scrollTo(0, 0);
-
-	//入力DOMのクリック時の自動スクロールを止めてフォーカスする
-	for (let el of [chatWhisperInput, chatInput])
-		el.addEventListener("mousedown", (e) => (e.preventDefault(), el.focus({ preventScroll: true })));
-});
-
-// タブが切り替わったり別ウィンドウに移った
-window.addEventListener('blur', () =>
-{
-});
-
-//メニューが表示されたとき
-document.addEventListener('contextmenu', (e) =>
-{
-	//addLog("warning", "contextmenu");
-	//ブラウザの標準右クリックメニューが出ないようにする
-	e.preventDefault();
-});
-
-//リサイズイベントを待つ
-// 画面のリサイズイベント完了を待つ非同期ヘルパー関数
-export function waitForResize(timeout = 100)
-{
-	return new Promise((resolve) =>
-	{
-		const onResize = () =>
-		{
-			window.removeEventListener('resize', onResize);
-			resolve();
-		};
-		window.addEventListener('resize', onResize);
-
-		// リサイズイベントがすでに発火済み、または発火しない場合のためのタイマー
-		setTimeout(() =>
-		{
-			window.removeEventListener('resize', onResize);
-			resolve();
-		}, timeout);
-	});
-}
-
-//ブラウザのアドレスを消して全画面表示 -1=auto ,1=full,2=解除
-export async function fullScreen(flg = -1)
-{
-	//自動
-	if (flg == -1)
-		flg = !(document.fullscreenElement);
-
-	try
-	{
-		if (flg)
-		{
-			// Promise を返して待機可能にする
-			await document.documentElement.requestFullscreen();
-		}
-		else if (document.fullscreenElement)
-		{
-			await document.exitFullscreen();
-		}
-	}
-	catch (err)
-	{
-		console.log("全画面化の切替に失敗しました:", err);
-	}
-}
-
-//ウィンドウリサイズ時の再描画
-export function repaint()
-{
-	// 実際にサイズが変わっていなければ何もしない（無駄なリセット＝チラつきを防ぐ）
-	if (canvas.width === window.innerWidth && canvas.height === window.innerHeight)
-		return;
-
-	canvas.width = window.innerWidth;
-	canvas.height = window.innerHeight;
-}
-
-// 汎用トグルボタン(down)
-export function downedToggleClick(e)
-{
-	e.currentTarget.classList.toggle("downed");
-}
-
-//ESCによるウィンドウ非表示
-export function escWindows()
-{
-	for (const w of escWins)
-	{
-		if (w.isVisible())
-		{
-			w.hide();
-			break;
-		}
-	}
-}
-
-//デバッグ============================================================
-export const debugContainer = document.getElementById('debugContainer');
-
-
-
-//チャット============================================================
-export const chatContainer = document.getElementById("chatContainer");
-export const chatWhisperInput = document.getElementById("chatWhisperInput");
-export const chatInput = document.getElementById("chatInput");
-export const chatLog = document.getElementById("chatLog");
-//チャットバーボタン
-export const chatOpen = document.getElementById("chatOpen");
-export const chatMail = document.getElementById("chatMail");
-export const chatMemo = document.getElementById("chatMemo");
-export const chatMessanger = document.getElementById("chatMessanger");
-export const chatDM = document.getElementById("chatDM");
-export const chatFixedText = document.getElementById("chatFixedText");
-export const chatEmote = document.getElementById("chatEmote");
-export const chatRangeContainer = document.getElementById("chatRangeContainer");
-
-//チャットDMボタン
-chatDM.addEventListener('click', (e) =>
-{
-
-});
-
-//チャット範囲選択
-chatOpen.addEventListener('click', (e) =>
-{
-	e.stopPropagation(); // ドキュメント側へのクリックイベント伝播を防止
-
-	const rect = chatOpen.getBoundingClientRect();
-	const x = rect.left;
-	const y = rect.top - (19 * 3);
-
-	chatRangeContainer.style.display = 'flex';
-	/*	chatRangeContainer.style.left = `${x}px`;
-		chatRangeContainer.style.top = `${y}px`;*/
-});
-
-//デバッグ表示
-chatMail.addEventListener('click', (e) =>
-{
-	debugWindow.show(-1);
-});
-
-//BGM再生
-chatEmote.addEventListener('click', (e) =>
-{
-	if (!world?.initialized)
-		return;
-
-	let fileBGM = sub.getFileName(world.location);
-	fileBGM = fileBGM + ".mp4";
-	fileBGM = sub.changeExt(fileBGM, "mp3");
-	fileBGM = sound.pathBGM + "/" + fileBGM;
-	sound.setBGM(fileBGM).play();
-
-});
-
-//画面フルスクリーン
-chatFixedText.addEventListener('click', (e) =>
-{
-	chatWindow.restoreFullScreen();
-});
-
-
-//左ステータス 開閉ボタンの要素と、開閉対象の箱の要素を取得=================
-export const leftStatusContainer = document.getElementById("leftStatusContainer");
-export const leftStatusBtns = document.getElementsByClassName("leftStatusBtn");
-export const leftStatusTab = document.getElementById("leftStatusTab");
-export const leftOpen = document.getElementById("leftOpen");
-export const leftAfkBtn = document.getElementById("leftAfkBtn");
-leftAfkBtn.addEventListener("click", downedToggleClick);
-leftFootBtn.addEventListener("click", downedToggleClick);
-leftStatusTab.addEventListener("click", downedToggleClick);
-leftEnvironmentTab.addEventListener("click", downedToggleClick);
-leftNoExpandTab.addEventListener("click", downedToggleClick);
-
-//左ステータス オープンボタン
-leftOpen.addEventListener("click", () =>
-{
-	leftStatusWindow.show(-1);
-});
-
-//左ステータス run/walk
-leftFootBtn.addEventListener('click', (e) =>
-{
-	if (player) player.isRunning = !player.isRunning;
-});
-
-//左ステータス afk=座り
-leftAfkBtn.addEventListener('click', (e) =>
-{
-	player.moveTarget = null;
-	if (player) player.isSitting = !player.isSitting;
-});
-
-//左ステータス 拡張タブボタン はみ出し抑制
-leftNoExpandTab.addEventListener('click', (e) =>
-{
-	//はみ出し抑制
-	//for (const win of windows.windows) { win.insideScreen(); }
-	inWins.forEach(w => { w.insideScreen(); });
-});
-
-//左クイックスロット=====================================================
-export const leftQuickSlotTab = document.getElementById("leftQuickSlotTab");
-
-//左クイックスロット タブ切り替えボタン
-leftQuickSlotTab.addEventListener('click', (e) =>
-{
-	if (e.offsetX <= leftQuickSlotTab.clientWidth / 2)
-		leftQuickSlotTab.classList.remove("quickSlotTab2");
-	else
-		leftQuickSlotTab.classList.add("quickSlotTab2");
-});
-
-//右メニュー============================================================
-export const rightMenuButtons = document.getElementById("rightMenuButtons");
-export const rightMenuOpenBtn = document.getElementById("rightMenuOpen");
-// 開閉ボタンがクリックされたら
-rightMenuOpenBtn.addEventListener("click", () => { rightMenuButtons.classList.toggle("closed"); });
-
-function setRightBtnPos(container, btn)
-{
-	// 非表示されていた場合範囲が取れないので、次の描画フレームまで待ってからサイズを取得
-	requestAnimationFrame(() =>
-	{
-		const rectBtn = btn.getBoundingClientRect();
-		const rectContainer = container.getBoundingClientRect();
-
-		container.style.left = (rectBtn.left - rectContainer.width) + "px";
-		container.style.top = rectBtn.top + "px";
-
-		//addLog("info", "x:" + container.style.left + " y:" + container.style.top);
-	});
-}
-
-//右メニュー　スキルウィンドウ
-rightMenuSkill.addEventListener(canHover ? 'mouseenter' : 'click', (e) =>
-{
-	skillWindow.show(-1);
-
-	setRightBtnPos(skillWindow.container, e.target);
-});
-
-rightMenuCharacter.addEventListener(canHover ? 'mouseenter' : 'click', (e) =>
-{
-	identityWindow.show(-1);
-
-	setRightBtnPos(identityWindow.container, e.target);
-});
-
 
 //ウィンドウズクラス=====================================================
 class WindowController
@@ -324,11 +69,13 @@ class WindowController
 	//resizeDir　特定サイズ変更位置
 	//minWidth　最小横幅
 	//minHeight　最小高さ
-	constructor({ container, drager = null, closer = null,
+	constructor({
+		container, containerResize = false,
+		drager = null, childLock = false,
+		closer = null,
 		resizer = null, resizeDir = 'n',
 		minWidth = 280, minHeight = 180,
-		childLock = false, defaultDisplay = null,
-		containerResize = true })
+		defaultDisplay = null, })
 	{
 		this.container = typeof container === 'string' ? document.querySelector(container) : container;
 		this.drager = typeof drager === 'string' ? document.querySelector(drager) : drager;
@@ -337,7 +84,7 @@ class WindowController
 
 		if (!this.container)
 		{
-			addLog("WARNING", '対象のウィンドウ要素が見つかりませんでした。');
+			addLog("WARNING", "対象のウィンドウ要素が見つかりませんでした。(" + (typeof container === 'string' ? container : "") + ")");
 			return;
 		}
 
@@ -347,9 +94,8 @@ class WindowController
 		else
 			this.defaultDisplay = getComputedStyle(this.container).display;
 
-		this.childLock = childLock;
-
 		// 各インスタンスごとに独立した状態（状態の隠蔽）
+		this.childLock = childLock;
 		this.isDragging = false;
 		this.dragOffsetX = 0;
 		this.dragOffsetY = 0;
@@ -711,3 +457,281 @@ class WindowController
 		this.insideScreen();
 	}
 }
+
+//全般===========================================================================
+
+//ページが閉じられた時。タブを閉じる・別ページへ移動するときに発火する
+window.addEventListener('pagehide', () =>
+{
+	localStorage.setItem('positionX', player.position.x);
+	localStorage.setItem('positionY', player.position.y);
+});
+
+// 画面リサイズへの対応
+window.addEventListener('resize', () =>
+{
+	//キャンバスリフレッシュ
+	repaint();
+});
+
+// ページ読み込み時
+window.addEventListener('load', () =>
+{
+	// ページの準備が完全に整ってからフォーカスを当てる
+	//canvas.focus();
+
+	//(いまいち) ページ全体のスクロールを左上(0,0)にリセットする
+	//window.scrollTo(0, 0);
+
+	//入力DOMのクリック時の自動スクロールを止めてフォーカスする
+	for (let el of [chatWhisperInput, chatInput])
+		el.addEventListener("mousedown", (e) => (e.preventDefault(), el.focus({ preventScroll: true })));
+});
+
+// タブが切り替わったり別ウィンドウに移った
+window.addEventListener('blur', () =>
+{
+});
+
+//メニューが表示されたとき
+document.addEventListener('contextmenu', (e) =>
+{
+	//addLog("warning", "contextmenu");
+	//ブラウザの標準右クリックメニューが出ないようにする
+	e.preventDefault();
+});
+
+//リサイズイベントを待つ
+// 画面のリサイズイベント完了を待つ非同期ヘルパー関数
+export function waitForResize(timeout = 100)
+{
+	return new Promise((resolve) =>
+	{
+		const onResize = () =>
+		{
+			window.removeEventListener('resize', onResize);
+			resolve();
+		};
+		window.addEventListener('resize', onResize);
+
+		// リサイズイベントがすでに発火済み、または発火しない場合のためのタイマー
+		setTimeout(() =>
+		{
+			window.removeEventListener('resize', onResize);
+			resolve();
+		}, timeout);
+	});
+}
+
+//ブラウザのアドレスを消して全画面表示 -1=auto ,1=full,2=解除
+export async function fullScreen(flg = -1)
+{
+	//自動
+	if (flg == -1)
+		flg = !(document.fullscreenElement);
+
+	try
+	{
+		if (flg)
+		{
+			// Promise を返して待機可能にする
+			await document.documentElement.requestFullscreen();
+		}
+		else if (document.fullscreenElement)
+		{
+			await document.exitFullscreen();
+		}
+	}
+	catch (err)
+	{
+		console.log("全画面化の切替に失敗しました:", err);
+	}
+}
+
+//ウィンドウリサイズ時の再描画
+export function repaint()
+{
+	// 実際にサイズが変わっていなければ何もしない（無駄なリセット＝チラつきを防ぐ）
+	if (canvas.width === window.innerWidth && canvas.height === window.innerHeight)
+		return;
+
+	canvas.width = window.innerWidth;
+	canvas.height = window.innerHeight;
+}
+
+// 汎用トグルボタン(down)
+export function downedToggleClick(e)
+{
+	e.currentTarget.classList.toggle("downed");
+}
+
+//ESCによるウィンドウ非表示
+export function escWindows()
+{
+	for (const [key, obj] of Object.entries(wins))
+	{
+		if (obj.esc)
+		{
+			if (obj.window.isVisible())
+			{
+				addLog("info", key);
+				obj.window.hide();
+				break;
+			}
+		}
+	}
+}
+
+//はみ出し抑制
+export function insideWindows()
+{
+	for (const obj of Object.values(wins))
+	{
+		if (obj.inside)
+		{
+			if (obj.window.isVisible())
+			{
+				obj.window.insideScreen();
+			}
+		}
+	}
+}
+
+
+//デバッグ============================================================
+export const debugContainer = document.getElementById('debugContainer');
+
+
+
+//チャット============================================================
+export const chatContainer = document.getElementById("chatContainer");
+export const chatWhisperInput = document.getElementById("chatWhisperInput");
+export const chatInput = document.getElementById("chatInput");
+export const chatLog = document.getElementById("chatLog");
+//チャットバーボタン
+export const chatOpen = document.getElementById("chatOpen");
+export const chatMail = document.getElementById("chatMail");
+export const chatMemo = document.getElementById("chatMemo");
+export const chatMessanger = document.getElementById("chatMessanger");
+export const chatDM = document.getElementById("chatDM");
+export const chatFixedText = document.getElementById("chatFixedText");
+export const chatEmote = document.getElementById("chatEmote");
+export const chatRangeContainer = document.getElementById("chatRangeContainer");
+
+//チャットDMボタン
+chatDM.addEventListener('click', (e) =>
+{
+
+});
+
+//チャット範囲選択
+chatOpen.addEventListener('click', (e) =>
+{
+	e.stopPropagation(); // ドキュメント側へのクリックイベント伝播を防止
+
+	const rect = chatOpen.getBoundingClientRect();
+	const x = rect.left;
+	const y = rect.top - (19 * 3);
+
+	chatRangeContainer.style.display = 'flex';
+	/*	chatRangeContainer.style.left = `${x}px`;
+		chatRangeContainer.style.top = `${y}px`;*/
+});
+
+//デバッグ表示
+chatMail.addEventListener('click', (e) =>
+{
+	wins["debug"].window.show(-1);
+});
+
+//BGM再生
+chatEmote.addEventListener('click', (e) =>
+{
+	if (!world?.initialized)
+		return;
+
+	let fileBGM = sub.getFileName(world.location);
+	fileBGM = fileBGM + ".mp4";
+	fileBGM = sub.changeExt(fileBGM, "mp3");
+	fileBGM = sound.pathBGM + "/" + fileBGM;
+	sound.setBGM(fileBGM).play();
+
+});
+
+//画面フルスクリーン
+chatFixedText.addEventListener('click', (e) =>
+{
+	wins["chat"].window.restoreFullScreen();
+});
+
+
+//左ステータス 開閉ボタンの要素と、開閉対象の箱の要素を取得=================
+export const leftStatusContainer = document.getElementById("leftStatusContainer");
+export const leftStatusBtns = document.getElementsByClassName("leftStatusBtn");
+export const leftStatusTab = document.getElementById("leftStatusTab");
+export const leftOpen = document.getElementById("leftOpen");
+export const leftAfkBtn = document.getElementById("leftAfkBtn");
+leftAfkBtn.addEventListener("click", downedToggleClick);
+leftFootBtn.addEventListener("click", downedToggleClick);
+leftStatusTab.addEventListener("click", downedToggleClick);
+leftEnvironmentTab.addEventListener("click", downedToggleClick);
+leftNoExpandTab.addEventListener("click", downedToggleClick);
+
+//左ステータス オープンボタン
+leftOpen.addEventListener("click", () =>
+{
+	wins["leftStatus"].window.show(-1);
+});
+
+//左ステータス run/walk
+leftFootBtn.addEventListener('click', (e) =>
+{
+	if (player) player.isRunning = !player.isRunning;
+});
+
+//左ステータス afk=座り
+leftAfkBtn.addEventListener('click', (e) =>
+{
+	player.moveTarget = null;
+	if (player) player.isSitting = !player.isSitting;
+});
+
+//左ステータス 拡張タブボタン はみ出し抑制
+leftNoExpandTab.addEventListener('click', (e) =>
+{
+	insideWindows();
+});
+
+//左クイックスロット=====================================================
+export const leftQuickSlotTab = document.getElementById("leftQuickSlotTab");
+
+//左クイックスロット タブ切り替えボタン
+leftQuickSlotTab.addEventListener('click', (e) =>
+{
+	if (e.offsetX <= leftQuickSlotTab.clientWidth / 2)
+		leftQuickSlotTab.classList.remove("quickSlotTab2");
+	else
+		leftQuickSlotTab.classList.add("quickSlotTab2");
+});
+
+//右メニュー============================================================
+export const rightMenuButtons = document.getElementById("rightMenuButtons");
+export const rightMenuOpenBtn = document.getElementById("rightMenuOpen");
+// 開閉ボタンがクリックされたら
+rightMenuOpenBtn.addEventListener("click", () => { rightMenuButtons.classList.toggle("closed"); });
+
+function setRightBtnPos(container, btn)
+{
+	// 非表示されていた場合範囲が取れないので、次の描画フレームまで待ってからサイズを取得
+	requestAnimationFrame(() =>
+	{
+		const rectBtn = btn.getBoundingClientRect();
+		const rectContainer = container.getBoundingClientRect();
+
+		container.style.left = (rectBtn.left - rectContainer.width) + "px";
+		container.style.top = rectBtn.top + "px";
+
+		//addLog("info", "x:" + container.style.left + " y:" + container.style.top);
+	});
+}
+

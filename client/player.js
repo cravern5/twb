@@ -689,9 +689,9 @@ export class Player
 			addLog("ERROR", "サーバーに接続されていません")
 		}
 		//チャットウィンドウ非表示中
-		if (!windows.chatWindow.isVisible())
+		if (!windows.wins["chat"].window.isVisible())
 		{
-			windows.chatWindow.restore();
+			windows.wins["chat"].window.restore();
 			chatInput.focus();
 		}
 		//チャットバーにフォーカスある
@@ -702,7 +702,7 @@ export class Player
 				canvas.focus();//キャンバスに戻る
 			else if (text.toUpperCase() === '/SHOWFPS')
 			{
-				windows.debugWindow.show(-1);
+				windows.wins["debug"].window.show(-1);
 				chatInput.value = '';// 入力欄をクリア
 				canvas.focus();//キャンバスに戻る
 			}
