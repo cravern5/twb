@@ -51,9 +51,18 @@ export function init()
 		{
 			obj.rightMenu.addEventListener(useHover ? 'mouseenter' : 'click', (e) =>
 			{
-				obj.window.show(-1);
+				obj.window.show(true);
 				setRightBtnPos(obj.window.container, e.target);
 			});
+
+			if (useHover)
+			{
+				obj.rightMenu.addEventListener('mouseleave', (e) =>
+				{
+					obj.window.show(false);
+					//setRightBtnPos(obj.window.container, e.target);
+				});
+			}
 		}
 	}
 

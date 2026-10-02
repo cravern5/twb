@@ -2,22 +2,23 @@
 //import fs from 'fs';//ブラウザ環境では使えない
 //import { fileURLToPath } from 'url'; //ブラウザ環境では使えない パスとURLを相互変換するための標準機能、isMainModule用
 
-//ゲームキャンバス
-export let canvas = document.getElementById("gameCanvas");
-export let ctx = canvas.getContext("2d");
-
-export const useTouch = canTouch();//タッチ操作が可能なら
-export const useHover = canHover();//ホバーが可能なら
+//クライアントかどうか (typeof document !== 'undefined')
+export const isBrowser = typeof location !== "undefined";
+//サーバーがどうか
+export const isServer = typeof process !== "undefined";
 
 //デバッグかどうか
-export const isDev =
-	// ブラウザ環境で、localhostアクセスなら開発環境とみなす
-	(typeof location !== "undefined" && (location.hostname === 'localhost' || location.hostname === '127.0.0.1')) ||
-	// サーバー環境で、NODE_ENVがproduction以外なら開発環境とみなす、本番サーバー(Render/Koyebなど)ではNODE_ENV=productionを設定しておくこと
-	(typeof process !== "undefined" && process.env.NODE_ENV !== 'production');
+// ブラウザ環境で、localhostアクセスなら開発環境とみなす
+// サーバー環境で、NODE_ENVがproduction以外なら開発環境とみなす、本番サーバー(Render/Koyebなど)ではNODE_ENV=productionを設定しておくこと
+export const isDev = (isBrowser && (location.hostname === 'localhost' || location.hostname === '127.0.0.1')) || (isServer && process.env.NODE_ENV !== 'production');
 
-//直接実行されたかどうか(サーバー環境のみ)
-//!!!!!!呼び出し方!!!!!　await isMainModule(import.meta.url)
+//タッチ操作が可能なら
+export const useTouch = isBrowser ? canTouch() : false;
+
+//ホバーが可能なら
+export const useHover = isBrowser ? canHover() : false;
+
+//直接実行されたかどうか(サーバー環境のみ)　//!!!!!!呼び出し方!!!!!　await isMainModule(import.meta.url)
 //import.meta.urlはサーバー・ブラウザ両方使えるが形式が違う＆fileURLToPathはブラウザで使えない
 export async function isMainModule(importMetaUrl)
 {
@@ -30,7 +31,11 @@ export async function isMainModule(importMetaUrl)
 }
 
 //チャットログエリア(ブラウザ環境のみ)
-let chatLog = (typeof document !== 'undefined') ? document.getElementById('chatLog') : null;
+let chatLog = isBrowser ? document.getElementById('chatLog') : null;
+
+//ゲームキャンバス
+export let canvas = isBrowser ? document.getElementById("gameCanvas") : null;
+export let ctx = isBrowser ? canvas.getContext("2d") : null;
 
 //色付きdiv作成
 export function createTypeFont(type, message)
