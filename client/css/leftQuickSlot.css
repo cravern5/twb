@@ -30,7 +30,7 @@
 
 	/*background-color:rgb(0, 60, 255);*/
 	/*background-size: 200% 100%;*/
-	background-image: url("../assets/ui/QuickSlot/tab.png");
+	background-image: url("../assets/ui/quickSlot/tab.png");
 	background-repeat: no-repeat;
 	background-position: left top;
 
@@ -54,7 +54,7 @@
 	/* 画像の横幅を2倍(200%)にすることで、画像全体を 左半分・右半分の2コマとして扱えるようにする */
 	/*background-size: 200% 100%;*/
 	/* 画像が繰り返し表示されないようにする */
-	background-image: url("../assets/ui/QuickSlot/quickSlot.png");
+	background-image: url("../assets/ui/quickSlot/quickSlot.png");
 	background-repeat: no-repeat;
 	
 	width: 135px;

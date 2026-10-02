@@ -64,7 +64,7 @@
 	width: 100%;
 	height: 7px;
 
-	border-image-source: url("../assets/ui/ChatBar/topBar.png");
+	border-image-source: url("../assets/ui/chatBar/topBar.png");
 
 	/* 画像の切り分け位置（順番は 上=0 右=8 下=0 左=8）
 		   上下は0＝画像の高さ全部をそのまま使う（この画像は上下で状態が分かれていないため）
@@ -171,11 +171,11 @@
 }
 
 #chatScrollUp {
-	background-image: url("../assets/ui/Scroll/scrollUp.png");
+	background-image: url("../assets/ui/scroll/scrollUp.png");
 }
 
 #chatScrollDown {
-	background-image: url("../assets/ui/Scroll/scrollDown.png");
+	background-image: url("../assets/ui/scroll/scrollDown.png");
 }
 
 #chatScrollUp:active,
@@ -188,7 +188,7 @@
 /*スクロールつまみ*/
 #chatScrollBar {
 
-	background-image: url("../assets/ui/Scroll/scrollBar.png");
+	background-image: url("../assets/ui/scroll/scrollBar.png");
 	background-repeat: no-repeat;
 
 	/* containだと縦横比が保たれて画像が伸びないので、要素の高さいっぱいまで画像自体を引き伸ばすように変更する */
@@ -214,7 +214,7 @@
 
 /*チャット3段目===========================*/
 #chatUnderContainer {
-	background-image: url("../assets/ui/ChatBar/under.png");
+	background-image: url("../assets/ui/chatBar/under.png");
 	height: 33px;
 
 	/*1枚の伸縮*/
@@ -272,7 +272,7 @@
 
 	/*   background だと画像全体を単純に引き伸ばすので、端の模様まで潰れてぼやける。
 	   border-image なら画像を9分割して「両端はそのまま・真ん中だけ」伸縮できる。 */
-	border-image-source: url("../assets/ui/ChatBar/input.png");
+	border-image-source: url("../assets/ui/chatBar/input.png");
 
 	/* 画像の切り分け位置（順番は 上 右 下 左）
 	   ・上=0, 下=25 → 縦50pxの画像のうち「上半分(0〜25px)」＝通常時の絵を使う
@@ -330,25 +330,25 @@
 	background-position: bottom left;
 }
 #chatOpen {
-	background-image: url("../assets/ui/ChatBar/open.png");
+	background-image: url("../assets/ui/chatBar/open.png");
 }
 #chatMail {
-	background-image: url("../assets/ui/ChatBar/mail.png");
+	background-image: url("../assets/ui/chatBar/mail.png");
 }
 #chatMemo {
-	background-image: url("../assets/ui/ChatBar/memo.png");
+	background-image: url("../assets/ui/chatBar/memo.png");
 }
 #chatMessanger {
-	background-image: url("../assets/ui/ChatBar/messanger.png");
+	background-image: url("../assets/ui/chatBar/messanger.png");
 }
 #chatDM {
-	background-image: url("../assets/ui/ChatBar/dm.png");
+	background-image: url("../assets/ui/chatBar/dm.png");
 }
 #chatFixedText {
-	background-image: url("../assets/ui/ChatBar/fixedText.png");
+	background-image: url("../assets/ui/chatBar/fixedText.png");
 }
 #chatEmote {
-	background-image: url("../assets/ui/ChatBar/emote.png");
+	background-image: url("../assets/ui/chatBar/emote.png");
 }
 
 /* ==========================================================================
@@ -395,14 +395,14 @@
 	background-position: bottom left;
 }
 #chatRangeClub {
-	background-image: url("../assets/ui/ChatBar/club.png");
+	background-image: url("../assets/ui/chatBar/club.png");
 }
 #chatRangeWhisper {
-	background-image: url("../assets/ui/ChatBar/whisper.png");
+	background-image: url("../assets/ui/chatBar/whisper.png");
 }
 #chatRangeParty {
-	background-image: url("../assets/ui/ChatBar/party.png");
+	background-image: url("../assets/ui/chatBar/party.png");
 }
 #chatRangeOpen {
-	background-image: url("../assets/ui/ChatBar/open.png");
+	background-image: url("../assets/ui/chatBar/open.png");
 }

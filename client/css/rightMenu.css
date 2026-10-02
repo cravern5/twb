@@ -116,34 +116,34 @@
 
 
 #rightMenuCharacter {
-	background-image: url("../assets/ui/RightMenu/character.png");
+	background-image: url("../assets/ui/rightMenu/character.png");
 }
 
 #rightMenuCombo {
-	background-image: url("../assets/ui/RightMenu/combo.png");
+	background-image: url("../assets/ui/rightMenu/combo.png");
 }
 
 #rightMenuEquip {
-	background-image: url("../assets/ui/RightMenu/equip.png");
+	background-image: url("../assets/ui/rightMenu/equip.png");
 }
 #rightMenuItem {
-	background-image: url("../assets/ui/RightMenu/item.png");
+	background-image: url("../assets/ui/rightMenu/item.png");
 }
 #rightMenuOption {
-	background-image: url("../assets/ui/RightMenu/option.png");
+	background-image: url("../assets/ui/rightMenu/option.png");
 }
 #rightMenuSkill {
-	background-image: url("../assets/ui/RightMenu/skill.png");
+	background-image: url("../assets/ui/rightMenu/skill.png");
 }
 #rightMenuTeam {
-	background-image: url("../assets/ui/RightMenu/team.png");
+	background-image: url("../assets/ui/rightMenu/team.png");
 }
 #rightMenuClub {
-	background-image: url("../assets/ui/RightMenu/club.png");
+	background-image: url("../assets/ui/rightMenu/club.png");
 }
 #rightMenuQuest {
-	background-image: url("../assets/ui/RightMenu/quest.png");
+	background-image: url("../assets/ui/rightMenu/quest.png");
 }
 #rightMenuOpen {
-	background-image: url("../assets/ui/RightMenu/open.png");
+	background-image: url("../assets/ui/rightMenu/open.png");
 }

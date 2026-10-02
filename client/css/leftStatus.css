@@ -38,7 +38,7 @@
 /*=======================*/
 
 #leftOpen {
-	background-image: url("../assets/ui/LeftStatus/open.png");
+	background-image: url("../assets/ui/leftStatus/open.png");
 	background-repeat: no-repeat;
 
 	/* 絶対配置にして、他の要素の下に埋もれないようにする */
@@ -59,7 +59,7 @@
 
 
 #leftXpBar {
-	background-image: url("../assets/ui/LeftStatus/xpBar.png");
+	background-image: url("../assets/ui/leftStatus/xpBar.png");
 	background-repeat: no-repeat;
 	/*background-color: rgb(231, 178, 4);*/
 	position: absolute;
@@ -85,7 +85,7 @@
 
 
 #leftCoolTimer {
-	background-image: url("../assets/ui/LeftStatus/coolTimer.png");
+	background-image: url("../assets/ui/leftStatus/coolTimer.png");
 	background-repeat: no-repeat;
 
 	position: absolute;
@@ -96,7 +96,7 @@
 }
 
 #leftToolCircle {
-	background-image: url("../assets/ui/LeftStatus/toolCircle.png");
+	background-image: url("../assets/ui/leftStatus/toolCircle.png");
 	background-repeat: no-repeat;
 
 	position: absolute;
@@ -110,7 +110,7 @@
 .leftPointBar
 {
 	/*background-color: red;*/
-	background-image: url("../assets/ui/LeftStatus/pointBar.png");
+	background-image: url("../assets/ui/leftStatus/pointBar.png");
 	background-repeat: no-repeat;
 
 	position: absolute;
@@ -237,7 +237,7 @@
 
 
 #leftEnvironment {
-	background-image: url("../assets/ui/LeftStatus/environment.png");
+	background-image: url("../assets/ui/leftStatus/environment.png");
 	background-repeat: no-repeat;
 	position: absolute;
 	left: 29px;
@@ -246,7 +246,7 @@
 	height: 35px;
 }
 #leftComboCount {
-	background-image: url("../assets/ui/LeftStatus/comboCount.png");
+	background-image: url("../assets/ui/leftStatus/comboCount.png");
 	background-repeat: no-repeat;
 	position: absolute;
 	left: 44px;
@@ -256,7 +256,7 @@
 }
 #leftAfkBtn {
 
-	background-image: url("../assets/ui/LeftStatus/afkBtn.png");
+	background-image: url("../assets/ui/leftStatus/afkBtn.png");
 	background-repeat: no-repeat;
 	position: absolute;
 	left: 77px;
@@ -265,7 +265,7 @@
 	height: 15px;
 }
 #leftFootBtn {
-	background-image: url("../assets/ui/LeftStatus/footBtn.png");
+	background-image: url("../assets/ui/leftStatus/footBtn.png");
 	background-repeat: no-repeat;
 	position: absolute;
 	left: 92px;
@@ -274,7 +274,7 @@
 	height: 15px;
 }
 #leftStatusTab {
-	background-image: url("../assets/ui/LeftStatus/statusBtn.png");
+	background-image: url("../assets/ui/leftStatus/statusBtn.png");
 	background-repeat: no-repeat;
 	position: absolute;
 	left: 66px;
@@ -283,7 +283,7 @@
 	height: 15px;
 }
 #leftEnvironmentTab {
-	background-image: url("../assets/ui/LeftStatus/environmentBtn.png");
+	background-image: url("../assets/ui/leftStatus/environmentBtn.png");
 	background-repeat: no-repeat;
 	position: absolute;
 	left: 85px;
@@ -293,7 +293,7 @@
 	cursor: pointer;
 }
 #leftNoExpandTab {
-	background-image: url("../assets/ui/LeftStatus/noexpand.png");
+	background-image: url("../assets/ui/leftStatus/noexpand.png");
 	background-repeat: no-repeat;
 	position: absolute;
 	left: 100px;
