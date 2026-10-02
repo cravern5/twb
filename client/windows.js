@@ -11,7 +11,8 @@ export let chatWindow;
 export let leftStatusWindow;
 export let leftQuickSlotWindow;
 export let skillWindow;
-export let wins = [];
+export let inWins = [];
+export let escWins = [];
 
 //ウィンドウクラス追加 呼び出し
 export function init()
@@ -23,7 +24,11 @@ export function init()
 	leftQuickSlotWindow = new WindowController({ container: '#leftQuickSlotContainer', drager: '#leftQuickSlotShortcut', defaultDisplay: "block", containerResize: false });
 	skillWindow = new WindowController({ container: '#skillContainer', drager: '#skillContainer', childLock: true, defaultDisplay: "block", containerResize: false });
 
-	wins.push(chatWindow);
+	//はみ出し戻すウィンドウズ
+	inWins.push(chatWindow);
+
+	//ESC非表示ウィンドウ
+	escWins.push(skillWindow);
 
 	//canvasサイズ初期化
 	repaint();
@@ -139,7 +144,7 @@ export function downedToggleClick(e)
 //ESCによるウィンドウ非表示
 export function escWindows()
 {
-	for (const w of wins)
+	for (const w of escWins)
 	{
 		if (w.isVisible())
 		{
@@ -252,7 +257,7 @@ leftNoExpandTab.addEventListener('click', (e) =>
 {
 	//はみ出し抑制
 	//for (const win of windows.windows) { win.insideScreen(); }
-	wins.forEach(win => { win.insideScreen(); });
+	inWins.forEach(w => { w.insideScreen(); });
 });
 
 //左クイックスロット=====================================================
