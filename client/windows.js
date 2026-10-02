@@ -11,7 +11,7 @@ export let chatWindow;
 export let leftStatusWindow;
 export let leftQuickSlotWindow;
 export let skillWindow;
-export let windows = [];
+export let wins = [];
 
 //ウィンドウクラス追加 呼び出し
 export function init()
@@ -23,7 +23,7 @@ export function init()
 	leftQuickSlotWindow = new WindowController({ container: '#leftQuickSlotContainer', drager: '#leftQuickSlotShortcut', defaultDisplay: "block", containerResize: false });
 	skillWindow = new WindowController({ container: '#skillContainer', drager: '#skillContainer', childLock: true, defaultDisplay: "block", containerResize: false });
 
-	windows.push(chatWindow);
+	wins.push(chatWindow);
 
 	//canvasサイズ初期化
 	repaint();
@@ -136,7 +136,18 @@ export function downedToggleClick(e)
 	e.currentTarget.classList.toggle("downed");
 }
 
-
+//ESCによるウィンドウ非表示
+export function escWindows()
+{
+	for (const w of wins)
+	{
+		if (w.isVisible())
+		{
+			w.hide();
+			break;
+		}
+	}
+}
 
 //デバッグ============================================================
 export const debugContainer = document.getElementById('debugContainer');
@@ -236,12 +247,12 @@ leftAfkBtn.addEventListener('click', (e) =>
 	if (player) player.isSitting = !player.isSitting;
 });
 
-//左ステータス 環境タブボタン はみ出し抑制
-leftEnvironmentTab.addEventListener('click', (e) =>
+//左ステータス 拡張タブボタン はみ出し抑制
+leftNoExpandTab.addEventListener('click', (e) =>
 {
 	//はみ出し抑制
 	//for (const win of windows.windows) { win.insideScreen(); }
-	windows.forEach(win => { win.insideScreen(); });
+	wins.forEach(win => { win.insideScreen(); });
 });
 
 //左クイックスロット=====================================================
@@ -531,10 +542,10 @@ class WindowController
 		return rect;
 	}
 
-	show(flg)
-	{
-		if (flg) this.restore(); else this.hide();
-	}
+	//show(flg)
+	//{
+	//	if (flg) this.restore(); else this.hide();
+	//}
 
 	show(flg = true)
 	{

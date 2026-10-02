@@ -264,6 +264,10 @@ export function keydown(e)
 		e.stopPropagation();
 		e.preventDefault();//デベロップツールが出る
 	}*/
+	else if (nKey("escape"))
+	{
+		windows.escWindows();
+	}
 	else
 	{
 
