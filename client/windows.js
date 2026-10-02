@@ -49,7 +49,7 @@ export function init()
 		obj.rightMenu = document.getElementById(obj.rightMenu ?? ("rightMenu" + sub.bigHead(key)));
 		if (obj.rightMenu)
 		{
-			obj.rightMenu.addEventListener(useHover ? 'mouseenter' : 'click', (e) =>
+			obj.rightMenu.addEventListener('click', (e) =>
 			{
 				obj.window.show(true);
 				setRightBtnPos(obj.window.container, e.target);
@@ -57,6 +57,12 @@ export function init()
 
 			if (useHover)
 			{
+				obj.rightMenu.addEventListener('mouseenter', (e) =>
+				{
+					obj.window.show(true);
+					setRightBtnPos(obj.window.container, e.target);
+				});
+
 				obj.rightMenu.addEventListener('mouseleave', (e) =>
 				{
 					obj.window.show(false);
