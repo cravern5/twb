@@ -171,11 +171,11 @@
 }
 
 #chatScrollUp {
-	background-image: url("../assets/ui/scroll/scrollUp.png");
+	background-image: url("../assets/ui/Scroll/scrollUp.png");
 }
 
 #chatScrollDown {
-	background-image: url("../assets/ui/scroll/scrollDown.png");
+	background-image: url("../assets/ui/Scroll/scrollDown.png");
 }
 
 #chatScrollUp:active,
@@ -188,7 +188,7 @@
 /*スクロールつまみ*/
 #chatScrollBar {
 
-	background-image: url("../assets/ui/scroll/scrollBar.png");
+	background-image: url("../assets/ui/Scroll/scrollBar.png");
 	background-repeat: no-repeat;
 
 	/* containだと縦横比が保たれて画像が伸びないので、要素の高さいっぱいまで画像自体を引き伸ばすように変更する */

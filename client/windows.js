@@ -7,28 +7,35 @@ import * as sound from './sound.js';
 
 export let activeWindow = null;
 export let debugWindow;
-export let chatWindow;
 export let leftStatusWindow;
 export let leftQuickSlotWindow;
-export let skillWindow;
+
 export let inWins = [];
+export let chatWindow;
+
 export let escWins = [];
+export let skillWindow;
+export let identityWindow;
+
+export const canHover = sub.canHover();
 
 //ウィンドウクラス追加 呼び出し
 export function init()
 {
 	//ウィンドウコンテナ作成
-	chatWindow = new WindowController({ container: '#chatContainer', drager: '#chatLog', minWidth: 300, minHeight: 90, childLock: true, defaultDisplay: 'flex' });
 	debugWindow = new WindowController({ container: '#debugContainer', defaultDisplay: "block" });
 	leftStatusWindow = new WindowController({ container: '#leftStatusGroup', defaultDisplay: "block" });
 	leftQuickSlotWindow = new WindowController({ container: '#leftQuickSlotContainer', drager: '#leftQuickSlotShortcut', defaultDisplay: "block", containerResize: false });
-	skillWindow = new WindowController({ container: '#skillContainer', drager: '#skillContainer', childLock: true, defaultDisplay: "block", containerResize: false });
 
 	//はみ出し戻すウィンドウズ
+	chatWindow = new WindowController({ container: '#chatContainer', drager: '#chatLog', minWidth: 300, minHeight: 90, childLock: true, defaultDisplay: 'flex' });
 	inWins.push(chatWindow);
 
 	//ESC非表示ウィンドウ
+	skillWindow = new WindowController({ container: '#skillContainer', drager: '#skillContainer', childLock: true, defaultDisplay: "block", containerResize: false });
+	identityWindow = new WindowController({ container: '#identityContainer', drager: '#identityContainer', childLock: true, defaultDisplay: "block", containerResize: false });
 	escWins.push(skillWindow);
+	escWins.push(identityWindow);
 
 	//canvasサイズ初期化
 	repaint();
@@ -278,15 +285,34 @@ export const rightMenuOpenBtn = document.getElementById("rightMenuOpen");
 // 開閉ボタンがクリックされたら
 rightMenuOpenBtn.addEventListener("click", () => { rightMenuButtons.classList.toggle("closed"); });
 
-//右メニュー　スキルウィンドウ============================================================
-rightMenuSkill.addEventListener(sub.canHover() ? 'mouseenter' : 'click', (e) =>
+function setRightBtnPos(container, btn)
 {
+	// 非表示されていた場合範囲が取れないので、次の描画フレームまで待ってからサイズを取得
+	requestAnimationFrame(() =>
+	{
+		const rectBtn = btn.getBoundingClientRect();
+		const rectContainer = container.getBoundingClientRect();
 
-	//if (!skillWindow.isVisible())
+		container.style.left = (rectBtn.left - rectContainer.width) + "px";
+		container.style.top = rectBtn.top + "px";
+
+		addLog("info", "x:" + container.style.left + " y:" + container.style.top);
+	});
+}
+
+//右メニュー　スキルウィンドウ
+rightMenuSkill.addEventListener(canHover ? 'mouseenter' : 'click', (e) =>
+{
 	skillWindow.show(-1);
 
-	//addLog("info", "test\ntest2\ntest2\ntest2\ntest2\ntest2\ntest2\ntest2", document.getElementById("skillContents"));
+	setRightBtnPos(skillWindow.container, e.target);
+});
 
+rightMenuCharacter.addEventListener(canHover ? 'mouseenter' : 'click', (e) =>
+{
+	identityWindow.show(-1);
+
+	setRightBtnPos(identityWindow.container, e.target);
 });
 
 
