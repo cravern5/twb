@@ -1,16 +1,11 @@
-import { print, addLog } from '../shared/sub.js';
+import { print, addLog, ctx, canvas } from '../shared/sub.js';
 import * as sub from '../shared/sub.js';
-
-import { ctx, canvas } from './DOM.js';
 //import * as world from './world.js';
 
-export let useTouch;
 
 //初期化
 export function init()
 {
-	//タッチ操作が可能なら
-	useTouch = sub.canTouch();
 
 	//画像を滑らかに拡大するかどうかを示します　※ここで変更してもダメcanvas.widthなど呼ばれると戻る
 	//ctx.imageSmoothingEnabled = false;
@@ -20,9 +15,33 @@ export function init()
 	// 外枠の黒い線を消す（フォーカス時に青い枠線などが出ないようにする）
 	//canvas.style.outline = 'none';
 
+	//保存時の自動ページリロード用
 	autoPageReloader();
 
 	return true;
+}
+
+//保存時の自動ページリロード用
+export function autoPageReloader()
+{
+	if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1')
+		return;
+
+	// サーバーとの常時接続を開始する
+	const eventSource = new EventSource('/events');
+
+	// サーバーから 'data: reload\n\n' が送られてきた時に実行される処理
+	eventSource.onmessage = function (event)
+	{
+		// 送られてきたデータが "reload" だったらページを再読み込みする
+		if (event.data === 'reload')
+			location.reload();
+	};
+	// 追加：接続エラー時（本番環境で404が返る場合など）は再接続をやめる
+	eventSource.onerror = function ()
+	{
+		eventSource.close();
+	};
 }
 
 
@@ -51,28 +70,7 @@ export function endProgress()
 	//loadingScreen.style.display = 'none';
 	setTimeout(() => { loadingScreen.style.display = 'none'; });
 }
-//保存時の自動ページリロード用
-export function autoPageReloader()
-{
-	if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1')
-		return;
 
-	// サーバーとの常時接続を開始する
-	const eventSource = new EventSource('/events');
-
-	// サーバーから 'data: reload\n\n' が送られてきた時に実行される処理
-	eventSource.onmessage = function (event)
-	{
-		// 送られてきたデータが "reload" だったらページを再読み込みする
-		if (event.data === 'reload')
-			location.reload();
-	};
-	// 追加：接続エラー時（本番環境で404が返る場合など）は再接続をやめる
-	eventSource.onerror = function ()
-	{
-		eventSource.close();
-	};
-}
 
 // カメラ（視点）関連 ====================================================
 

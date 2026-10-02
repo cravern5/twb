@@ -1,5 +1,4 @@
-import { print, addLog } from '../shared/sub.js';
-import { ctx, canvas } from './DOM.js';
+import { print, addLog, ctx, canvas } from '../shared/sub.js';
 //import * as world from './world.js';
 //import { player } from './player.js';
 import * as game from './game.js';

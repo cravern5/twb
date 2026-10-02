@@ -1,12 +1,11 @@
 import * as sub from '../shared/sub.js';
-import { print, addLog } from '../shared/sub.js';
+import { print, addLog, ctx, canvas } from '../shared/sub.js';
 
 import * as socket from './ws_bin_client.js';
 import * as utils2 from './utils2.js';
 import * as input from './input.js';
 import * as windows from './windows.js';
 import * as engine from './engine.js';
-import { ctx, canvas } from './DOM.js';
 //import { MAP_WIDTH, MAP_HEIGHT } from './world.js';
 //import * as world from './world.js';
 import { SpriteAnimator } from './animator.js';

@@ -2,6 +2,13 @@
 //import fs from 'fs';//ブラウザ環境では使えない
 //import { fileURLToPath } from 'url'; //ブラウザ環境では使えない パスとURLを相互変換するための標準機能、isMainModule用
 
+//ゲームキャンバス
+export let canvas = document.getElementById("gameCanvas");
+export let ctx = canvas.getContext("2d");
+
+//タッチ操作が可能なら
+export const useTouch = canTouch();
+
 //デバッグかどうか
 export const isDev =
 	// ブラウザ環境で、localhostアクセスなら開発環境とみなす
@@ -24,7 +31,6 @@ export async function isMainModule(importMetaUrl)
 
 //チャットログエリア(ブラウザ環境のみ)
 let chatLog = (typeof document !== 'undefined') ? document.getElementById('chatLog') : null;
-
 
 //色付きdiv作成
 export function createTypeFont(type, message)

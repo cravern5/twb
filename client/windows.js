@@ -1,6 +1,5 @@
-import { addLog } from '../shared/sub.js';
+import { addLog, ctx, canvas } from '../shared/sub.js';
 import * as sub from '../shared/sub.js';
-import { ctx, canvas } from './DOM.js';
 import { player } from './player.js';
 import * as world from './world.js';
 import * as sound from './sound.js';

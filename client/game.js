@@ -1,9 +1,7 @@
 
 //※ここの順序は特に気にしたほうが良い
-import { print, addLog, isDev } from '../shared/sub.js';
+import { print, addLog, ctx, canvas, isDev } from '../shared/sub.js';
 import * as sub from '../shared/sub.js';
-
-import { ctx, canvas } from './DOM.js';
 import * as engine from './engine.js';
 import * as utils2 from './utils2.js';
 import * as windows from './windows.js';
