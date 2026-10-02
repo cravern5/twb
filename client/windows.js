@@ -295,7 +295,7 @@ function setRightBtnPos(container, btn)
 		container.style.left = (rectBtn.left - rectContainer.width) + "px";
 		container.style.top = rectBtn.top + "px";
 
-		addLog("info", "x:" + container.style.left + " y:" + container.style.top);
+		//addLog("info", "x:" + container.style.left + " y:" + container.style.top);
 	});
 }
 

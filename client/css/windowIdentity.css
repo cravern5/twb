@@ -1,7 +1,7 @@
 #identityContainer {
 	
 
-	background-image: url("../assets/ui/identityWindow/window.png");
+	background-image: url("../assets/ui/windowIdentity/window.png");
 
 	/* ドットを崩さずに拡大表示する指定 ctx.imageSmoothingEnabled=falseと併用可能*/
 	/* Chrome, Edge, Safari */

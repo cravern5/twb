@@ -14,7 +14,7 @@
 #skillContainer {
 	
 
-	background-image: url("../assets/ui/skillWindow/window.png");
+	background-image: url("../assets/ui/windowSkill/window.png");
 
 	/* ドットを崩さずに拡大表示する指定 ctx.imageSmoothingEnabled=falseと併用可能*/
 	/* Chrome, Edge, Safari */
@@ -51,7 +51,7 @@
 	/* 黒の50%半透明 */
 	background-color: rgba(40, 204, 7, 0.534);
 	
-	background-image: url("../assets/ui/skillWindow/skillContents.png");
+	background-image: url("../assets/ui/windowSkill/skillContents.png");
 
 	position: absolute;
 	top: 43px;
