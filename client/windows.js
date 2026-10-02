@@ -6,6 +6,7 @@ import * as sound from './sound.js';
 
 export let activeWindow = null;
 
+//ウィンドウクラス登録用オブジェクト
 export let wins =
 {
 	debug: { esc: true, nodrag: true },
@@ -27,7 +28,7 @@ export let wins =
 //ウィンドウクラス追加 呼び出し
 export function init()
 {
-	//右メニュー ウィンドウ関連付け
+	//ウィンドウクラスの登録
 	for (const [key, obj] of Object.entries(wins))
 	{
 		obj.container = document.getElementById(obj.container ?? key + "Container");
@@ -717,9 +718,11 @@ leftQuickSlotTab.addEventListener('click', (e) =>
 //右メニュー============================================================
 export const rightMenuButtons = document.getElementById("rightMenuButtons");
 export const rightMenuOpenBtn = document.getElementById("rightMenuOpen");
-// 開閉ボタンがクリックされたら
+
+//右メニュー 開閉ボタン
 rightMenuOpenBtn.addEventListener("click", () => { rightMenuButtons.classList.toggle("closed"); });
 
+//右メニュー 左側にウィンドウを表示する
 function setRightBtnPos(container, btn)
 {
 	// 非表示されていた場合範囲が取れないので、次の描画フレームまで待ってからサイズを取得
