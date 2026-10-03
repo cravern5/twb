@@ -51,7 +51,7 @@ export function init()
 		{
 			obj.rightMenu.addEventListener('click', (e) =>
 			{
-				obj.window.show(true);
+				obj.window.show(-1);
 				setRightBtnPos(obj.window.container, e.target);
 			});
 
